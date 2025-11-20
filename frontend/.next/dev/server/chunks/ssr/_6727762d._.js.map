@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":""}},
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/src/app/layout.tsx"],"sourcesContent":["import \"./globals.css\";\nimport Sidebar from \"@/components\";\nimport Navbar from \"@/components/Navbar\";\n\nexport const metadata = {\n  title: \"HRMS System\",\n  description: \"Human Resource Management System UI\",\n};\n\nexport default function RootLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <html lang=\"en\">\n      <body className=\"flex\">\n        <Sidebar />\n        <div className=\"flex-1\">\n          <Navbar />\n          <main className=\"p-6\">{children}</main>\n        </div>\n      </body>\n    </html>\n  );\n}\n"],"names":[],"mappings":";;;;;;;;;;;;AAEA;;;;;AAEO,MAAM,WAAW;IACtB,OAAO;IACP,aAAa;AACf;AAEe,SAAS,WAAW,EACjC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;YAAK,WAAU;;8BACd,8OAAC;;;;;8BACD,8OAAC;oBAAI,WAAU;;sCACb,8OAAC,uIAAM;;;;;sCACP,8OAAC;4BAAK,WAAU;sCAAO;;;;;;;;;;;;;;;;;;;;;;;AAKjC"}},
-    {"offset": {"line": 77, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0]}}]
-}

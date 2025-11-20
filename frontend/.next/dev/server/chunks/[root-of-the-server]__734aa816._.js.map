@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/src/app/api/send-otp/route.ts"],"sourcesContent":["// src/app/api/send-otp/route.ts\r\nimport { NextResponse } from \"next/server\";\r\n\r\nexport async function POST(req: Request) {\r\n  try {\r\n    const { identifier } = await req.json();\r\n\r\n    if (!identifier)\r\n      return NextResponse.json({ error: \"Identifier required\" }, { status: 400 });\r\n\r\n    // Simulate sending OTP (in production send via SMS/Email)\r\n    console.log(\"OTP sent to:\", identifier);\r\n\r\n    return NextResponse.json({ success: true, message: \"OTP sent\" });\r\n  } catch (err) {\r\n    return NextResponse.json(\r\n      { error: \"Server error\" },\r\n      { status: 500 }\r\n    );\r\n  }\r\n}\r\n"],"names":[],"mappings":"AAAA,gCAAgC;;;;;AAChC;;AAEO,eAAe,KAAK,GAAY;IACrC,IAAI;QACF,MAAM,EAAE,UAAU,EAAE,GAAG,MAAM,IAAI,IAAI;QAErC,IAAI,CAAC,YACH,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,OAAO;QAAsB,GAAG;YAAE,QAAQ;QAAI;QAE3E,0DAA0D;QAC1D,QAAQ,GAAG,CAAC,gBAAgB;QAE5B,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,SAAS;YAAM,SAAS;QAAW;IAChE,EAAE,OAAO,KAAK;QACZ,OAAO,gJAAY,CAAC,IAAI,CACtB;YAAE,OAAO;QAAe,GACxB;YAAE,QAAQ;QAAI;IAElB;AACF"}}]
-}

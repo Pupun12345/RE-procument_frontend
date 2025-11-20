@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":""}},
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/src/app/layout.tsx"],"sourcesContent":["import \"./globals.css\";\nimport type { Metadata } from \"next\";\nimport LayoutClient from \"./LayoutClient\";\n\nexport const metadata: Metadata = {\n  title: \"HRMS Dashboard\",\n  description: \"HRMS frontend built with Next.js + Tailwind\",\n};\n\nexport default function RootLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <html lang=\"en\">\n      <body className=\"min-h-screen bg-gray-100\">\n        <LayoutClient>{children}</LayoutClient>\n      </body>\n    </html>\n  );\n}\n"],"names":[],"mappings":";;;;;;;AAEA;;;;AAEO,MAAM,WAAqB;IAChC,OAAO;IACP,aAAa;AACf;AAEe,SAAS,WAAW,EACjC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;YAAK,WAAU;sBACd,cAAA,8OAAC,sIAAY;0BAAE;;;;;;;;;;;;;;;;AAIvB"}},
-    {"offset": {"line": 49, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = (\n  require('../../module.compiled') as typeof import('../../module.compiled')\n).vendored['react-rsc']!.ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":"AAAAA,OAAOC,OAAO,GACZC,QAAQ,4HACRC,QAAQ,CAAC,YAAY,CAAEC,kBAAkB","ignoreList":[0]}}]
-}

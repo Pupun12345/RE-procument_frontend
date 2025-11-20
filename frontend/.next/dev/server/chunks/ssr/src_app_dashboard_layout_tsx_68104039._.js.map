@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KIIT0001/Desktop/hrms/hrms-frontend/src/app/dashboard/layout.tsx"],"sourcesContent":["\"use client\";\r\n\r\nimport Sidebar from \"@/components/Sidebar\";\r\n\r\nexport default function DashboardLayout({\r\n  children,\r\n}: {\r\n  children: React.ReactNode;\r\n}) {\r\n  return (\r\n    <div className=\"flex min-h-screen w-full\">\r\n\r\n      {/* FIXED SIDEBAR */}\r\n      <div className=\"fixed top-0 left-0 h-full z-50\">\r\n        <Sidebar />\r\n      </div>\r\n\r\n      {/* MAIN CONTENT PUSHED */}\r\n      <main\r\n        className=\"flex-1 ml-20 transition-all duration-300\"\r\n      >\r\n        <div className=\"p-6\">{children}</div>\r\n      </main>\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAEA;AAFA;;;AAIe,SAAS,gBAAgB,EACtC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAI,WAAU;;0BAGb,8OAAC;gBAAI,WAAU;0BACb,cAAA,8OAAC,wIAAO;;;;;;;;;;0BAIV,8OAAC;gBACC,WAAU;0BAEV,cAAA,8OAAC;oBAAI,WAAU;8BAAO;;;;;;;;;;;;;;;;;AAI9B"}}]
-}
