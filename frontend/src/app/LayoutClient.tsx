@@ -1,16 +1,21 @@
-// src/app/LayoutClient.tsx
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const noLayoutRoutes = ["/", "/login", "/signup"];
-  const isNoLayout = noLayoutRoutes.includes(pathname);
+  const hydrate = useAuthStore((s) => s.hydrate);
 
-  if (isNoLayout) return <>{children}</>;
+  useEffect(() => {
+    hydrate(); // <-- MAIN FIX
+  }, []);
+
+  const hideLayoutRoutes = ["/", "/login"];
+  if (hideLayoutRoutes.includes(pathname)) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen">

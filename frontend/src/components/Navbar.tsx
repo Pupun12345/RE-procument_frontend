@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 "use client";
 
 import React from "react";
@@ -8,34 +7,25 @@ import { useAuthStore } from "@/store/authStore";
 export default function Navbar() {
   const router = useRouter();
   const logout = useAuthStore((s) => s.logout);
-  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+
+  const handleLogout = () => {
+    // Clear auth state properly
+    logout();
+
+    // Navigate once with replace (prevents back button returning)
+    router.replace("/login");
+  };
 
   return (
     <header className="w-full bg-white border-b p-4 flex items-center justify-between">
-      <div className="font-semibold">My App</div>
+      <div className="font-semibold text-lg">HRMS</div>
 
-      <div>
-        {isLoggedIn ? (
-          <>
-            <button
-              onClick={() => {
-                logout();
-                router.push("/login");
-              }}
-              className="text-sm text-red-600 hover:underline"
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => router.push("/login")}
-            className="text-sm text-slate-700 hover:underline"
-          >
-            Login
-          </button>
-        )}
-      </div>
+      <button
+        onClick={handleLogout}
+        className="text-sm text-red-600 hover:underline"
+      >
+        Logout
+      </button>
     </header>
   );
 }

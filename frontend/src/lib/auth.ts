@@ -1,23 +1,20 @@
 // src/lib/auth.ts
+export async function sendMagicLink(email: string) {
+  const res = await fetch("http://localhost:5000/auth/send-link", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email }),
+  });
 
-let DEMO_OTP = "000000";
-
-export async function sendOtp(phone: string) {
-  DEMO_OTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-  console.log(`📌 DEMO OTP for ${phone}: ${DEMO_OTP}`);
-
-  // 🔥 Dispatch OTP event so UI can auto-read it
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("demo-otp", { detail: DEMO_OTP }));
-  }
-
-  return "demo-session";
+  if (!res.ok) throw new Error("Failed to send magic link");
+  return res.json();
 }
 
-export async function verifyOtp(sessionInfo: string, otp: string) {
-  if (otp === DEMO_OTP) {
-    return { idToken: "demo-token" };
-  }
-  return { idToken: null };
+export async function checkAuth() {
+  const res = await fetch("http://localhost:5000/auth/check", {
+    credentials: "include"
+  });
+
+  return res.ok;
 }
