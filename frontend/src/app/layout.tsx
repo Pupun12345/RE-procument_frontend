@@ -30,3 +30,4 @@ export default function RootLayout({
     </html>
   );
 }
+//updated code

@@ -60,3 +60,4 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoggedIn: false, role: null });
   },
 }));
+//updated code

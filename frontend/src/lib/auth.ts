@@ -18,3 +18,4 @@ export async function checkAuth() {
 
   return res.ok;
 }
+//updated code

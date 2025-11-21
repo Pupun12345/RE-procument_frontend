@@ -20,3 +20,4 @@ export const login = async (req, res) => {
     role: user.role,     // <--- RETURN ROLE
   });
 };
+//updated code

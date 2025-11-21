@@ -39,3 +39,4 @@ mongoose
     mongoose.connection.close();
   })
   .catch((err) => console.error("❌ Error:", err));
+//updated code

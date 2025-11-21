@@ -33,3 +33,4 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     </div>
   );
 }
+//updated code

@@ -166,3 +166,4 @@ function Th({ children }: { children: React.ReactNode }) {
 function Td({ children }: { children: React.ReactNode }) {
   return <td className="p-2">{children}</td>;
 }
+//updated code
