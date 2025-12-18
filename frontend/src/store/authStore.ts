@@ -1,63 +1,37 @@
-"use client";
-
 import { create } from "zustand";
-
-// ---- Helpers MUST be declared BEFORE Zustand uses them ----
-function getCookie(name: string) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? match[2] : null;
-}
-
-function deleteCookie(name: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
-}
-
-// ---- Types ----
-type Role = "admin" | "user" | null;
+import { persist } from "zustand/middleware";
 
 interface AuthState {
-  isLoggedIn: boolean;
-  role: Role;
-  hydrated: boolean;
-
-  setAuth: (role: Role) => void;
-  clearAuth: () => void;
-  hydrate: () => void;
+  role: string | null;
+  username: string | null;
+  token: string | null;
+  setAuth: (role: string, username: string, token: string) => void;
   logout: () => void;
 }
 
-// ---- Zustand Store ----
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: false,
-  role: null,
-  hydrated: false,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      role: null,
+      username: null,
+      token: null,
 
-  hydrate: () => {
-    const token = getCookie("token");
-    const role = getCookie("role") as Role;
+      setAuth: (role, username, token) =>
+        set({
+          role,
+          username,
+          token,
+        }),
 
-    set({
-      hydrated: true,
-      isLoggedIn: !!token,
-      role: role ?? null,
-    });
-  },
-
-  setAuth: (role) => {
-    set({ isLoggedIn: true, role });
-  },
-
-  clearAuth: () => {
-    set({ isLoggedIn: false, role: null });
-  },
-
-  logout: () => {
-    deleteCookie("token");
-    deleteCookie("role");
-
-    set({ isLoggedIn: false, role: null });
-  },
-}));
-//updated code
+      logout: () =>
+        set({
+          role: null,
+          username: null,
+          token: null,
+        }),
+    }),
+    {
+      name: "auth-storage", // ✅ single source of truth
+    }
+  )
+);

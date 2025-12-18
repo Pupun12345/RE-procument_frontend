@@ -1,0 +1,23 @@
+/* Employee Form Custom Styles */
+@import "tailwindcss";
+
+:root {
+  --font-size: 16px;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --border: rgba(0, 0, 0, 0.1);
+  --input-background: #f3f3f5;
+  --ring: #708090;
+  --radius: 0.5rem;
+}
+
+/* Custom utility overrides */
+@media (max-width: 639px) {
+  .max-w-4xl {
+    max-width: 95vw !important;
+  }
+}
+
+.mr-\[140px\] {
+  margin-right: 140px;
+}

@@ -1,0 +1,141 @@
+/* Responsive styles for Employee Registration Form */
+
+/* Labels - smaller on mobile */
+.employee-form-label {
+  font-size: 0.75rem; /* 12px - text-xs */
+  font-weight: 500;
+  line-height: 1;
+}
+
+@media (min-width: 640px) {
+  .employee-form-label {
+    font-size: 0.875rem; /* 14px - text-sm */
+  }
+}
+
+/* Inputs - smaller height and padding on mobile */
+.employee-form-input {
+  display: flex;
+  height: 2rem; /* 32px - h-8 */
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--input, 214.3 31.8% 91.4%));
+  background-color: transparent;
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  font-size: 0.875rem; /* 14px - text-sm */
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s;
+}
+
+.employee-form-input::placeholder {
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+}
+
+.employee-form-input:focus-visible {
+  outline: none;
+  ring: 1px solid hsl(var(--ring, 262.1 83.3% 57.8%));
+}
+
+.employee-form-input:hover,
+input.employee-form-input:hover {
+  border-color: rgb(59 130 246) !important; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.employee-form-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (min-width: 640px) {
+  .employee-form-input {
+    height: 2.25rem; /* 36px - h-9 */
+    padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  }
+}
+
+/* Textarea - responsive */
+.employee-form-textarea {
+  display: flex;
+  min-height: 60px;
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--input, 214.3 31.8% 91.4%));
+  background-color: transparent;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s;
+}
+
+.employee-form-textarea::placeholder {
+  color: hsl(var(--muted-foreground, 215.4 16.3% 46.9%));
+}
+
+.employee-form-textarea:focus-visible {
+  outline: none;
+  ring: 1px solid hsl(var(--ring, 262.1 83.3% 57.8%));
+}
+
+.employee-form-textarea:hover,
+textarea.employee-form-textarea:hover {
+  border-color: rgb(59 130 246) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+@media (min-width: 640px) {
+  .employee-form-textarea {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Select dropdown - responsive */
+.employee-form-select {
+  display: flex;
+  height: 2rem;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--input, 214.3 31.8% 91.4%));
+  background-color: transparent;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s;
+}
+
+.employee-form-select:focus-visible {
+  outline: none;
+  ring: 1px solid hsl(var(--ring, 262.1 83.3% 57.8%));
+}
+
+.employee-form-select:hover,
+select.employee-form-select:hover {
+  border-color: rgb(59 130 246) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+@media (min-width: 640px) {
+  .employee-form-select {
+    height: 2.25rem;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
+/* Photo upload section */
+.employee-photo-upload {
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.employee-photo-upload:hover img {
+  border-color: rgb(59 130 246) !important; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.employee-photo-upload:hover > div {
+  border-color: rgb(59 130 246) !important; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: rgba(59, 130, 246, 0.05);
+}
