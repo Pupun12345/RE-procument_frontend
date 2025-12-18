@@ -1,0 +1,236 @@
+/* ================= CARD ================= */
+.scaffold-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 1050px;
+  margin: 24px auto;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= HEADER ================= */
+.scaffold-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scaffold-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+.close-btn:hover {
+  color: #6b6ef9;
+}
+
+/* Divider */
+.scaffold-card hr {
+  margin: 16px 0 22px;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ================= FORM ================= */
+.scaffold-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Rows */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+/* Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.form-group span {
+  color: #ef4444;
+}
+
+/* Inputs */
+.form-group input,
+.form-group select {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #6b6ef9;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 110, 249, 0.12);
+}
+
+/* ================= MATERIALS ================= */
+.materials-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.materials-header label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.add-btn {
+  background: #6b6ef9;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.add-btn:hover {
+  background: #5a5df0;
+}
+
+/* ================= TABLE ================= */
+.material-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Header + Row */
+.table-head,
+.table-row {
+  display: grid;
+  grid-template-columns: 48px 2fr 1.2fr 1.5fr 60px;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.table-head {
+  background: #f9fafb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.table-row {
+  border-top: 1px solid #e5e7eb;
+  transition: background 0.2s ease;
+}
+.table-row:hover {
+  background: #f5f6ff;
+}
+
+/* Table Inputs */
+.table-row select,
+.table-row input {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  background: #ffffff;
+}
+
+.table-row select:hover,
+.table-row input:hover,
+.table-row select:focus,
+.table-row input:focus {
+  border-color: #6b6ef9;
+  outline: none;
+}
+
+/* Disabled Provider */
+.table-row input[disabled] {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+/* Delete */
+.delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+}
+.delete-btn:hover {
+  color: #6b6ef9;
+}
+.delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ================= FOOTER ================= */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+/* Buttons */
+.cancel-btn,
+.save-btn {
+  min-width: 110px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+.cancel-btn:hover {
+  border-color: #6b6ef9;
+  color: #6b6ef9;
+}
+
+.save-btn {
+  background: #6b6ef9;
+  color: #ffffff;
+  border: none;
+}
+.save-btn:hover {
+  background: #5a5df0;
+}
