@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import "./mechanicalreturn.css"
+import "./PPEreturn.css";
 import { FaPen, FaTrash } from "react-icons/fa";
 
 interface ReturnItem {
@@ -37,7 +37,7 @@ interface ReturnRecord {
   returnWeight: number;
 }
 
-export default function MechanicalReturnPage() {
+export default function PPEReturnPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entry");
   const [search, setSearch] = useState("");

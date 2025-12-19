@@ -15,6 +15,9 @@ import ScaffoldingRegistration from "../src/pages/scaffholding";
 import PPERegistration from "../src/pages/ppe";
 import MechanicalIssuePage from "../src/pages/material_issue/MechanicalIssue";
 import ScaffholdingIssuePage from "../src/pages/material_issue/scaffholdingIssue";
+import ReturnPage from "../src/pages/material_return/scaffholdingreturn";
+import MechanicalReturnPage from "../src/pages/material_return/mechanicalreturn";
+import PPEReturnPage from "../src/pages/material_return/PPEreturn";
 export default function AppRouter() {
   return (
     <Routes>
@@ -136,6 +139,36 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffholdingIssuePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+       path="/dashboard/material-return/scaffholding-return"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ReturnPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+       path="/dashboard/material-return/mechanical-return"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MechanicalReturnPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+       path="/dashboard/material-return/ppe-return"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <PPEReturnPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
