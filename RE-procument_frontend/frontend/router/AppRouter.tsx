@@ -10,8 +10,11 @@ import { StoreManager } from "../src/pages/storemanager";
 import VendorForm from "../src/pages/vendorRegistration/page";
 import { VendorGateway } from "../src/pages/vendorRegistration/gateway";
 import MechanicalRegistration from "../src/pages/mechanical";
-import PPERegistration from "../src/pages/ppe";
+import PPEDistribution from "../src/pages/material_issue/PPEDistribution";
 import ScaffoldingRegistration from "../src/pages/scaffholding";
+import PPERegistration from "../src/pages/ppe";
+import MechanicalIssuePage from "../src/pages/material_issue/MechanicalIssue";
+import ScaffholdingIssuePage from "../src/pages/material_issue/scaffholdingIssue";
 export default function AppRouter() {
   return (
     <Routes>
@@ -103,6 +106,36 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffoldingRegistration />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />''
+      <Route
+       path="/dashboard/material-issue/ppe-distribution"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <PPEDistribution />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+       path="/dashboard/material-issue/mechanical-issue"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MechanicalIssuePage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+       path="/dashboard/material-issue/scaffholding-issue"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ScaffholdingIssuePage />
             </DashboardLayout>
           </ProtectedRoute>
         }

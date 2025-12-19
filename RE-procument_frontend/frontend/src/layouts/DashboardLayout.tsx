@@ -182,9 +182,9 @@ export default function DashboardLayout({ children }: Props) {
           </SubGroup>
 
           <SubGroup label="Material Issue">
-            <SubItem label="PPE" />
-            <SubItem label="Mechanical" />
-            <SubItem label="Scaffolding" />
+            <SubItem label="PPE" path="/dashboard/material-issue/ppe-distribution" />
+            <SubItem label="Mechanical" path="/dashboard/material-issue/mechanical-issue" />
+            <SubItem label="Scaffolding"  path="/dashboard/material-issue/scaffholding-issue"/>
           </SubGroup>
 
           <SubGroup label="Material Return">
