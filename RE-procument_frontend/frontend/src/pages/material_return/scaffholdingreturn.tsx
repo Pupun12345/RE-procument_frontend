@@ -38,6 +38,33 @@ interface ReturnRecord {
 }
 
 export default function ReturnPage() {
+    // Edit material row: populate formData with selected material row for editing
+    const [editingMaterialIdx, setEditingMaterialIdx] = useState<number | null>(null);
+
+    const handleEditMaterial = (idx: number) => {
+      const mat = materials[idx];
+      setFormData((prev) => ({
+        ...prev,
+        itemName: mat.itemName,
+        unitWeight: mat.unitWeight,
+        issuedQty: mat.returnQuantity,
+        issuedWeight: mat.returnWeight,
+        unit: mat.unit,
+      }));
+      setEditingMaterialIdx(idx);
+      showMessage("Material row loaded for editing");
+    };
+
+    const handleDeleteMaterial = (idx: number) => {
+      if (materials.length === 1) {
+        showMessage("At least one material is required");
+        return;
+      }
+      setMaterials(materials.filter((_, i) => i !== idx));
+      showMessage("Material removed");
+      // If editing the deleted row, reset editingMaterialIdx
+      if (editingMaterialIdx === idx) setEditingMaterialIdx(null);
+    };
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("entry");
   const [search, setSearch] = useState("");
@@ -47,16 +74,18 @@ export default function ReturnPage() {
 
   // Add Material Section State
   interface MaterialRow {
-    material: string;
-    quantity: string;
+    itemName: string;
+    unitWeight: string;
+    returnQuantity: string;
+    returnWeight: string;
     unit: string;
   }
   const [materials, setMaterials] = useState<MaterialRow[]>([
-    { material: "", quantity: "", unit: "" }
+    { itemName: "", unitWeight: "", returnQuantity: "", returnWeight: "", unit: "" }
   ]);
 
   const addMaterial = () => {
-    setMaterials([...materials, { material: "", quantity: "", unit: "" }]);
+    setMaterials([...materials, { itemName: "", unitWeight: "", returnQuantity: "", returnWeight: "", unit: "" }]);
     showMessage("Material row added");
   };
 
@@ -72,6 +101,21 @@ export default function ReturnPage() {
   const updateMaterial = (index: number, key: keyof MaterialRow, value: string) => {
     const updated = [...materials];
     updated[index][key] = value;
+    // If itemName changes, auto-update unit if found in savedItems
+    if (key === 'itemName') {
+      const selected = savedItems.find((s) => s.itemName === value);
+      updated[index].unit = selected ? selected.unit : '';
+    }
+    // Auto-calculate returnWeight if unitWeight or returnQuantity changes
+    if (key === 'unitWeight' || key === 'returnQuantity') {
+      const unitWeightNum = parseFloat(key === 'unitWeight' ? value : updated[index].unitWeight || '0');
+      const returnQuantityNum = parseFloat(key === 'returnQuantity' ? value : updated[index].returnQuantity || '0');
+      let returnWeight = '';
+      if (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) {
+        returnWeight = (unitWeightNum * returnQuantityNum).toString();
+      }
+      updated[index].returnWeight = returnWeight;
+    }
     setMaterials(updated);
   };
 
@@ -99,9 +143,26 @@ export default function ReturnPage() {
 
   // Removed API calls. You may want to set initial data here if needed.
   useEffect(() => {
-    // fetchSavedItems();
-    // fetchReturns();
+    // load saved records from localStorage
+    try {
+      const raw = localStorage.getItem("scaff_returnRecords");
+      if (raw) setReturnRecords(JSON.parse(raw));
+    } catch (e) {
+      console.warn("Failed to load saved return records", e);
+    }
   }, []);
+
+  // refresh records when switching to report tab (in case other pages updated storage)
+  useEffect(() => {
+    if (activeTab === "report") {
+      try {
+        const raw = localStorage.getItem("scaff_returnRecords");
+        if (raw) setReturnRecords(JSON.parse(raw));
+      } catch (e) {
+        console.warn("Failed to load saved return records", e);
+      }
+    }
+  }, [activeTab]);
 
   // ✅ Updated handleChange with auto-calculation
   const handleChange = (field: keyof ReturnItem, value: string | number) => {
@@ -124,17 +185,43 @@ export default function ReturnPage() {
 
   // Removed API call. Only local state update or validation can be done here.
   const handleSave = () => {
-    if (
-      !formData.itemName ||
-      !formData.woNumber ||
-      !formData.tslManager ||
-      formData.issuedQty === "" || Number(formData.issuedQty) === 0
-    ) {
+    const hasValidMaterial = materials.some(
+      (m) => m.itemName && m.returnQuantity !== "" && Number(m.returnQuantity) > 0
+    );
+
+    if (!formData.woNumber || !formData.tslManager || !hasValidMaterial) {
       showMessage("⚠️ Fill all required fields before saving");
       return;
     }
-    // Here you could update local state or show a message
+    // Build records from valid material rows
+    const newRecords: ReturnRecord[] = materials
+      .map((m) => {
+        if (!m.itemName || m.returnQuantity === "" || Number(m.returnQuantity) <= 0) return null;
+        return {
+          _id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          woNumber: formData.woNumber,
+          location: formData.location,
+          personName: formData.tslManager,
+          returnDate: formData.returnDate || new Date().toISOString(),
+          itemName: m.itemName,
+          unit: m.unit || formData.unit || "",
+          unitWeight: Number(m.unitWeight) || Number(formData.unitWeight) || 0,
+          returnQuantity: Number(m.returnQuantity),
+          returnWeight: Number(m.returnWeight) || (Number(m.unitWeight || 0) * Number(m.returnQuantity || 0)),
+        } as ReturnRecord;
+      })
+      .filter(Boolean) as ReturnRecord[];
+
+    const updated = [...returnRecords, ...newRecords];
+    setReturnRecords(updated);
+    try {
+      localStorage.setItem("scaff_returnRecords", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed to save return records", e);
+    }
+
     showMessage(editingId ? "✅ Return updated (local only)" : "✅ Return saved (local only)");
+    // reset form and materials
     setFormData({
       woNumber: "",
       location: "",
@@ -147,6 +234,7 @@ export default function ReturnPage() {
       issuedWeight: "",
       unit: "",
     });
+    setMaterials([{ itemName: "", unitWeight: "", returnQuantity: "", returnWeight: "", unit: "" }]);
     setEditingId(null);
   };
 
@@ -187,7 +275,7 @@ export default function ReturnPage() {
     return matchesSearch && matchesFromDate && matchesToDate;
   });
 
-  // Removed API call. Only local state update or confirmation can be done here.
+  // Removed API call. Remove record from local state + storage.
   const handleDelete = (record: ReturnRecord) => {
     const formattedDate = record.returnDate
       ? new Date(record.returnDate).toISOString().split("T")[0]
@@ -198,7 +286,34 @@ export default function ReturnPage() {
     ) {
       return;
     }
-    // Here you could update local state or show a message
+
+    let updated: ReturnRecord[] = [];
+    if (record._id) {
+      updated = returnRecords.filter((r) => r._id !== record._id);
+    } else {
+      // fallback: remove first matching record
+      const idx = returnRecords.findIndex(
+        (r) =>
+          r.itemName === record.itemName &&
+          r.location === record.location &&
+          r.returnDate === record.returnDate &&
+          r.returnQuantity === record.returnQuantity &&
+          r.personName === record.personName
+      );
+      if (idx !== -1) {
+        updated = [...returnRecords.slice(0, idx), ...returnRecords.slice(idx + 1)];
+      } else {
+        updated = returnRecords;
+      }
+    }
+
+    setReturnRecords(updated);
+    try {
+      localStorage.setItem("scaff_returnRecords", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed to save return records", e);
+    }
+
     showMessage("🗑️ Return deleted (local only)");
   };
   const exportCSV = () => {
@@ -364,19 +479,19 @@ export default function ReturnPage() {
             <div className="sr-form-grid">
               <input
                 className="sr-input"
-                placeholder="W/O Number *"
+                placeholder="W/O Number"
                 value={formData.woNumber}
                 onChange={(e) => handleChange("woNumber", e.target.value)}
               />
               <input
                 className="sr-input"
-                placeholder="Location / Site *"
+                placeholder="Location / Site"
                 value={formData.location}
                 onChange={(e) => handleChange("location", e.target.value)}
               />
               <input
                 className="sr-input"
-                placeholder="TSL Manager *"
+                placeholder="TSL Manager"
                 value={formData.tslManager}
                 onChange={(e) => handleChange("tslManager", e.target.value)}
               />
@@ -386,27 +501,7 @@ export default function ReturnPage() {
                 value={formData.returnDate}
                 onChange={(e) => handleChange("returnDate", e.target.value)}
               />
-              <input
-                className="sr-input"
-                type="number"
-                placeholder="Unit Weight"
-                value={formData.unitWeight}
-                onChange={(e) => handleChange("unitWeight", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                type="number"
-                placeholder="Return Quantity *"
-                value={formData.issuedQty}
-                onChange={(e) => handleChange("issuedQty", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                type="number"
-                placeholder="Return Weight (Auto)"
-                value={formData.issuedWeight}
-                readOnly
-              />
+            
             </div>
 
             {/* --- Add Material Section --- */}
@@ -416,43 +511,62 @@ export default function ReturnPage() {
                 + Add Material
               </button>
             </div>
-            <div className="sr-material-table">
-              <div className="sr-table-head" style={{ display: "grid", gridTemplateColumns: "48px 2fr 1.2fr 1.2fr 100px", alignItems: "center" }}>
-                <div>#</div>
-                <div>Material</div>
-                <div>Quantity</div>
-                <div>Unit</div>
-                <div>Action</div>
+            <div className="sr-material-table" style={{ overflowX: 'auto' }}>
+              <div className="sr-table-head" style={{ display: 'flex', minWidth: 900, fontWeight: 600 }}>
+                <span style={{ flex: '1 0 180px' }}>Item Name</span>
+                <span style={{ flex: '1 0 120px' }}>Unit Weight</span>
+                <span style={{ flex: '1 0 140px', marginLeft: '20px' }}>Return Quantity</span>
+                <span style={{ flex: '1 0 140px' , marginLeft: '20px' }}>Return Weight</span>
+                <span style={{ flex: '1 0 110px' , paddingLeft: '20px' }}>Unit</span>
+                <span style={{ flex: '0 0 110px', textAlign: 'center' }}>Action</span>
               </div>
               {materials.map((row, idx) => (
-                <div className="sr-table-row" key={idx} style={{ display: "grid", gridTemplateColumns: "48px 2fr 1.2fr 1.2fr 100px", alignItems: "center", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
-                  <div>{idx + 1}</div>
+                <div className="sr-table-row" key={idx} style={{ display: 'flex', minWidth: 900, borderTop: '1px solid #e5e7eb', background: '#fff' }}>
                   <input
                     className="sr-material-input"
-                    value={row.material}
-                    onChange={e => updateMaterial(idx, "material", e.target.value)}
-                    placeholder="Material Name"
+                    style={{ flex: '1 0 180px' }}
+                    value={row.itemName}
+                    onChange={e => updateMaterial(idx, "itemName", e.target.value)}
+                    placeholder="Item Name"
                   />
                   <input
                     className="sr-material-input"
-                    value={row.quantity}
-                    onChange={e => updateMaterial(idx, "quantity", e.target.value)}
-                    placeholder="Quantity"
+                    style={{ flex: '1 0 120px' }}
+                    value={row.unitWeight}
+                    onChange={e => updateMaterial(idx, "unitWeight", e.target.value)}
+                    placeholder="Unit Weight"
                     type="number"
                   />
                   <input
                     className="sr-material-input"
+                    style={{ flex: '1 0 140px', marginLeft: '0px' }}
+                    value={row.returnQuantity}
+                    onChange={e => updateMaterial(idx, "returnQuantity", e.target.value)}
+                    placeholder="Return Quantity"
+                    type="number"
+                  />
+                  <input
+                    className="sr-material-input"
+                    style={{ flex: '1 0 140px' }}
+                    value={row.returnWeight}
+                    placeholder="Return Weight"
+                    type="number"
+                    readOnly
+                  />
+                  <input
+                    className="sr-material-input"
+                    style={{ flex: '1 0 110px' }}
                     value={row.unit}
                     onChange={e => updateMaterial(idx, "unit", e.target.value)}
                     placeholder="Unit"
                   />
-                  <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                  <div style={{ flex: '0 0 110px', display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
                     <button
                       type="button"
                       className="sr-edit-btn"
                       title="Edit"
                       style={{ background: "#3B82F6", color: "white", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}
-                      onClick={() => alert('Edit functionality to be implemented')}
+                      onClick={() => handleEditMaterial(idx)}
                     >
                       <FaPen size={16} />
                     </button>
@@ -461,7 +575,7 @@ export default function ReturnPage() {
                       className="sr-delete-btn"
                       title="Delete"
                       style={{ background: "#EF4444", color: "white", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: materials.length === 1 ? "not-allowed" : "pointer", opacity: materials.length === 1 ? 0.4 : 1 }}
-                      onClick={() => removeMaterial(idx)}
+                      onClick={() => handleDeleteMaterial(idx)}
                       disabled={materials.length === 1}
                     >
                       <FaTrash size={16} />
@@ -472,9 +586,14 @@ export default function ReturnPage() {
             </div>
       
 
-            <button className="sr-btn-save" onClick={handleSave}>
-              💾 {editingId ? "Update Return" : "Save Return"}
-            </button>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
+              <button className="sr-btn-save" onClick={handleSave}>
+                💾 {editingId ? "Update Return" : "Save Return"}
+              </button>
+              <button className="sr-btn-save" onClick={() => navigate(-1)}>
+                Back
+              </button>
+            </div>
           </div>
         )}
 
@@ -575,14 +694,7 @@ export default function ReturnPage() {
               </table>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-              <button
-                className="sr-btn-back"
-                onClick={() => navigate(-1)}
-              >
-                Back
-              </button>
-            </div>
+            {/* Removed Back button from report section to avoid confusion */}
           </>
         )}
       </div>

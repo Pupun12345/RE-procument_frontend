@@ -29,6 +29,11 @@ export default function DashboardLayout({ children }: Props) {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+
+  const toggleSidebarVisibility = () => {
+    setSidebarVisible((prev) => !prev);
+  };
 
   const toggleMenu = (key: string, label: string) => {
     setOpenMenu(openMenu === key ? null : key);
@@ -66,6 +71,7 @@ export default function DashboardLayout({ children }: Props) {
       )}
 
       {/* ================= SIDEBAR ================= */}
+      {sidebarVisible && (
       <aside
         style={{
           flexBasis: window.innerWidth < 768 ? "200px" : window.innerWidth < 1024 ? "240px" : "20%",
@@ -85,6 +91,29 @@ export default function DashboardLayout({ children }: Props) {
           zIndex: 50,
         }}
       >
+        {/* Collapse Button (desktop) */}
+        <button
+          onClick={toggleSidebarVisibility}
+          style={{
+            display: window.innerWidth >= 1024 ? "flex" : "none",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 36,
+            height: 36,
+            borderRadius: 8,
+            border: "1px solid #e5e7eb",
+            background: "#fff",
+            cursor: "pointer",
+            marginBottom: 16,
+            marginLeft: 'auto',
+            marginRight: 0,
+            transition: "all 0.2s",
+          }}
+          title="Collapse Sidebar"
+        >
+          {'<'}
+        </button>
+
         {/* Close Button for Mobile/Tablet - Only show when sidebar is open */}
         {isSidebarOpen && (
           <button
@@ -146,7 +175,10 @@ export default function DashboardLayout({ children }: Props) {
         <SidebarButton
           icon={<FaHome />}
           label="Dashboard"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => {
+            setOpenMenu(null);
+            navigate("/dashboard");
+          }}
         />
 
         <SidebarExpandable
@@ -155,11 +187,11 @@ export default function DashboardLayout({ children }: Props) {
           open={openMenu === "registration"}
           onClick={() => toggleMenu("registration", "Registration")}
         >
-          <SubItem label="Vendor" path="/dashboard/registration/vendor"/>
-          <SubItem label="Employee" path="/dashboard/registration/employee" />
-          <SubItem label="PPE" path="/dashboard/registration/ppe"/>
-          <SubItem label="Mechanical" path="/dashboard/registration/mechanical"/>
-          <SubItem label="Scaffolding" path="/dashboard/registration/scaffolding" />
+          <SubItem label="Vendor" path="/dashboard/registration/vendor" onNavigate={() => setOpenMenu(null)} />
+          <SubItem label="Employee" path="/dashboard/registration/employee" onNavigate={() => setOpenMenu(null)} />
+          <SubItem label="PPE" path="/dashboard/registration/ppe" onNavigate={() => setOpenMenu(null)} />
+          <SubItem label="Mechanical" path="/dashboard/registration/mechanical" onNavigate={() => setOpenMenu(null)} />
+          <SubItem label="Scaffolding" path="/dashboard/registration/scaffolding" onNavigate={() => setOpenMenu(null)} />
         </SidebarExpandable>
 
         <SidebarExpandable
@@ -169,34 +201,35 @@ export default function DashboardLayout({ children }: Props) {
           onClick={() => toggleMenu("store", "Store Management")}
         >
           <SubGroup label="Material Purchase">
-            <SubItem label="PPE" />
-            <SubItem label="Mechanical" />
-            <SubItem label="Scaffolding" />
+            <SubItem label="PPE" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Mechanical" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Scaffolding" onNavigate={() => setOpenMenu(null)} />
           </SubGroup>
 
           <SubGroup label="Material orders">
-            <SubItem
-              label="Scaffolding"
-              path="/dashboard/material-order/scaffolding"
-            />
+                <SubItem
+                  label="Scaffolding"
+                  path="/dashboard/material-order/scaffolding"
+                  onNavigate={() => setOpenMenu(null)}
+                />
           </SubGroup>
 
           <SubGroup label="Material Issue">
-            <SubItem label="PPE" path="/dashboard/material-issue/ppe-distribution" />
-            <SubItem label="Mechanical" path="/dashboard/material-issue/mechanical-issue" />
-            <SubItem label="Scaffolding"  path="/dashboard/material-issue/scaffholding-issue"/>
+            <SubItem label="PPE" path="/dashboard/material-issue/ppe-distribution" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Mechanical" path="/dashboard/material-issue/mechanical-issue" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Scaffolding"  path="/dashboard/material-issue/scaffholding-issue" onNavigate={() => setOpenMenu(null)} />
           </SubGroup>
 
           <SubGroup label="Material Return">
-            <SubItem label="PPE"  path="/dashboard/material-return/ppe-return"/>
-            <SubItem label="Mechanical"  path="/dashboard/material-return/mechanical-return"/>
-            <SubItem label="Scaffolding"  path="/dashboard/material-return/scaffholding-return" />
+            <SubItem label="PPE"  path="/dashboard/material-return/ppe-return" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Mechanical"  path="/dashboard/material-return/mechanical-return" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Scaffolding"  path="/dashboard/material-return/scaffholding-return" onNavigate={() => setOpenMenu(null)} />
           </SubGroup>
 
           <SubGroup label="Stock Report">
-            <SubItem label="PPE" />
-            <SubItem label="Mechanical" />
-            <SubItem label="Scaffolding" />
+            <SubItem label="PPE" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Mechanical" onNavigate={() => setOpenMenu(null)} />
+            <SubItem label="Scaffolding" onNavigate={() => setOpenMenu(null)} />
           </SubGroup>
         </SidebarExpandable>
 
@@ -205,6 +238,7 @@ export default function DashboardLayout({ children }: Props) {
         <SidebarButton icon={<FaChartBar />} label="Settings" />
         <SidebarButton icon={<FaQuestionCircle />} label="Help & Support" />
       </aside>
+      )}
 
       {/* ================= MAIN ================= */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", width: "100%", minWidth: 0 }}>
@@ -247,6 +281,28 @@ export default function DashboardLayout({ children }: Props) {
             >
               <span style={{ fontSize: 20 }}>☰</span>
             </button>
+            {/* Expand Button (desktop only) when sidebar hidden */}
+            {!sidebarVisible && (
+              <button
+                onClick={toggleSidebarVisibility}
+                style={{
+                  display: window.innerWidth >= 1024 ? "flex" : "none",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  border: "1px solid #e5e7eb",
+                  background: "#fff",
+                  cursor: "pointer",
+                  marginRight: 8,
+                  transition: "all 0.2s",
+                }}
+                title="Expand Sidebar"
+              >
+                {'>'}
+              </button>
+            )}
             
             <img src="/ray-log.png" alt="Ray Engineering" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "contain" }} />
             <div>
@@ -367,7 +423,7 @@ function SubGroup({ label, children }: { label: string; children: ReactNode }) {
     </div>
   );
 }
-function SubItem({ label, path }: { label: string; path?: string }) {
+function SubItem({ label, path, onNavigate }: { label: string; path?: string; onNavigate?: () => void }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -379,6 +435,7 @@ function SubItem({ label, path }: { label: string; path?: string }) {
     } else {
       toast(label + " clicked", { icon: "➡️" });
     }
+    if (onNavigate) onNavigate();
   };
 
   return (

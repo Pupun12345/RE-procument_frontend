@@ -37,9 +37,7 @@ export function StoreManager() {
       icon: PackageOpen,
       color: 'bg-orange-500',
       action: 'Open Material Issue',
-      onClick: () => {
-        navigate('/dashboard/material-order/scaffolding');
-      }
+     
     },
     {
       id: 4,
@@ -49,7 +47,7 @@ export function StoreManager() {
       color: 'bg-red-500',
       action: 'Open Material Orders',
       onClick: () => {
-        toast.info('Material Orders - Coming Soon');
+        navigate('/dashboard/material-order/scaffolding');
       }
     },
     {
@@ -96,7 +94,7 @@ export function StoreManager() {
         </div>
 
         {/* Module Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 lg:grid-cols-3 gap-6">
           {modules.map((module) => {
             const Icon = module.icon;
             return (

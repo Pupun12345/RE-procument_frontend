@@ -85,6 +85,7 @@ export default function ScaffoldingRegistration() {
       <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-10">
         <h1 className="text-2xl font-bold mb-6 text-center">Scaffolding Item Registration</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ...existing form fields... */}
           <div>
             <label htmlFor="itemName" className="block font-medium mb-1">Item Name</label>
             <input
@@ -165,6 +166,54 @@ export default function ScaffoldingRegistration() {
             </button>
           </div>
         </form>
+
+        {/* --- Materials Section --- */}
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold mb-4">Registered Materials</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 rounded-lg">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 text-left">#</th>
+                  <th className="px-4 py-2 text-left">Item Name</th>
+                  <th className="px-4 py-2 text-left">PUW</th>
+                  <th className="px-4 py-2 text-left">Unit</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">No items registered.</td>
+                  </tr>
+                ) : (
+                  items.map((item, idx) => (
+                    <tr key={idx} className="border-t">
+                      <td className="px-4 py-2">{idx + 1}</td>
+                      <td className="px-4 py-2">{item.itemName}</td>
+                      <td className="px-4 py-2">{item.puw}</td>
+                      <td className="px-4 py-2">{item.unit}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mr-2"
+                          onClick={() => alert('Edit functionality to be implemented')}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                          onClick={() => alert('Delete functionality to be implemented')}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );

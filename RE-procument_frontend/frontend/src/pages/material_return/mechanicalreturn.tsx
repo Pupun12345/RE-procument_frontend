@@ -57,21 +57,28 @@ export default function MechanicalReturnPage() {
 
   const addMaterial = () => {
     setMaterials([...materials, { material: "", quantity: "", unit: "" }]);
-    showMessage("Material row added");
+    showMessage("Item row added");
   };
 
   const removeMaterial = (index: number) => {
     if (materials.length === 1) {
-      showMessage("At least one material is required");
+      showMessage("At least one item is required");
       return;
     }
     setMaterials(materials.filter((_, i) => i !== index));
-    showMessage("Material removed");
+    showMessage("Item removed");
   };
 
   const updateMaterial = (index: number, key: keyof MaterialRow, value: string) => {
     const updated = [...materials];
     updated[index][key] = value;
+
+    // Auto-update unit when item selected in a material row
+    if (key === "material") {
+      const selected = savedItems.find((s) => s.itemName === value);
+      updated[index].unit = selected ? selected.unit : updated[index].unit;
+    }
+
     setMaterials(updated);
   };
 
@@ -95,9 +102,26 @@ export default function MechanicalReturnPage() {
 
   // Removed API calls. You may want to set initial data here if needed.
   useEffect(() => {
-    // fetchSavedItems();
-    // fetchReturns();
+    // load saved records from localStorage
+    try {
+      const raw = localStorage.getItem("mech_returnRecords");
+      if (raw) setReturnRecords(JSON.parse(raw));
+    } catch (e) {
+      console.warn("Failed to load saved return records", e);
+    }
   }, []);
+
+  // refresh records when switching to report tab
+  useEffect(() => {
+    if (activeTab === "report") {
+      try {
+        const raw = localStorage.getItem("mech_returnRecords");
+        if (raw) setReturnRecords(JSON.parse(raw));
+      } catch (e) {
+        console.warn("Failed to load saved return records", e);
+      }
+    }
+  }, [activeTab]);
 
   // ✅ Updated handleChange with auto-calculation
   const handleChange = (field: keyof ReturnItem, value: string | number) => {
@@ -114,15 +138,46 @@ export default function MechanicalReturnPage() {
 
   // Removed API call. Only local state update or validation can be done here.
   const handleSave = () => {
-    if (
-      !formData.itemName ||
-      !formData.location ||
-      formData.issuedQty === "" || Number(formData.issuedQty) === 0
-    ) {
+    const hasValidMaterial = materials.some(
+      (m) => m.material && m.quantity !== "" && Number(m.quantity) > 0
+    );
+
+    // require at least one valid material row
+    if (!formData.location || !hasValidMaterial) {
       showMessage("⚠️ Fill all required fields before saving");
       return;
     }
-    // Here you could update local state or show a message
+    // Build records from valid material rows
+    const newRecords: ReturnRecord[] = [];
+
+    if (hasValidMaterial) {
+      materials.forEach((m) => {
+        if (!m.material || m.quantity === "" || Number(m.quantity) <= 0) return;
+        newRecords.push({
+          _id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          woNumber: formData.woNumber || "",
+          location: formData.location,
+          personName: formData.tslManager || formData.supervisorName || "",
+          returnDate: formData.returnDate || new Date().toISOString(),
+          itemName: m.material,
+          unit: m.unit || formData.unit || "",
+          unitWeight: 0,
+          returnQuantity: Number(m.quantity),
+          returnWeight: 0,
+        });
+      });
+    }
+
+    // top-level fallback removed: only material rows are saved
+
+    const updated = [...returnRecords, ...newRecords];
+    setReturnRecords(updated);
+    try {
+      localStorage.setItem("mech_returnRecords", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed to save return records", e);
+    }
+
     showMessage(editingId ? "✅ Return updated (local only)" : "✅ Return saved (local only)");
     setFormData({
       location: "",
@@ -132,6 +187,7 @@ export default function MechanicalReturnPage() {
       issuedQty: "",
       unit: "",
     });
+    setMaterials([{ material: "", quantity: "", unit: "" }]);
     setEditingId(null);
   };
 
@@ -147,6 +203,8 @@ export default function MechanicalReturnPage() {
       issuedQty: record.returnQuantity,
       unit: record.unit,
     });
+    // populate material table for editing
+    setMaterials([{ material: record.itemName, quantity: String(record.returnQuantity), unit: record.unit }]);
     setEditingId(record._id || null);
     showMessage("✏️ Editing existing record");
   };
@@ -168,7 +226,7 @@ export default function MechanicalReturnPage() {
     return matchesSearch && matchesFromDate && matchesToDate;
   });
 
-  // Removed API call. Only local state update or confirmation can be done here.
+  // Removed API call. Remove record from local state + storage.
   const handleDelete = (record: ReturnRecord) => {
     const formattedDate = record.returnDate
       ? new Date(record.returnDate).toISOString().split("T")[0]
@@ -179,7 +237,33 @@ export default function MechanicalReturnPage() {
     ) {
       return;
     }
-    // Here you could update local state or show a message
+
+    let updated: ReturnRecord[] = [];
+    if (record._id) {
+      updated = returnRecords.filter((r) => r._id !== record._id);
+    } else {
+      const idx = returnRecords.findIndex(
+        (r) =>
+          r.itemName === record.itemName &&
+          r.location === record.location &&
+          r.returnDate === record.returnDate &&
+          r.returnQuantity === record.returnQuantity &&
+          r.personName === record.personName
+      );
+      if (idx !== -1) {
+        updated = [...returnRecords.slice(0, idx), ...returnRecords.slice(idx + 1)];
+      } else {
+        updated = returnRecords;
+      }
+    }
+
+    setReturnRecords(updated);
+    try {
+      localStorage.setItem("mech_returnRecords", JSON.stringify(updated));
+    } catch (e) {
+      console.warn("Failed to save return records", e);
+    }
+
     showMessage("🗑️ Return deleted (local only)");
   };
   const exportCSV = () => {
@@ -343,25 +427,7 @@ export default function MechanicalReturnPage() {
                 value={formData.returnDate}
                 onChange={(e) => handleChange("returnDate", e.target.value)}
               />
-              <input
-                className="sr-input"
-                placeholder="Item Name *"
-                value={formData.itemName}
-                onChange={(e) => handleChange("itemName", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                type="number"
-                placeholder="Return Quantity *"
-                value={formData.issuedQty}
-                onChange={(e) => handleChange("issuedQty", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                placeholder="Unit"
-                value={formData.unit}
-                onChange={(e) => handleChange("unit", e.target.value)}
-              />
+              {/* Item Name moved into the Items table below */}
             </div>
 
             {/* --- Add Material Section --- */}
@@ -374,8 +440,8 @@ export default function MechanicalReturnPage() {
             <div className="sr-material-table">
               <div className="sr-table-head" style={{ display: "grid", gridTemplateColumns: "48px 2fr 1.2fr 1.2fr 100px", alignItems: "center" }}>
                 <div>#</div>
-                <div>Material</div>
-                <div>Quantity</div>
+                <div>Item</div>
+                <div>Return Quantity</div>
                 <div>Unit</div>
                 <div>Action</div>
               </div>
@@ -386,13 +452,13 @@ export default function MechanicalReturnPage() {
                     className="sr-material-input"
                     value={row.material}
                     onChange={e => updateMaterial(idx, "material", e.target.value)}
-                    placeholder="Material Name"
+                    placeholder="Item Name"
                   />
                   <input
                     className="sr-material-input"
                     value={row.quantity}
                     onChange={e => updateMaterial(idx, "quantity", e.target.value)}
-                    placeholder="Quantity"
+                    placeholder="Return Quantity"
                     type="number"
                   />
                   <input
@@ -427,9 +493,14 @@ export default function MechanicalReturnPage() {
             </div>
       
 
-            <button className="sr-btn-save" onClick={handleSave}>
-              💾 {editingId ? "Update Return" : "Save Return"}
-            </button>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
+              <button className="sr-btn-save" onClick={handleSave}>
+                💾 {editingId ? "Update Return" : "Save Return"}
+              </button>
+              <button className="sr-btn-save" onClick={() => navigate(-1)}>
+                Back
+              </button>
+            </div>
           </div>
         )}
 
@@ -522,14 +593,7 @@ export default function MechanicalReturnPage() {
               </table>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-              <button
-                className="sr-btn-back"
-                onClick={() => navigate(-1)}
-              >
-                Back
-              </button>
-            </div>
+            {/* Removed Back button from report section to avoid confusion */}
           </>
         )}
       </div>

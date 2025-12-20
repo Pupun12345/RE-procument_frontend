@@ -33,6 +33,12 @@ interface FormState {
   issueDate: string;
   personName: string;
   location: string;
+  unitWeight?: string;
+  issuedWeight?: string;
+  issuedQuantity?: string;
+  woNumber?: string;
+  supervisorName?: string;
+  tslName?: string;
 }
 
 interface FilterState {
@@ -47,11 +53,13 @@ export default function ScaffholdingIssuePage() {
   const recordsPerPage = 20;
   interface MaterialRow {
     material: string;
-    quantity: string;
     unit: string;
+    unitWeight: string;
+    issuedQuantity: string;
+    issuedWeight: string;
   }
   const [materials, setMaterials] = useState<MaterialRow[]>([
-    { material: '', quantity: '', unit: '' }
+    { material: '', unit: '', unitWeight: '', issuedQuantity: '', issuedWeight: '' }
   ]);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
@@ -63,7 +71,7 @@ export default function ScaffholdingIssuePage() {
   };
 
   const addMaterial = () => {
-    setMaterials([...materials, { material: '', quantity: '', unit: '' }]);
+    setMaterials([...materials, { material: '', unit: '', unitWeight: '', issuedQuantity: '', issuedWeight: '' }]);
     showToast('success', 'Material row added');
   };
 
@@ -79,6 +87,16 @@ export default function ScaffholdingIssuePage() {
   const updateMaterial = (index: number, key: keyof MaterialRow, value: string) => {
     const updated = [...materials];
     updated[index][key] = value;
+    // If unitWeight or issuedQuantity changes, recalculate issuedWeight
+    if (key === 'unitWeight' || key === 'issuedQuantity') {
+      const unitWeightNum = parseFloat(key === 'unitWeight' ? value : updated[index].unitWeight || '0');
+      const issuedQuantityNum = parseFloat(key === 'issuedQuantity' ? value : updated[index].issuedQuantity || '0');
+      let issuedWeight = '';
+      if (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) {
+        issuedWeight = (unitWeightNum * issuedQuantityNum).toString();
+      }
+      updated[index].issuedWeight = issuedWeight;
+    }
     setMaterials(updated);
   };
 
@@ -107,6 +125,12 @@ export default function ScaffholdingIssuePage() {
     issueDate: new Date().toISOString().split("T")[0],
     personName: "",
     location: "",
+    unitWeight: "",
+    issuedWeight: "",
+    issuedQuantity: "",
+    woNumber: "",
+    supervisorName: "",
+    tslName: "",
   });
 
   const [filters, setFilters] = useState<FilterState>({
@@ -130,6 +154,16 @@ export default function ScaffholdingIssuePage() {
         itemName: value,
         unit: selected ? selected.unit : "",
       });
+    } else if (field === "unitWeight" || field === "issuedQuantity") {
+      // Update the field, then recalculate issuedWeight
+      const updatedForm = { ...form, [field]: value };
+      const unitWeightNum = parseFloat(field === "unitWeight" ? value : updatedForm.unitWeight || "0");
+      const issuedQuantityNum = parseFloat(field === "issuedQuantity" ? value : updatedForm.issuedQuantity || "0");
+      let issuedWeight = "";
+      if (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) {
+        issuedWeight = (unitWeightNum * issuedQuantityNum).toString();
+      }
+      setForm({ ...updatedForm, issuedWeight });
     } else {
       setForm({ ...form, [field]: value });
     }
@@ -211,12 +245,11 @@ export default function ScaffholdingIssuePage() {
       startY: 65,
       margin: { top: 60, bottom: 50 },
       head: [[
-        "Item", "Qty", "Unit", "Date", "Person", "Location",
-        "W/O Number", "Supervisor Name", "TSL Name", "Issued Weight", "Issued Quantity"
+        "Item", "Unit", "Date", "Person", "Location",
+        "W/O Number", "Supervisor Name", "TSL Name", "Unit Weight", "Issued Weight", "Issued Quantity"
       ]],
       body: filteredRecords.map((r: any) => [
         r.itemName,
-        r.quantity,
         r.unit,
         r.issueDate,
         r.personName,
@@ -224,6 +257,7 @@ export default function ScaffholdingIssuePage() {
         r.woNumber || '',
         r.supervisorName || '',
         r.tslName || '',
+        r.unitWeight || '',
         r.issuedWeight || '',
         r.issuedQuantity || ''
       ]),
@@ -244,12 +278,11 @@ export default function ScaffholdingIssuePage() {
 
   const exportCSV = (): void => {
     const headers = [
-      "Item", "Quantity", "Unit", "Date", "Person", "Location",
-      "W/O Number", "Supervisor Name", "TSL Name", "Issued Weight", "Issued Quantity"
+      "Item", "Unit", "Date", "Person", "Location",
+      "W/O Number", "Supervisor Name", "TSL Name", "Unit Weight", "Issued Weight", "Issued Quantity"
     ];
     const rows = filteredRecords.map((r: any) => [
       r.itemName,
-      r.quantity,
       r.unit,
       r.issueDate,
       r.personName,
@@ -257,6 +290,7 @@ export default function ScaffholdingIssuePage() {
       r.woNumber || '',
       r.supervisorName || '',
       r.tslName || '',
+      r.unitWeight || '',
       r.issuedWeight || '',
       r.issuedQuantity || ''
     ]);
@@ -326,24 +360,7 @@ export default function ScaffholdingIssuePage() {
                     onChange={(e) => handleChange("tslName", e.target.value)}
                   />
                 </div>
-                <div className="ppe-form-group">
-                  <input
-                    className="ppe-input"
-                    type="text"
-                    placeholder="Issued Weight"
-                    value={form.issuedWeight || ''}
-                    onChange={(e) => handleChange("issuedWeight", e.target.value)}
-                  />
-                </div>
-                <div className="ppe-form-group">
-                  <input
-                    className="ppe-input"
-                    type="text"
-                    placeholder="Issued Quantity"
-                    value={form.issuedQuantity || ''}
-                    onChange={(e) => handleChange("issuedQuantity", e.target.value)}
-                  />
-                </div>
+               
                 <div className="ppe-form-group">
                   <input
                     className="ppe-input"
@@ -370,38 +387,55 @@ export default function ScaffholdingIssuePage() {
                     ＋ Add Material
                   </button>
                 </div>
-                <div className="ppe-material-table">
-                  <div className="ppe-table-head">
-                    <span>#</span>
-                    <span>Material Name</span>
-                    <span>Quantity</span>
-                    <span>Unit</span>
-                    <span>Action</span>
+                <div className="ppe-material-table" style={{ overflowX: 'auto' }}>
+                  <div className="ppe-table-head" style={{ display: 'flex', minWidth: 600, fontWeight: 600 }}>
+                    <span style={{ flex: '0 0 40px' }}>#</span>
+                    <span style={{ flex: '1 0 180px' }}>Material Name</span>
+                    <span style={{ flex: '1 0 110px' }}>Unit Weight</span>
+                    <span style={{ flex: '1 0 120px' }}>Issued Quantity</span>
+                    <span style={{ flex: '1 0 120px' }}>Issued Weight</span>
+                    <span style={{ flex: '1 0 110px' }}>Unit</span>
+                    <span style={{ flex: '0 0 90px' }}>Action</span>
                   </div>
                   {materials.map((row, index) => (
-                    <div className="ppe-table-row" key={index}>
-                      <span>{index + 1}</span>
+                    <div className="ppe-table-row" key={index} style={{ display: 'flex', minWidth: 700 }}>
+                      <span style={{ flex: '0 0 40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{index + 1}</span>
                       <input
                         className="ppe-input"
+                        style={{ flex: '1 0 180px' }}
                         value={row.material}
                         onChange={e => updateMaterial(index, 'material', e.target.value)}
                         placeholder="Material Name"
                       />
                       <input
                         className="ppe-input"
-                        value={row.quantity}
-                        onChange={e => updateMaterial(index, 'quantity', e.target.value)}
-                        placeholder="Quantity"
-                        type="number"
-                        min="1"
+                        style={{ flex: '1 0 110px' }}
+                        value={row.unitWeight}
+                        onChange={e => updateMaterial(index, 'unitWeight', e.target.value)}
+                        placeholder="Unit Weight"
                       />
                       <input
                         className="ppe-input"
+                        style={{ flex: '1 0 120px' }}
+                        value={row.issuedQuantity}
+                        onChange={e => updateMaterial(index, 'issuedQuantity', e.target.value)}
+                        placeholder="Issued Quantity"
+                      />
+                      <input
+                        className="ppe-input"
+                        style={{ flex: '1 0 120px' }}
+                        value={row.issuedWeight}
+                        placeholder="Issued Weight"
+                        readOnly
+                      />
+                      <input
+                        className="ppe-input"
+                        style={{ flex: '1 0 110px' }}
                         value={row.unit}
                         onChange={e => updateMaterial(index, 'unit', e.target.value)}
                         placeholder="Unit"
                       />
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                      <div style={{ flex: '0 0 90px', display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
@@ -432,19 +466,19 @@ export default function ScaffholdingIssuePage() {
                     const newRecords = materials.map((mat) => ({
                       _id: Math.random().toString(36).substr(2, 9),
                       itemName: mat.material,
-                      quantity: Number(mat.quantity),
                       unit: mat.unit,
+                      unitWeight: mat.unitWeight, // <-- ensure unitWeight is included
                       issueDate: form.issueDate,
                       personName: form.personName,
                       location: form.location,
                       woNumber: form.woNumber || '',
                       supervisorName: form.supervisorName || '',
                       tslName: form.tslName || '',
-                      issuedWeight: form.issuedWeight || '',
-                      issuedQuantity: form.issuedQuantity || ''
+                      issuedWeight: mat.issuedWeight || '',
+                      issuedQuantity: mat.issuedQuantity || ''
                     }));
                     setRecords((prev) => [...prev, ...newRecords]);
-                    setMaterials([{ material: '', quantity: '', unit: '' }]);
+                    setMaterials([{ material: '', unit: '', unitWeight: '', issuedQuantity: '', issuedWeight: '' }]);
                     setForm({
                       itemName: '',
                       quantity: '',
@@ -452,11 +486,12 @@ export default function ScaffholdingIssuePage() {
                       issueDate: new Date().toISOString().split('T')[0],
                       personName: '',
                       location: '',
+                      unitWeight: '',
+                      issuedWeight: '',
+                      issuedQuantity: '',
                       woNumber: '',
                       supervisorName: '',
                       tslName: '',
-                      issuedWeight: '',
-                      issuedQuantity: ''
                     });
                     showToast('success', 'Materials submitted!');
                     setActiveTab('report');
@@ -521,7 +556,6 @@ export default function ScaffholdingIssuePage() {
                 <thead>
                   <tr>
                     <th>Item</th>
-                    <th>Qty</th>
                     <th>Unit</th>
                     <th>Date</th>
                     <th>Issued To</th>
@@ -529,6 +563,7 @@ export default function ScaffholdingIssuePage() {
                     <th>W/O Number</th>
                     <th>Supervisor Name</th>
                     <th>TSL Name</th>
+                    <th>Unit Weight</th>
                     <th>Issued Weight</th>
                     <th>Issued Quantity</th>
                     <th>Edit</th>
@@ -540,7 +575,6 @@ export default function ScaffholdingIssuePage() {
                     paginatedRecords.map((r: any) => (
                       <tr key={r._id}>
                         <td>{r.itemName}</td>
-                        <td>{r.quantity}</td>
                         <td>{r.unit}</td>
                         <td>{r.issueDate}</td>
                         <td>{r.personName}</td>
@@ -548,6 +582,7 @@ export default function ScaffholdingIssuePage() {
                         <td>{r.woNumber || ''}</td>
                         <td>{r.supervisorName || ''}</td>
                         <td>{r.tslName || ''}</td>
+                        <td>{r.unitWeight || ''}</td>
                         <td>{r.issuedWeight || ''}</td>
                         <td>{r.issuedQuantity || ''}</td>
                         <td>
