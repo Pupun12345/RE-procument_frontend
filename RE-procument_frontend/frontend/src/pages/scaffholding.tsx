@@ -82,136 +82,114 @@ export default function ScaffoldingRegistration() {
 
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
-      <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-10">
-        <h1 className="text-2xl font-bold mb-6 text-center">Scaffolding Item Registration</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ...existing form fields... */}
-          <div>
-            <label htmlFor="itemName" className="block font-medium mb-1">Item Name</label>
-            <input
-              type="text"
-              id="itemName"
-              name="itemName"
-              placeholder="Enter item name"
-              value={formData.itemName}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="puw" className="block font-medium mb-1">Per Unit Weight (PUW)</label>
-            <input
-              type="text"
-              id="puw"
-              name="puw"
-              placeholder="Enter weight per unit"
-              value={formData.puw}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="unit" className="block font-medium mb-1">Unit</label>
-            <select
-              id="unit"
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select unit</option>
-              <option value="pcs">pcs</option>
-              <option value="pair">pair</option>
-              <option value="mtr">mtr</option>
-              <option value="Others (Custom)">Others (Custom)</option>
-            </select>
-          </div>
-
-          {formData.unit === "Others (Custom)" && (
-            <div>
-              <label htmlFor="customUnit" className="block font-medium mb-1">Custom Unit</label>
+      <div className="scaffholding-container">
+        <div className="scaffholding-content">
+          <h1 className="scaffholding-title">Scaffolding Item Registration</h1>
+          <form onSubmit={handleSubmit} className="scaffholding-form">
+            <div className="scaffholding-field">
+              <label htmlFor="itemName">Item Name</label>
               <input
                 type="text"
-                id="customUnit"
-                name="customUnit"
-                placeholder="Enter your custom unit"
-                value={formData.customUnit}
+                id="itemName"
+                name="itemName"
+                placeholder="Enter item name"
+                value={formData.itemName}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-          )}
-
-          <div className="flex justify-center gap-3 mt-6">
-            <button
-              type="submit"
-              className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white font-medium px-6 py-2 rounded shadow"
-            >
-              Submit
-            </button>
-          </div>
-          <div className="flex justify-center mt-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white font-medium px-6 py-2 rounded shadow"
-            >
-              Back
-            </button>
-          </div>
-        </form>
-
-        {/* --- Materials Section --- */}
-        <div className="mt-10">
-          <h2 className="text-lg font-semibold mb-4">Registered Materials</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left">#</th>
-                  <th className="px-4 py-2 text-left">Item Name</th>
-                  <th className="px-4 py-2 text-left">PUW</th>
-                  <th className="px-4 py-2 text-left">Unit</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
+            <div className="scaffholding-field">
+              <label htmlFor="puw">Per Unit Weight (PUW)</label>
+              <input
+                type="text"
+                id="puw"
+                name="puw"
+                placeholder="Enter weight per unit"
+                value={formData.puw}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="scaffholding-field">
+              <label htmlFor="unit">Unit</label>
+              <select
+                id="unit"
+                name="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select unit</option>
+                <option value="pcs">pcs</option>
+                <option value="pair">pair</option>
+                <option value="mtr">mtr</option>
+                <option value="Others (Custom)">Others (Custom)</option>
+              </select>
+            </div>
+            {formData.unit === "Others (Custom)" && (
+              <div className="scaffholding-field">
+                <label htmlFor="customUnit">Custom Unit</label>
+                <input
+                  type="text"
+                  id="customUnit"
+                  name="customUnit"
+                  placeholder="Enter your custom unit"
+                  value={formData.customUnit}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}
+            <div className="scaffholding-form-actions">
+              <button type="submit" className="scaffholding-btn">Submit</button>
+              <button type="button" className="scaffholding-btn" onClick={() => window.history.back()}>Back</button>
+            </div>
+          </form>
+          <div className="scaffholding-table-section">
+            <h2 className="scaffholding-table-title">Registered Materials</h2>
+            <div className="scaffholding-table-wrapper">
+              <table className="scaffholding-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} className="text-center py-4">No items registered.</td>
+                    <th>#</th>
+                    <th>Item Name</th>
+                    <th>PUW</th>
+                    <th>Unit</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  items.map((item, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-4 py-2">{idx + 1}</td>
-                      <td className="px-4 py-2">{item.itemName}</td>
-                      <td className="px-4 py-2">{item.puw}</td>
-                      <td className="px-4 py-2">{item.unit}</td>
-                      <td className="px-4 py-2">
-                        <button
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mr-2"
-                          onClick={() => alert('Edit functionality to be implemented')}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                          onClick={() => alert('Delete functionality to be implemented')}
-                        >
-                          Delete
-                        </button>
-                      </td>
+                </thead>
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '16px' }}>No items registered.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{idx + 1}</td>
+                        <td>{item.itemName}</td>
+                        <td>{item.puw}</td>
+                        <td>{item.unit}</td>
+                        <td className="scaffholding-actions-cell">
+                          <button
+                            className="scaffholding-edit-btn"
+                            onClick={() => alert('Edit functionality to be implemented')}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="scaffholding-delete-btn"
+                            onClick={() => alert('Delete functionality to be implemented')}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

@@ -64,73 +64,59 @@ export default function PPERegistration() {
 
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
-      <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-10">
-        <h1 className="text-2xl font-bold mb-6 text-center">PPE Registration</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="itemName" className="block font-medium mb-1">Item Name</label>
-            <input
-              type="text"
-              id="itemName"
-              name="itemName"
-              placeholder="Enter item name"
-              value={formData.itemName}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="unit" className="block font-medium mb-1">Unit</label>
-            <select
-              id="unit"
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select a unit</option>
-              <option value="Pieces">Pieces</option>
-              <option value="Pairs">Pairs</option>
-              <option value="Kg">Kg</option>
-              <option value="Liters">Liters</option>
-              <option value="Others (Custom)">Others (Custom)</option>
-            </select>
-          </div>
-          {formData.unit === "Others (Custom)" && (
-            <div>
-              <label htmlFor="customUnit" className="block font-medium mb-1">Custom Unit</label>
+      <div className="ppe-container">
+        <div className="ppe-content">
+          <h1 className="ppe-title">PPE Registration</h1>
+          <form onSubmit={handleSubmit} className="ppe-form">
+            <div className="ppe-field">
+              <label htmlFor="itemName">Item Name</label>
               <input
                 type="text"
-                id="customUnit"
-                name="customUnit"
-                placeholder="Enter your custom unit"
-                value={formData.customUnit}
+                id="itemName"
+                name="itemName"
+                placeholder="Enter item name"
+                value={formData.itemName}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-          )}
-          <div className="flex justify-center gap-3 mt-6">
-            <button
-              type="submit"
-              className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white font-medium px-6 py-2 rounded shadow"
-            >
-              Submit
-            </button>
-          </div>
-          <div className="flex justify-center mt-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white font-medium px-6 py-2 rounded shadow"
-            >
-              Back
-            </button>
-          </div>
-        </form>
+            <div className="ppe-field">
+              <label htmlFor="unit">Unit</label>
+              <select
+                id="unit"
+                name="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a unit</option>
+                <option value="Pieces">Pieces</option>
+                <option value="Pairs">Pairs</option>
+                <option value="Kg">Kg</option>
+                <option value="Liters">Liters</option>
+                <option value="Others (Custom)">Others (Custom)</option>
+              </select>
+            </div>
+            {formData.unit === "Others (Custom)" && (
+              <div className="ppe-field">
+                <label htmlFor="customUnit">Custom Unit</label>
+                <input
+                  type="text"
+                  id="customUnit"
+                  name="customUnit"
+                  placeholder="Enter your custom unit"
+                  value={formData.customUnit}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}
+            <div className="ppe-form-actions">
+              <button type="submit" className="ppe-btn">Submit</button>
+              <button type="button" className="ppe-btn" onClick={() => window.history.back()}>Back</button>
+            </div>
+          </form>
+        </div>
       </div>
     </ProtectedRoute>
   );

@@ -219,96 +219,84 @@ export function VendorGateway() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-indigo-100 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="gateway-container">
+      <div className="gateway-content">
         {/* Header */}
-        <h1 className="text-5xl text-center mb-12 text-black">
-          VENDOR GATEWAY
-        </h1>
+        <div className="gateway-header">
+          <h1 className="gateway-title">VENDOR GATEWAY</h1>
+        </div>
 
         {/* Search and Actions Bar */}
-        <div className="flex items-center gap-4 mb-8">
-          {/* Search Bar */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="gateway-actions-bar">
+          <div className="gateway-search-wrapper">
+            <span className="gateway-search-icon"><Search /></span>
             <input
               type="text"
               placeholder="Search by party name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 bg-white border border-gray-300 rounded-md text-gray-900 placeholder:text-gray-400 h-12 shadow-sm px-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="gateway-search-input"
             />
           </div>
-
-          {/* Action Buttons */}
           <button
             onClick={handleVendorRegistration}
-            className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white h-12 px-6 shadow-md rounded-md transition-colors font-medium"
+            className="gateway-action-btn"
           >
             Vendor Registration
           </button>
-
           <button
             onClick={handleDownloadCSV}
-            className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white h-12 px-6 shadow-md rounded-md transition-colors font-medium flex items-center"
+            className="gateway-action-btn"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <span className="gateway-action-icon"><Download /></span>
             Download CSV
           </button>
-
           <button
             onClick={handleFilter}
-            className="bg-[#6b6ef9] hover:bg-[#5759d6] text-white h-12 px-6 shadow-md rounded-md transition-colors font-medium flex items-center"
+            className="gateway-action-btn"
           >
-            <Filter className="w-4 h-4 mr-2" />
+            <span className="gateway-action-icon"><Filter /></span>
             Filter
           </button>
         </div>
 
         {/* Party List Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-lg">
-          <h2 className="text-black mb-4">
-            PARTY LIST
-          </h2>
-          
+        <div className="gateway-list-section">
+          <h2 className="gateway-list-title">PARTY LIST</h2>
           {filteredParties.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="gateway-table-wrapper">
+              <table>
                 <thead>
-                  <tr className="border-b-2 border-gray-300">
-                    <th className="text-left p-3 text-gray-900">Party Name</th>
-                    <th className="text-left p-3 text-gray-900">Address</th>
-                    <th className="text-left p-3 text-gray-900">GST</th>
-                    <th className="text-left p-3 text-gray-900">Contact</th>
-                    <th className="text-left p-3 text-gray-900">Published Date</th>
-                    <th className="text-left p-3 text-gray-900">Actions</th>
+                  <tr>
+                    <th>Party Name</th>
+                    <th>Address</th>
+                    <th>GST</th>
+                    <th>Contact</th>
+                    <th>Published Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredParties.map((party) => (
-                    <tr key={party.id} className="border-b border-gray-200 hover:bg-blue-50 transition-colors">
-                      <td className="p-3 text-gray-800">{party.name}</td>
-                      <td className="p-3 text-gray-800">{party.address}</td>
-                      <td className="p-3 text-gray-800">{party.gst}</td>
-                      <td className="p-3 text-gray-800">{party.contact}</td>
-                      <td className="p-3 text-gray-800">{party.publishedDate}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(party)}
-                            className="p-2 text-[#6b6ef9] hover:bg-blue-100 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(party.id)}
-                            className="p-2 text-red-600 hover:bg-blue-100 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                    <tr key={party.id}>
+                      <td>{party.name}</td>
+                      <td>{party.address}</td>
+                      <td>{party.gst}</td>
+                      <td>{party.contact}</td>
+                      <td>{party.publishedDate}</td>
+                      <td className="gateway-actions-cell">
+                        <button
+                          onClick={() => handleEdit(party)}
+                          title="Edit"
+                        >
+                          <Edit />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(party.id)}
+                          title="Delete"
+                        >
+                          <Trash2 />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -316,93 +304,61 @@ export function VendorGateway() {
               </table>
             </div>
           ) : (
-            <p className="text-gray-500">No vendors found</p>
+            <p className="gateway-empty">No vendors found</p>
           )}
         </div>
 
         {/* Edit Modal */}
         {editingParty && (
           <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="gateway-modal-overlay"
             onClick={() => setEditingParty(null)}
           >
             <div
-              className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl"
+              className="gateway-modal-content"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl text-gray-900">Edit Vendor Details</h3>
-                <button
-                  onClick={() => setEditingParty(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <span className="gateway-modal-title">Edit Vendor Details</span>
+                <button onClick={() => setEditingParty(null)}>
+                  <X />
                 </button>
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">Party Name</label>
-                  <input
-                    type="text"
-                    value={editingParty.name}
-                    onChange={(e) =>
-                      setEditingParty({ ...editingParty, name: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">Address</label>
-                  <input
-                    type="text"
-                    value={editingParty.address}
-                    onChange={(e) =>
-                      setEditingParty({ ...editingParty, address: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">GST</label>
-                  <input
-                    type="text"
-                    value={editingParty.gst}
-                    onChange={(e) =>
-                      setEditingParty({ ...editingParty, gst: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">Contact</label>
-                  <input
-                    type="text"
-                    value={editingParty.contact}
-                    onChange={(e) =>
-                      setEditingParty({ ...editingParty, contact: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
+              <div>
+                <label>Party Name</label>
+                <input
+                  type="text"
+                  value={editingParty.name}
+                  onChange={(e) => setEditingParty({ ...editingParty, name: e.target.value })}
+                />
               </div>
-              
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white rounded-md py-2 font-medium transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditingParty(null)}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md py-2 font-medium transition-colors"
-                >
-                  Cancel
-                </button>
+              <div>
+                <label>Address</label>
+                <input
+                  type="text"
+                  value={editingParty.address}
+                  onChange={(e) => setEditingParty({ ...editingParty, address: e.target.value })}
+                />
+              </div>
+              <div>
+                <label>GST</label>
+                <input
+                  type="text"
+                  value={editingParty.gst}
+                  onChange={(e) => setEditingParty({ ...editingParty, gst: e.target.value })}
+                />
+              </div>
+              <div>
+                <label>Contact</label>
+                <input
+                  type="text"
+                  value={editingParty.contact}
+                  onChange={(e) => setEditingParty({ ...editingParty, contact: e.target.value })}
+                />
+              </div>
+              <div className="gateway-modal-actions">
+                <button className="gateway-modal-btn save" onClick={handleSaveEdit}>Save</button>
+                <button className="gateway-modal-btn cancel" onClick={() => setEditingParty(null)}>Cancel</button>
               </div>
             </div>
           </div>
@@ -411,110 +367,74 @@ export function VendorGateway() {
         {/* Filter Modal */}
         {showFilter && (
           <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="gateway-modal-overlay"
             onClick={() => setShowFilter(false)}
           >
             <div
-              className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
+              className="gateway-modal-content"
+              style={{ maxHeight: '90vh', overflowY: 'auto' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl text-gray-900">Advanced Filters</h3>
-                <button
-                  onClick={() => setShowFilter(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <span className="gateway-modal-title">Advanced Filters</span>
+                <button onClick={() => setShowFilter(false)}>
+                  <X />
                 </button>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">Filter by GST</label>
-                  <input
-                    type="text"
-                    placeholder="Enter GST number..."
-                    value={gstFilter}
-                    onChange={(e) => setGstFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+              <div>
+                <label>Filter by GST</label>
+                <input
+                  type="text"
+                  placeholder="Enter GST number..."
+                  value={gstFilter}
+                  onChange={(e) => setGstFilter(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Filter by Contact</label>
+                <input
+                  type="text"
+                  placeholder="Enter contact number..."
+                  value={contactFilter}
+                  onChange={(e) => setContactFilter(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Filter by Published Date</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <button type="button" onClick={() => handlePreset(0)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>Today</button>
+                  <button type="button" onClick={() => handlePreset(7)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>Last 7 Days</button>
+                  <button type="button" onClick={() => handlePreset(30)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>This Month</button>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-gray-700 mb-1">Filter by Contact</label>
-                  <input
-                    type="text"
-                    placeholder="Enter contact number..."
-                    value={contactFilter}
-                    onChange={(e) => setContactFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">Filter by Published Date</label>
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => handlePreset(0)}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-gray-700"
-                    >
-                      Today
-                    </button>
-                    <button
-                      onClick={() => handlePreset(7)}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-gray-700"
-                    >
-                      Last 7 Days
-                    </button>
-                    <button
-                      onClick={() => handlePreset(30)}
-                      className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm text-gray-700"
-                    >
-                      This Month
-                    </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      placeholderText="Start Date"
+                      className="gateway-search-input"
+                    />
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <DatePicker
-                        selected={startDate}
-                        onChange={(date) => setStartDate(date)}
-                        selectsStart
-                        startDate={startDate}
-                        endDate={endDate}
-                        placeholderText="Start Date"
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <DatePicker
-                        selected={endDate}
-                        onChange={(date) => setEndDate(date)}
-                        selectsEnd
-                        startDate={startDate}
-                        endDate={endDate}
-                        minDate={startDate || undefined}
-                        placeholderText="End Date"
-                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                      />
-                    </div>
+                  <div style={{ flex: 1 }}>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate || undefined}
+                      placeholderText="End Date"
+                      className="gateway-search-input"
+                    />
                   </div>
                 </div>
               </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleSubmitFilter}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white rounded-md py-2 font-medium transition-colors"
-                >
-                  Apply Filter
-                </button>
-                <button
-                  onClick={handleClearFilters}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md py-2 font-medium transition-colors"
-                >
-                  Clear
-                </button>
+              <div className="gateway-modal-actions">
+                <button className="gateway-modal-btn save" onClick={handleSubmitFilter}>Apply Filter</button>
+                <button className="gateway-modal-btn cancel" onClick={handleClearFilters}>Clear</button>
               </div>
             </div>
           </div>

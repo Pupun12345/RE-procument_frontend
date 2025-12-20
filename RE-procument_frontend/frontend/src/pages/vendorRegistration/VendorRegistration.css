@@ -1,4 +1,158 @@
-@tailwind base;
+/* Pure CSS for Vendor Registration, modeled after EmployeeRegistration */
+
+.vendor-reg-container {
+  min-height: 100vh;
+  background: #F8F9FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.vendor-reg-content {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 32px 32px 32px;
+  position: relative;
+}
+
+.vendor-reg-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.vendor-reg-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2937;
+  text-align: center;
+  margin-right: 36px; /* Increased gap to edit icon */
+}
+
+.vendor-reg-gateway-btn {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.vendor-reg-gateway-btn:hover {
+  color: #6366F1;
+}
+.vendor-reg-gateway-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.vendor-reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.vendor-reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vendor-reg-field label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1F2937;
+}
+.vendor-reg-required {
+  color: #EF4444;
+  margin-left: 2px;
+}
+.vendor-reg-field input,
+.vendor-reg-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.vendor-reg-field input:focus,
+.vendor-reg-field textarea:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+.vendor-reg-field input::placeholder,
+.vendor-reg-field textarea::placeholder {
+  color: #9CA3AF;
+}
+.vendor-reg-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.vendor-reg-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+.vendor-reg-back-btn,
+.vendor-reg-save-btn {
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.vendor-reg-back-btn {
+  background: #6366F1;
+  color: #fff;
+}
+.vendor-reg-back-btn:hover {
+  background: #4F46E5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99,102,241,0.18);
+}
+.vendor-reg-save-btn {
+  background: #6366F1;
+  color: #fff;
+}
+.vendor-reg-save-btn:hover {
+  background: #4F46E5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99,102,241,0.18);
+}
+
+@media (max-width: 600px) {
+  .vendor-reg-content {
+    padding: 20px 8px 16px 8px;
+  }
+  .vendor-reg-title {
+    font-size: 1.3rem;
+  }
+  .vendor-reg-buttons {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .vendor-reg-back-btn,
+  .vendor-reg-save-btn {
+    width: 100%;
+  }
+}@tailwind base;
 @tailwind components;
 @tailwind utilities;
 

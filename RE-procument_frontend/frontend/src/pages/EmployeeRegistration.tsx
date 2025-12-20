@@ -1,101 +1,61 @@
-import React, { useState } from "react";
-import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import "./employee-form.css";
-import "./employee-registration.css";
+import { useState } from 'react';
+import { toast } from 'react-hot-toast';
+import './employee-registration.css';
 
-/* ================= TYPES ================= */
-
-interface EmployeeForm {
-  name: string;
-  email: string;
-  designation: string;
-  dateOfJoining: string;
-  mobileNumber: string;
-  alternateMobileNumber: string;
-  aadharCard: string;
-  panCard: string;
+interface EmployeeFormData {
+  employeeName: string;
   employeeCode: string;
-  fatherName: string;
-  fatherMobileNumber: string;
+  designation: string;
+  emailId: string;
+  mobileNumber: string;
+  panCardNumber: string;
+  aadharCardNumber: string;
   safetyPassNumber: string;
-  ifscCode: string;
-  accountNumber: string;
+  emergencyContactNumber: string;
+  dateOfJoining: string;
+  dateOfBirth: string;
+  fatherName: string;
+  fatherContactNumber: string;
+  bankName: string;
+  bankAccountNumber: string;
+  bankIfscCode: string;
   address: string;
+  employeePhoto: File | null;
 }
-
-/* ================= FIELD ================= */
-
-interface FieldProps {
-  label: string;
-  name: keyof EmployeeForm;
-  value: string;
-  onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void;
-  placeholder?: string;
-  required?: boolean;
-  type?: string;
-}
-
-function Field({
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  required,
-  type = "text",
-}: FieldProps) {
-  return (
-    <div className="erp-field">
-      <label>
-        {label} {required && <span>*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-      />
-    </div>
-  );
-}
-
-/* ================= MAIN ================= */
 
 export default function EmployeeRegistration() {
-  const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EmployeeFormData>({
     employeeName: '',
-    employeeId: '',
-    emailId: '',
     employeeCode: '',
-    panNo: '',
-    aadharNo: '',
-    safetyPassNo: '',
-    contactNumber: '',
-    address: '',
+    designation: '',
+    emailId: '',
+    mobileNumber: '',
+    panCardNumber: '',
+    aadharCardNumber: '',
+    safetyPassNumber: '',
+    emergencyContactNumber: '',
     dateOfJoining: '',
     dateOfBirth: '',
-    bankAccountNumber: '',
-    bankName: '',
-    ifscCode: '',
-    designation: '',
-    emergencyContact: '',
     fatherName: '',
-    fatherContact: ''
+    fatherContactNumber: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankIfscCode: '',
+    address: '',
+    employeePhoto: null
   });
 
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleInputChange = (field: keyof EmployeeFormData, value: string) => {
+    setFormData({ ...formData, [field]: value });
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setFormData({ ...formData, employeePhoto: file });
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
@@ -104,437 +64,309 @@ export default function EmployeeRegistration() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Show confirmation dialog instead of submitting directly
-    setShowConfirmDialog(true);
+  const handleSaveEmployee = () => {
+    const { employeeName, employeeCode, emailId, mobileNumber, dateOfJoining, address } = formData;
+    if (!employeeName || !employeeCode || !emailId || !mobileNumber || !dateOfJoining || !address) {
+      toast.error('⚠️ Please fill all required fields.');
+      return;
+    }
+    setShowConfirm(true);
   };
 
-  const handleConfirmRegistration = () => {
-    console.log('Form submitted:', formData);
-    toast.success(`Employee registered successfully! ${formData.employeeName} has been added to the system.`, {
-      duration: 4000,
+  const handleConfirmSave = () => {
+    setShowConfirm(false);
+    console.log('Saving employee:', formData);
+    toast.success('✅ Employee registered successfully!');
+    setFormData({
+      employeeName: '',
+      employeeCode: '',
+      designation: '',
+      emailId: '',
+      mobileNumber: '',
+      panCardNumber: '',
+      aadharCardNumber: '',
+      safetyPassNumber: '',
+      emergencyContactNumber: '',
+      dateOfJoining: '',
+      dateOfBirth: '',
+      fatherName: '',
+      fatherContactNumber: '',
+      bankName: '',
+      bankAccountNumber: '',
+      bankIfscCode: '',
+      address: '',
+      employeePhoto: null
     });
-    setShowConfirmDialog(false);
-    // Navigate to dashboard after successful registration
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
+    setPhotoPreview('');
   };
 
-  const handleCancelConfirmation = () => {
-    setShowConfirmDialog(false);
+  const handleCancelConfirm = () => {
+    setShowConfirm(false);
   };
 
-  const handleCancel = () => {
-    // Go back to previous page using React Router
-    navigate(-1);
-  };
-
-  const handleDashboardClick = () => {
-    // Navigate to dashboard using React Router
-    navigate('/dashboard');
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-    // Dispatch event to notify DashboardLayout
-    window.dispatchEvent(new CustomEvent('toggleSidebar'));
+  const handleBack = () => {
+    console.log('Going back');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6" style={{ background: 'linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%)' }}>
-      <div className="bg-white rounded-lg shadow-lg w-full p-4 sm:p-6 md:p-8 relative" style={{ flexBasis: '80%', maxWidth: '95%' }}>
-        {/* Heading Section */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-gray-800 text-center text-xl sm:text-2xl md:text-3xl font-bold">Employee Registration Form</h1>
-        </div>
+    <div className="employee-reg-container">
+      <div className="employee-reg-content">
+        <h1 className="employee-reg-title">Employee Registration Form</h1>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-            {/* Employee Name */}
-            <div className="space-y-2">
-              <label htmlFor="employeeName" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Employee Name <span className="text-red-500">*</span>
-              </label>
+        <div className="employee-reg-form">
+          {/* Left Column */}
+          <div className="employee-reg-left-column">
+            <div className="employee-reg-field">
+              <label>Employee Name <span className="required" style={{ color: 'red' }}>*</span></label>
               <input
-                id="employeeName"
                 type="text"
                 placeholder="Enter employee name"
                 value={formData.employeeName}
-                onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
-                required
-                className="employee-form-input"
+                onChange={(e) => handleInputChange('employeeName', e.target.value)}
               />
             </div>
 
-            {/* Photo Upload Section - Top Right */}
-            <div className="row-span-2 space-y-2 flex flex-col items-center justify-center">
-              <label className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70 self-center">Employee Photo</label>
-              <div className="relative employee-photo-upload">
+            <div className="employee-reg-field">
+              <label>Employee Code <span className="required" style={{ color: 'red' }}>*</span></label>
+              <input
+                type="text"
+                placeholder="Enter employee code"
+                value={formData.employeeCode}
+                onChange={(e) => handleInputChange('employeeCode', e.target.value)}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Designation</label>
+              <select
+                value={formData.designation}
+                onChange={(e) => handleInputChange('designation', e.target.value)}
+              >
+                <option value="">Select designation</option>
+                <option value="Manager">Manager</option>
+                <option value="Engineer">Engineer</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Technician">Technician</option>
+                <option value="Operator">Operator</option>
+              </select>
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Mobile Number <span className="required" style={{ color: 'red' }}>*</span></label>
+              <input
+                type="tel"
+                placeholder="Enter 10 digit mobile number"
+                value={formData.mobileNumber}
+                onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
+                maxLength={10}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Aadhar Card Number</label>
+              <input
+                type="text"
+                placeholder="Enter 12 digit Aadhar number"
+                value={formData.aadharCardNumber}
+                onChange={(e) => handleInputChange('aadharCardNumber', e.target.value)}
+                maxLength={12}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Emergency Contact Number</label>
+              <input
+                type="tel"
+                placeholder="Enter 10 digit emergency contact"
+                value={formData.emergencyContactNumber}
+                onChange={(e) => handleInputChange('emergencyContactNumber', e.target.value)}
+                maxLength={10}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Date of Birth</label>
+              <input
+                type="date"
+                placeholder="mm/dd/yyyy"
+                value={formData.dateOfBirth}
+                onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Father's Contact Number</label>
+              <input
+                type="tel"
+                placeholder="Enter 10 digit father's contact"
+                value={formData.fatherContactNumber}
+                onChange={(e) => handleInputChange('fatherContactNumber', e.target.value)}
+                maxLength={10}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Bank A/C Number</label>
+              <input
+                type="text"
+                placeholder="Enter bank account number"
+                value={formData.bankAccountNumber}
+                onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
+              />
+            </div>
+
+            <div className="employee-reg-field employee-reg-address">
+              <label>Address <span className="required" style={{ color: 'red' }}>*</span></label>
+              <textarea
+                placeholder="Enter complete address"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="employee-reg-right-column">
+            <div className="employee-reg-photo-section">
+              <label>Employee Photo</label>
+              <div className="employee-reg-photo-upload">
                 {photoPreview ? (
-                  <img
-                    src={photoPreview}
-                    alt="Employee"
-                    className="w-32 h-32 object-cover rounded border-2 border-gray-300"
-                  />
+                  <img src={photoPreview} alt="Employee" className="employee-reg-photo-preview" />
                 ) : (
-                  <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center bg-gray-50">
-                    <span className="text-gray-400 text-2xl">📷</span>
+                  <div className="employee-reg-photo-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
                   </div>
                 )}
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  id="photo-upload"
+                  className="employee-reg-photo-input"
                 />
+                <label htmlFor="photo-upload" className="employee-reg-photo-label">
+                  Click to upload photo
+                </label>
               </div>
-              <p className="text-xs text-gray-500 text-center">Click to upload photo</p>
             </div>
 
-            {/* Employee Code */}
-            <div className="space-y-2">
-              <label htmlFor="employeeCode" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Employee Code <span className="text-red-500">*</span>
-              </label>
+            <div className="employee-reg-field">
+              <label>Email ID <span className="required" style={{ color: 'red' }}>*</span></label>
               <input
-                id="employeeCode"
-                type="text"
-                placeholder="Enter employee code"
-                value={formData.employeeCode}
-                onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
-                required
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* Designation */}
-            <div className="space-y-2">
-              <label htmlFor="designation" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Designation
-              </label>
-              <select
-                id="designation"
-                value={formData.designation}
-                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                className="employee-form-select"
-              >
-                <option value="">Select designation</option>
-                <option value="management">Management</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="in-charge">In-charge</option>
-                <option value="hr">HR</option>
-                <option value="it">IT</option>
-                <option value="workers">Workers</option>
-              </select>
-            </div>
-
-            {/* Email ID */}
-            <div className="space-y-2">
-              <label htmlFor="emailId" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Email ID <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="emailId"
                 type="email"
                 placeholder="Enter email address"
                 value={formData.emailId}
-                onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-                required
-                className="employee-form-input"
+                onChange={(e) => handleInputChange('emailId', e.target.value)}
               />
             </div>
 
-            {/* Mobile Number */}
-            <div className="space-y-2">
-              <label htmlFor="contactNumber" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Mobile Number <span className="text-red-500">*</span>
-              </label>
+            <div className="employee-reg-field">
+              <label>PAN Card Number</label>
               <input
-                id="contactNumber"
-                type="tel"
-                placeholder="Enter 10 digit mobile number"
-                value={formData.contactNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-                  setFormData({ ...formData, contactNumber: value });
-                }}
-                maxLength={10}
-                pattern="[0-9]{10}"
-                required
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* PAN Card Number */}
-            <div className="space-y-2">
-              <label htmlFor="panNo" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                PAN Card Number
-              </label>
-              <input
-                id="panNo"
                 type="text"
                 placeholder="Enter PAN number (e.g., ABCDE1234F)"
-                value={formData.panNo}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
-                  setFormData({ ...formData, panNo: value });
-                }}
+                value={formData.panCardNumber}
+                onChange={(e) => handleInputChange('panCardNumber', e.target.value)}
                 maxLength={10}
-                pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
-                className="employee-form-input"
               />
             </div>
 
-            {/* Aadhar Card Number */}
-            <div className="space-y-2">
-              <label htmlFor="aadharNo" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Aadhar Card Number
-              </label>
+            <div className="employee-reg-field">
+              <label>Safety Pass Number</label>
               <input
-                id="aadharNo"
-                type="tel"
-                placeholder="Enter 12 digit Aadhar number"
-                value={formData.aadharNo}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
-                  setFormData({ ...formData, aadharNo: value });
-                }}
-                maxLength={12}
-                pattern="[0-9]{12}"
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* Safety Pass Number */}
-            <div className="space-y-2">
-              <label htmlFor="safetyPassNo" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Safety Pass Number
-              </label>
-              <input
-                id="safetyPassNo"
                 type="text"
                 placeholder="Enter safety pass number"
-                value={formData.safetyPassNo}
-                onChange={(e) => {
-                  const value = e.target.value.toUpperCase().slice(0, 20);
-                  setFormData({ ...formData, safetyPassNo: value });
-                }}
-                maxLength={20}
-                className="employee-form-input"
+                value={formData.safetyPassNumber}
+                onChange={(e) => handleInputChange('safetyPassNumber', e.target.value)}
               />
             </div>
 
-            {/* Emergency Contact Number */}
-            <div className="space-y-2">
-              <label htmlFor="emergencyContact" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Emergency Contact Number
-              </label>
+            <div className="employee-reg-field">
+              <label>Date of Joining <span className="required" style={{ color: 'red' }}>*</span></label>
               <input
-                id="emergencyContact"
-                type="tel"
-                placeholder="Enter 10 digit emergency contact"
-                value={formData.emergencyContact}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-                  setFormData({ ...formData, emergencyContact: value });
-                }}
-                maxLength={10}
-                pattern="[0-9]{10}"
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* Date of Joining */}
-            <div className="space-y-2">
-              <label htmlFor="dateOfJoining" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Date of Joining <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="dateOfJoining"
                 type="date"
+                placeholder="mm/dd/yyyy"
                 value={formData.dateOfJoining}
-                onChange={(e) => setFormData({ ...formData, dateOfJoining: e.target.value })}
-                required
-                className="employee-form-input"
-              />
-            </div>
-            {/* Date of Birth */}
-            <div className="space-y-2">
-              <label htmlFor="dateOfBirth" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Date of Birth
-              </label>
-              <input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                className="employee-form-input"
+                onChange={(e) => handleInputChange('dateOfJoining', e.target.value)}
               />
             </div>
 
-            {/* Father's Name */}
-            <div className="space-y-2">
-              <label htmlFor="fatherName" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Father's Name
-              </label>
+            <div className="employee-reg-field">
+              <label>Father's Name</label>
               <input
-                id="fatherName"
                 type="text"
                 placeholder="Enter father's name"
                 value={formData.fatherName}
-                onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                className="employee-form-input"
+                onChange={(e) => handleInputChange('fatherName', e.target.value)}
               />
             </div>
 
-            {/* Father's Contact Number */}
-            <div className="space-y-2">
-              <label htmlFor="fatherContact" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Father's Contact Number
-              </label>
+            <div className="employee-reg-field">
+              <label>Bank Name</label>
               <input
-                id="fatherContact"
-                type="tel"
-                placeholder="Enter 10 digit father's contact"
-                value={formData.fatherContact}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-                  setFormData({ ...formData, fatherContact: value });
-                }}
-                maxLength={10}
-                pattern="[0-9]{10}"
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* Bank Name */}
-            <div className="space-y-2">
-              <label htmlFor="bankName" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Bank Name
-              </label>
-              <input
-                id="bankName"
                 type="text"
                 placeholder="Enter bank name"
                 value={formData.bankName}
-                onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                className="employee-form-input"
+                onChange={(e) => handleInputChange('bankName', e.target.value)}
               />
             </div>
 
-            {/* Bank Account Number */}
-            <div className="space-y-2">
-              <label htmlFor="bankAccountNumber" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Bank A/C Number
-              </label>
+            <div className="employee-reg-field">
+              <label>Bank IFSC Code</label>
               <input
-                id="bankAccountNumber"
-                type="tel"
-                placeholder="Enter bank account number"
-                value={formData.bankAccountNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 18);
-                  setFormData({ ...formData, bankAccountNumber: value });
-                }}
-                maxLength={18}
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* IFSC Code */}
-            <div className="space-y-2">
-              <label htmlFor="ifscCode" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Bank IFSC Code
-              </label>
-              <input
-                id="ifscCode"
                 type="text"
                 placeholder="Enter IFSC code"
-                value={formData.ifscCode}
-                onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value })}
-                className="employee-form-input"
-              />
-            </div>
-
-            {/* Address - Full Width */}
-            <div className="col-span-2 space-y-2">
-              <label htmlFor="address" className="employee-form-label peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Address <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                id="address"
-                placeholder="Enter complete address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                required
-                rows={4}
-                className="employee-form-textarea"
+                value={formData.bankIfscCode}
+                onChange={(e) => handleInputChange('bankIfscCode', e.target.value)}
+                maxLength={11}
               />
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-8">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border bg-[#6b6ef9] text-white hover:bg-[#5759d6] hover:border-[#5759d6]"
-            >
-              <span>←</span>
-              Back
-            </button>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-[#6b6ef9] hover:bg-[#5759d6] text-white"
-            >
-              💾 Save Employee
-            </button>
-          </div>
-        </form>
+        {/* Action Buttons */}
+        <div className="employee-reg-buttons">
+          <button className="employee-reg-back-btn" onClick={handleBack} type="button">
+            Back
+          </button>
+          <button className="employee-reg-save-btn" onClick={handleSaveEmployee} type="button">
+            Save Employee
+          </button>
+        </div>
       </div>
 
       {/* Confirmation Dialog */}
-      {showConfirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={handleCancelConfirmation}
-          />
-          
-          {/* Dialog */}
-          <div className="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 z-10">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                <span className="text-2xl">💾</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Confirm Registration
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                Are you sure you want to register <strong>{formData.employeeName || 'this employee'}</strong>? 
-                This action will save all the employee details to the system.
-              </p>
-            </div>
-            
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={handleCancelConfirmation}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border bg-background text-foreground hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmRegistration}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                💾 Confirm & Save
-              </button>
+      {showConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 8,
+            padding: 32,
+            minWidth: 320,
+            boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
+            textAlign: 'center'
+          }}>
+            <h2 style={{marginBottom: 16}}>Confirm Registration</h2>
+            <p style={{marginBottom: 24}}>Are you sure you want to register <b>{formData.employeeName || 'this employee'}</b>?</p>
+            <div style={{display: 'flex', justifyContent: 'center', gap: 16}}>
+              <button onClick={handleCancelConfirm} style={{padding: '8px 20px', borderRadius: 4, border: '1px solid #ccc', background: '#f3f4f6', color: '#374151', fontWeight: 500, cursor: 'pointer'}}>Cancel</button>
+              <button onClick={handleConfirmSave} style={{padding: '8px 20px', borderRadius: 4, border: 'none', background: '#6366F1', color: 'white', fontWeight: 600, cursor: 'pointer'}}>Confirm & Save</button>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
@@ -68,111 +69,104 @@ export default function VendorForm() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="min-h-screen w-full flex items-center justify-center p-6" style={{ background: 'linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%)' }}>
-        <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-8 relative">
-        {/* Header */}
-        <div className="flex items-center justify-center mb-8 relative">
-          <h1 className="text-gray-800">Vendor Registration</h1>
-          <button
-            type="button"
-            onClick={handleEditClick}
-            className="absolute right-0 text-gray-400 hover:text-blue-500 transition-colors p-1"
-            title="Go to Vendor Gateway"
-          >
-            <FaEdit className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Party Name */}
-          <div className="space-y-2">
-            <label htmlFor="partyName" className="block text-sm font-medium text-gray-700">
-              Party Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="partyName"
-              type="text"
-              placeholder="Enter party name"
-              value={formData.partyName}
-              onChange={(e) => setFormData({ ...formData, partyName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Address */}
-          <div className="space-y-2">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-              Address <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="address"
-              placeholder="Enter full address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              rows={4}
-            />
-          </div>
-
-          {/* GST Number */}
-          <div className="space-y-2">
-            <label htmlFor="gstNumber" className="block text-sm font-medium text-gray-700">
-              GST Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="gstNumber"
-              type="text"
-              placeholder="Enter your 15 character GST number"
-              value={formData.gstNumber}
-              onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={15}
-              required
-            />
-          </div>
-
-          {/* Contact Number */}
-          <div className="space-y-2">
-            <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">
-              Contact Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="contactNumber"
-              type="tel"
-              placeholder="Enter your 10 digit contact number"
-              value={formData.contactNumber}
-              onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={10}
-              required
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between gap-4 mt-8">
+      <div className="vendor-reg-container">
+        <div className="vendor-reg-content">
+          {/* Header */}
+          <div className="vendor-reg-header">
+            <h1 className="vendor-reg-title">Vendor Registration</h1>
             <button
               type="button"
-              onClick={handleBackClick}
-              className="px-6 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-colors h-10"
+              onClick={handleEditClick}
+              className="vendor-reg-gateway-btn"
+              title="Go to Vendor Gateway"
             >
-              Back
-            </button>
-            <button
-              type="submit"
-              className="flex-1 h-10 px-6 py-2 rounded-md text-white font-medium transition-colors"
-              style={{ backgroundColor: '#9333ea' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#7e22ce'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#9333ea'}
-            >
-              Submit
+              <FaEdit className="vendor-reg-gateway-icon" />
             </button>
           </div>
-        </form>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="vendor-reg-form">
+            {/* Party Name */}
+            <div className="vendor-reg-field">
+              <label htmlFor="partyName">
+                Party Name <span className="vendor-reg-required">*</span>
+              </label>
+              <input
+                id="partyName"
+                type="text"
+                placeholder="Enter party name"
+                value={formData.partyName}
+                onChange={(e) => setFormData({ ...formData, partyName: e.target.value })}
+                required
+              />
+            </div>
+
+            {/* Address */}
+            <div className="vendor-reg-field">
+              <label htmlFor="address">
+                Address <span className="vendor-reg-required">*</span>
+              </label>
+              <textarea
+                id="address"
+                placeholder="Enter full address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                required
+                rows={4}
+              />
+            </div>
+
+            {/* GST Number */}
+            <div className="vendor-reg-field">
+              <label htmlFor="gstNumber">
+                GST Number <span className="vendor-reg-required">*</span>
+              </label>
+              <input
+                id="gstNumber"
+                type="text"
+                placeholder="Enter your 15 character GST number"
+                value={formData.gstNumber}
+                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                maxLength={15}
+                required
+              />
+            </div>
+
+            {/* Contact Number */}
+            <div className="vendor-reg-field">
+              <label htmlFor="contactNumber">
+                Contact Number <span className="vendor-reg-required">*</span>
+              </label>
+              <input
+                id="contactNumber"
+                type="tel"
+                placeholder="Enter your 10 digit contact number"
+                value={formData.contactNumber}
+                onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                maxLength={10}
+                required
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="vendor-reg-buttons">
+              <button
+                type="button"
+                onClick={handleBackClick}
+                className="vendor-reg-back-btn"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="vendor-reg-save-btn"
+              >
+                Submit
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </>
   );
 }
