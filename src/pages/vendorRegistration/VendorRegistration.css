@@ -1,0 +1,300 @@
+/* Pure CSS for Vendor Registration, modeled after EmployeeRegistration */
+
+.vendor-reg-container {
+  min-height: 100vh;
+  background: #F8F9FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.vendor-reg-content {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 32px 32px 32px;
+  position: relative;
+}
+
+.vendor-reg-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.vendor-reg-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2937;
+  text-align: center;
+  margin-right: 36px; /* Increased gap to edit icon */
+}
+
+.vendor-reg-gateway-btn {
+  position: absolute;
+  right: 0;
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.vendor-reg-gateway-btn:hover {
+  color: #6366F1;
+}
+.vendor-reg-gateway-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.vendor-reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.vendor-reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vendor-reg-field label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1F2937;
+}
+.vendor-reg-required {
+  color: #EF4444;
+  margin-left: 2px;
+}
+.vendor-reg-field input,
+.vendor-reg-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.vendor-reg-field input:focus,
+.vendor-reg-field textarea:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+}
+.vendor-reg-field input::placeholder,
+.vendor-reg-field textarea::placeholder {
+  color: #9CA3AF;
+}
+.vendor-reg-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.vendor-reg-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+.vendor-reg-back-btn,
+.vendor-reg-save-btn {
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.vendor-reg-back-btn {
+  background: #6366F1;
+  color: #fff;
+}
+.vendor-reg-back-btn:hover {
+  background: #4F46E5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99,102,241,0.18);
+}
+.vendor-reg-save-btn {
+  background: #6366F1;
+  color: #fff;
+}
+.vendor-reg-save-btn:hover {
+  background: #4F46E5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99,102,241,0.18);
+}
+
+@media (max-width: 600px) {
+  .vendor-reg-content {
+    padding: 20px 8px 16px 8px;
+  }
+  .vendor-reg-title {
+    font-size: 1.3rem;
+  }
+  .vendor-reg-buttons {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .vendor-reg-back-btn,
+  .vendor-reg-save-btn {
+    width: 100%;
+  }
+}@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-size: 16px;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #030213;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: rgba(from var(--ring) r g b / 0.5);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}

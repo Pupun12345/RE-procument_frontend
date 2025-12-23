@@ -1,0 +1,486 @@
+/* ================= CONTAINER ================= */
+.purchase-container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 32px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+h1 {
+  text-align: center;
+  color: #121111;
+  letter-spacing: 1px;
+}
+
+/* ================= TABS ================= */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.tabs button {
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: none;
+  background: #000;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.tabs .active {
+  background: linear-gradient(135deg, #6b6ef9, #4f46e5);
+  box-shadow: 0 6px 16px rgba(107, 110, 249, 0.45);
+}
+
+/* ================= FORM ================= */
+label {
+  font-weight: 600;
+  margin-top: 14px;
+  display: block;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  height: 48px;
+  padding: 12px 14px;
+  margin: 6px 0 16px;
+  border-radius: 10px;
+  background: #fff;
+  border: 2px solid #000;
+  color: #000;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+input::placeholder {
+  color: #6b7280;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #6b6ef9;
+  box-shadow: 0 0 0 4px rgba(107, 110, 249, 0.2);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #6b6ef9;
+  box-shadow: 0 0 0 3px rgba(107, 110, 249, 0.15);
+}
+
+input[type="date"] {
+  color-scheme: light;
+}
+
+/* ================= TABLE ================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 18px;
+}
+
+th {
+  background: #000;
+  color: #fff;
+  padding: 14px;
+  text-align: left;
+  letter-spacing: 0.3px;
+}
+
+td {
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+tr:hover {
+  background: #f9fafb;
+}
+
+/* ================= BUTTON BASE ================= */
+button {
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* ================= ACTION BUTTONS ================= */
+.add {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35);
+}
+
+.save {
+  background: linear-gradient(135deg, #6b6ef9, #4f46e5);
+  color: white;
+  padding: 14px 30px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(107, 110, 249, 0.4);
+}
+
+/* PDF */
+button.download {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  padding: 14px 30px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+button.download:hover {
+  box-shadow: 0 10px 22px rgba(220, 38, 38, 0.55);
+}
+
+/* ================= SUMMARY ================= */
+.summary {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+/* ================= FOOTER ================= */
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+
+/* ================= REPORT ================= */
+.report-title {
+  text-align: center;
+  margin: 36px 0 28px;
+  color: #2563eb;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* ================= TOOLBAR ================= */
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 32px;                 /* space BETWEEN filters & buttons */
+  margin-bottom: 28px;
+}
+
+/* ================= FILTERS ================= */
+.report-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;                 /* tight spacing like reference */
+}
+
+/* Input sizing */
+.report-filters input {
+  height: 48px;
+  line-height: 48px;
+}
+
+.report-filters input:first-child {
+  width: 260px;              /* Search */
+}
+
+.report-filters input:nth-child(2),
+.report-filters input:nth-child(3) {
+  width: 200px;              /* Date inputs */
+}
+
+/* ================= ACTIONS ================= */
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;         /* pushes buttons to right cleanly */
+  white-space: nowrap;
+}
+
+/* Button sizing */
+.report-actions button {
+  height: 48px;
+  min-width: 140px;
+  padding: 0 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ================= BUTTON COLORS ================= */
+button.green {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #ffffff;
+}
+
+button.green:hover {
+  box-shadow: 0 10px 22px rgba(34, 197, 94, 0.45);
+  transform: translateY(-1px);
+}
+
+button.orange {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+}
+
+button.orange:hover {
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ================= REPORT ================= */
+.report-title {
+  text-align: center;
+  margin: 36px 0 28px;
+  color: #2563eb;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* ================= TOOLBAR (FIXED) ================= */
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;          /* ⬅ prevents horizontal scroll */
+  box-sizing: border-box;
+  margin-bottom: 28px;
+}
+
+/* ================= FILTERS ================= */
+.report-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 🔍 Search Party Name — LARGE */
+.report-filters input:first-child {
+  flex: 1;              /* grows more */
+  min-width: 200px;     /* bigger box */
+  max-width: 300px;
+}
+
+/* 📅 Date Pickers — SMALL */
+.report-filters input:nth-child(2),
+.report-filters input:nth-child(3) {
+  flex: 0;
+  width: 160px;         /* smaller size */
+  min-width: 160px;
+}
+
+
+/* ================= ACTIONS ================= */
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;            /* ⬅ buttons never overflow */
+}
+
+/* Button sizing */
+.report-actions button {
+  height: 48px;
+  min-width: 140px;
+  padding: 0 26px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ================= BUTTON COLORS ================= */
+button.green {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+button.green:hover {
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.45);
+  transform: translateY(-1px);
+}
+
+button.orange {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+}
+
+button.orange:hover {
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.45);
+  transform: translateY(-1px);
+}
+
+/* ================= REPORT TABLE ================= */
+.report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.report-table th {
+  background: #000;
+  color: #fff;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.report-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.report-table tr:hover {
+  background: #f9fafb;
+}
+
+.report-table .amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Center Edit/Delete */
+.report-table td:nth-last-child(1),
+.report-table td:nth-last-child(2) {
+  text-align: center;
+}
+
+/* ================= EDIT / DELETE ================= */
+.edit-btn,
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.edit-btn:hover {
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.35);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+}
+
+.delete-btn:hover {
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1024px) {
+  .report-toolbar {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .report-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+/* ENTRY TABLE */
+.entry-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.entry-table thead th {
+  background: #000;
+  color: #fff;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.entry-table td {
+  padding: 6px;
+}
+
+.entry-table input,
+.entry-table select {
+  width: 100%;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid #000;
+  padding: 0 10px;
+}
+
+.entry-table .amount {
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* RED DELETE BUTTON */
+.btn-delete {
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background: #d9363e;
+}
+.entry-delete {
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entry-delete:hover {
+  background: #d9363e;
+}

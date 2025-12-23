@@ -1,0 +1,213 @@
+Rewritten CSS for Vendor Gateway
+:root {
+  --font-size: 16px;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --primary: #030213;
+  --primary-foreground: #ffffff;
+  --secondary: #ececf0;
+  --secondary-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --radius: 0.625rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Poppins', sans-serif;
+}
+
+.gateway-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--background);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.gateway-content {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin: 16px 0;
+  width: 100%;
+}
+
+.gateway-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.gateway-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.gateway-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.gateway-search-wrapper {
+  flex: 1;
+  position: relative;
+  min-width: 260px;
+}
+
+.gateway-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.gateway-action-btn {
+  background: #6b6ef9;
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: calc(var(--radius) - 4px);
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: 48px;
+  min-width: 0;
+  min-height: 0;
+  line-height: 1;
+  white-space: nowrap;
+  margin-top: 32px;
+}
+
+/* Match button classes used in JSX */
+.vendor-action-button,
+.vendor-modal-save-button,
+.vendor-modal-cancel-button,
+.vendor-filter-preset-button {
+  background: #6b6ef9;
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: calc(var(--radius) - 4px);
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.vendor-action-button:hover,
+.vendor-modal-save-button:hover,
+.vendor-modal-cancel-button:hover,
+.vendor-filter-preset-button:hover,
+.gateway-action-btn:hover {
+  filter: brightness(0.95);
+}
+
+.gateway-list-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.gateway-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gateway-table-wrapper th,
+.gateway-table-wrapper td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.gateway-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gateway-modal-content {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .gateway-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gateway-title {
+    font-size: 1.5rem;
+  }
+
+  .gateway-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gateway-content {
+    padding: 16px;
+  }
+
+  .gateway-modal-content {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gateway-title {
+    font-size: 1.2rem;
+  }
+
+  .gateway-search-input {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .gateway-action-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .gateway-table-wrapper th,
+  .gateway-table-wrapper td {
+    padding: 8px;
+  }
+}

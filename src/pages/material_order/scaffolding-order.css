@@ -1,0 +1,448 @@
+/* ================= CARD ================= */
+.scaffold-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 1050px;
+  margin: 24px auto;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= HEADER ================= */
+.scaffold-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scaffold-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+.close-btn:hover {
+  color: #6b6ef9;
+}
+
+/* Divider */
+.scaffold-card hr {
+  margin: 16px 0 22px;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ================= FORM ================= */
+.scaffold-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Rows */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+/* Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.form-group span {
+  color: #ef4444;
+}
+
+/* Inputs */
+.form-group input,
+.form-group select {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #6b6ef9;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(107, 110, 249, 0.12);
+}
+
+/* ================= MATERIALS ================= */
+.materials-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.materials-header label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.add-btn {
+  background: #6b6ef9;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.add-btn:hover {
+  background: #5a5df0;
+}
+
+/* ================= TABLE ================= */
+.material-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+/* FORCE GRID — IMPORTANT FIX */
+.table-head,
+.table-row {
+  display: grid !important;
+  grid-template-columns:
+    48px
+    minmax(220px, 2fr)
+    minmax(160px, 1.2fr)
+    minmax(220px, 1.5fr)
+    100px;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Header */
+.table-head {
+  background: #f9fafb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Rows */
+.table-row {
+  border-top: 1px solid #e5e7eb;
+  transition: background 0.2s ease;
+}
+.table-row:hover {
+  background: #f5f6ff;
+}
+
+/* Cells */
+.cell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.cell select,
+.cell input {
+  width: 100%;
+}
+
+/* Table Inputs */
+.table-row select,
+.table-row input {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.table-row select:hover,
+.table-row input:hover,
+.table-row select:focus,
+.table-row input:focus {
+  border-color: #6b6ef9;
+  outline: none;
+}
+
+/* Disabled Provider */
+.table-row input[disabled] {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+/* Action Cell */
+.action-cell {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Delete */
+.delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9ca3af;
+  transition: color 0.2s ease;
+}
+.delete-btn:hover {
+  color: #6b6ef9;
+}
+.delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ================= FOOTER ================= */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+/* Buttons */
+.cancel-btn,
+.save-btn {
+  min-width: 110px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+.cancel-btn:hover {
+  border-color: #6b6ef9;
+  color: #6b6ef9;
+}
+
+.save-btn {
+  background: #6b6ef9;
+  color: #ffffff;
+  border: none;
+}
+.save-btn:hover {
+  background: #5a5df0;
+}
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tab-btn.active {
+  background: #6b6ef9;
+  color: #ffffff;
+  border-color: #6b6ef9;
+}
+/* ================= REPORT ================= */
+
+.report-section {
+  margin-top: 10px;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.report-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Filters */
+.report-filters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.filter-group input {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.clear-filters {
+  text-align: right;
+  font-size: 13px;
+  color: #6b6ef9;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.report-count {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #374151;
+}
+
+/* View Button */
+.view-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: #eef2ff;
+  color: #6b6ef9;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.view-btn:hover {
+  background: #e0e7ff;
+}
+/* =====================================================
+   REPORT TABLE (SEPARATE FROM ENTRY / MATERIALS)
+   DO NOT REUSE material-table HERE
+===================================================== */
+
+.report-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow-x: auto;
+  background: #ffffff;
+}
+
+/* 🔒 REPORT GRID CONTRACT */
+.report-table .table-head,
+.report-table .table-row {
+  display: grid;
+  grid-template-columns:
+    200px /* Order Number */
+    220px /* Supervisor */
+    180px /* Employee ID */
+    160px /* Issue Date */
+    minmax(320px, 1fr) /* Location */
+    90px; /* Action */
+  align-items: center;
+  column-gap: 16px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+}
+
+/* Header */
+.report-table .table-head {
+  background: #f9fafb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Rows */
+.report-table .table-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.report-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.report-table .table-row:hover {
+  background: #f5f6ff;
+}
+
+/* =====================
+   REPORT CELLS
+===================== */
+.report-table .cell {
+  display: flex;
+  align-items: center;
+  min-width: 0; /* 🔥 critical for text */
+}
+
+/* Truncate long text cleanly */
+.report-table .cell span,
+.report-table .cell div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =====================
+   REPORT ACTION
+===================== */
+.report-table .action-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.report-table .view-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: none;
+  background: #eef2ff;
+  color: #6b6ef9;
+  cursor: pointer;
+}
+
+.report-table .view-btn:hover {
+  background: #e0e7ff;
+}
