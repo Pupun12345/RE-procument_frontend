@@ -1,30 +1,33 @@
-import { MdDelete, MdEdit } from "react-icons/md";
 "use client";
+
 import React, { useEffect, useState } from "react";
+import { MdDelete, MdEdit } from "react-icons/md";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/axios";
 import "./PPEDistribution.css";
+import toast from "react-hot-toast";
 
 // ====================== TYPES ======================
 interface Item {
   itemName: string;
   unit: string;
+  qty: number;
 }
 
 interface DistributionRecord {
   _id: string;
-  itemName: string;
-  quantity: number;
-  unit: string;
+  issuedTo: string;
   issueDate: string;
-  personName: string;
   location: string;
+  items: Item[];
 }
 
-interface Stock {
+interface StockItem {
+  _id: string;
   itemName: string;
+  unit: string;
   qty: number;
 }
 
@@ -44,75 +47,51 @@ interface FilterState {
 }
 
 // ====================== MAIN COMPONENT ======================
+
 const DistributionPage: React.FC = () => {
-      // Item row type for dynamic items
-      interface ItemRow {
-        itemName: string;
-        quantity: string;
-        unit: string;
-      }
-      // Dynamic items state (like ScaffoldingOrder)
-      const [items, setItems] = useState<ItemRow[]>(
-        [
-          { itemName: '', quantity: '', unit: '' }
-        ]
-      );
+  const [records, setRecords] = useState<DistributionRecord[]>([]);
+  // Item row type for dynamic items
+  interface ItemRow {
+    itemName: string;
+    quantity: string;
+    unit: string;
+  }
+  // Dynamic items state (like ScaffoldingOrder)
+  const [items, setItems] = useState<ItemRow[]>([
+    { itemName: "", quantity: "", unit: "" },
+  ]);
 
-      // Toast fallback
-      const showToast = (type: 'success' | 'error', msg: string) => {
-        if (window && window['toast']) {
-          window['toast'][type](msg);
-        } else {
-          if (type === 'error') alert(msg);
-        }
-      };
-
-      // Add item row (with toast)
-      const addItem = () => {
-        setItems([...items, { itemName: '', quantity: '', unit: '' }]);
-        showToast('success', 'Item row added');
-      };
-
-      // Remove item row (with toast)
-      const removeItem = (index: number) => {
-        if (items.length === 1) {
-          showToast('error', 'At least one item is required');
-          return;
-        }
-        setItems(items.filter((_, i) => i !== index));
-        showToast('success', 'Item removed');
-      };
-
-      // Update item row
-      const updateItem = (index: number, key: keyof ItemRow, value: string) => {
-        const updated = [...items];
-        updated[index][key] = value;
-        setItems(updated);
-      };
-    // Navigation function
-    const handleBack = () => {
-      navigate(-1);
-    };
+  // Update item row
+  const updateItem = (index: number, key: keyof ItemRow, value: string) => {
+    const updated = [...items];
+    updated[index][key] = value;
+    setItems(updated);
+  };
+  // Navigation function
+  const handleBack = () => {
+    navigate(-1);
+  };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   // Items state is now mutable to allow adding new items
-  const [itemList, setItemList] = useState<Item[]>(
-    [
-      { itemName: "Helmet", unit: "pcs" },
-      { itemName: "Gloves", unit: "pairs" },
-      { itemName: "Safety Shoes", unit: "pairs" },
-      { itemName: "Safety Vest", unit: "pcs" },
-      { itemName: "Goggles", unit: "pcs" },
-      // Add more items as needed
-    ]
-  );
 
   // Modal state for adding item
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [newItem, setNewItem] = useState<Item>({ itemName: "", unit: "" });
-  const [records, setRecords] = useState<DistributionRecord[]>([]);
-  const [stock, setStock] = useState<Stock[]>([]);
-  const navigate = useNavigate();
+  const fetchRecords = async () => {
+  try {
+    const res = await api.get("/issue/ppe");
 
+    setRecords(Array.isArray(res.data) ? res.data : []);
+  } catch {
+    toast.error("Failed to fetch PPE issues");
+    setRecords([]);
+  }
+};
+
+  useEffect(() => {
+    fetchRecords();
+  }, []);
+
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const navigate = useNavigate();
 
   const [form, setForm] = useState<FormState>({
     itemName: "",
@@ -132,30 +111,39 @@ const DistributionPage: React.FC = () => {
   const [editRecord, setEditRecord] = useState<DistributionRecord | null>(null);
 
   // Delete record from report section
-  const handleDelete = (_id: string) => {
-    setRecords((prev) => prev.filter((r) => r._id !== _id));
-    showToast('success', 'Record deleted!');
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this PPE issue?")) return;
+
+    try {
+      await api.delete(`/issue/ppe/${id}`);
+      toast("success");
+      fetchRecords();
+    } catch {
+      toast("error");
+    }
   };
 
   // ====================== FETCH DATA ======================
   // Fetch items from backend on component mount
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchStock = async () => {
       try {
-        const response = await axios.get('/api/items');
-        setItemList(response.data);
-      } catch (error) {
-        console.error('Error fetching items:', error);
+        const res = await api.get("/stock");
+
+        // 🔑 FIX IS HERE
+        setStockItems(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (err) {
+        showToast("error", "Failed to load stock items");
       }
     };
 
-    fetchItems();
+    fetchStock();
   }, []);
 
   // ====================== HANDLERS ======================
   const handleChange = (field: keyof FormState, value: string): void => {
     if (field === "itemName") {
-      const selected = itemList.find((i) => i.itemName === value);
+      const selected = stockItems.find((s) => s.itemName === e.target.value);
       setForm({
         ...form,
         itemName: value,
@@ -167,31 +155,26 @@ const DistributionPage: React.FC = () => {
   };
 
   // Add item logic
-  const handleAddItem = () => {
-    if (!newItem.itemName.trim() || !newItem.unit.trim()) {
-      alert("Please enter both item name and unit.");
-      return;
-    }
-    if (items.some(i => i.itemName.toLowerCase() === newItem.itemName.trim().toLowerCase())) {
-      alert("Item already exists.");
-      return;
-    }
-    setItems(prev => [...prev, { itemName: newItem.itemName.trim(), unit: newItem.unit.trim() }]);
-    setShowAddItem(false);
-    setNewItem({ itemName: "", unit: "" });
-  };
 
+  const filteredRecords = records.filter((r) => {
+  const search = filters.search.toLowerCase();
 
-  const filteredRecords = records.filter((r: DistributionRecord) => {
-    const searchMatch =
-      r.itemName.toLowerCase().includes(filters.search.toLowerCase()) ||
-      r.personName.toLowerCase().includes(filters.search.toLowerCase());
-    const from = filters.from ? new Date(filters.from) : null;
-    const to = filters.to ? new Date(filters.to) : null;
-    const date = new Date(r.issueDate);
-    const dateMatch = (!from || date >= from) && (!to || date <= to);
-    return searchMatch && dateMatch;
-  });
+  const itemMatch = r.items.some(i =>
+    i.itemName.toLowerCase().includes(search)
+  );
+
+  const personMatch = r.issuedTo.toLowerCase().includes(search);
+
+  const date = new Date(r.issueDate);
+  const from = filters.from ? new Date(filters.from) : null;
+  const to = filters.to ? new Date(filters.to) : null;
+
+  const dateMatch =
+    (!from || date >= from) &&
+    (!to || date <= to);
+
+  return (itemMatch || personMatch) && dateMatch;
+});
 
   // ====================== EXPORT ======================
   const exportPDF = (): void => {
@@ -315,10 +298,16 @@ const DistributionPage: React.FC = () => {
     link.download = "PPE_Distribution_Report.csv";
     link.click();
   };
+  const addItem = () => {
+    setItems([...items, { itemName: "", quantity: "", unit: "" }]);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
 
   // ====================== UI ======================
   return (
-
     <div className="ppe-container">
       <div className="ppe-content">
         <h2 className="ppe-title">PPE ISSUE</h2>
@@ -342,8 +331,11 @@ const DistributionPage: React.FC = () => {
         {activeTab === "entry" && (
           <React.Fragment>
             {/* Materials Section */}
-              {/* Materials Section - moved to top of form */}
-              <div className="ppe-form-card" style={{ margin: "0 auto", maxWidth: 900 }}>
+            {/* Materials Section - moved to top of form */}
+            <div
+              className="ppe-form-card"
+              style={{ margin: "0 auto", maxWidth: 900 }}
+            >
               <div className="ppe-form-grid">
                 {/* Removed select item, quantity, and unit fields as requested */}
                 <div className="ppe-form-group">
@@ -373,11 +365,17 @@ const DistributionPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div style={{ marginBottom: 24 }}>
                 <div className="ppe-materials-header">
-                  <label  >Items <span style={{ color: '#ef4444' }}>*</span></label>
-                  <button type="button" className="ppe-add-btn" onClick={addItem}>
+                  <label>
+                    Items <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="ppe-add-btn"
+                    onClick={addItem}
+                  >
                     ＋ Add Item
                   </button>
                 </div>
@@ -392,35 +390,76 @@ const DistributionPage: React.FC = () => {
                   {items.map((row, index) => (
                     <div className="ppe-table-row" key={index}>
                       <span>{index + 1}</span>
-                      <input
+                      <select
                         className="ppe-input"
                         value={row.itemName}
-                        onChange={e => updateItem(index, 'itemName', e.target.value)}
-                        placeholder="Item Name"
-                        style={{width : "fit-content"}}
-                      />
+                        onChange={(e) => {
+                          const selected = stockItems.find(
+                            (s) => s.itemName === e.target.value
+                          );
+
+                          updateItem(index, "itemName", e.target.value);
+                          updateItem(
+                            index,
+                            "unit",
+                            selected ? selected.unit : ""
+                          );
+                        }}
+                      >
+                        <option value="">Select Item</option>
+                        {stockItems.map((s) => (
+                          <option key={s._id} value={s.itemName}>
+                            {s.itemName}
+                          </option>
+                        ))}
+                      </select>
+
                       <input
                         className="ppe-input"
                         value={row.quantity}
-                        onChange={e => updateItem(index, 'quantity', e.target.value)}
+                        onChange={(e) =>
+                          updateItem(index, "quantity", e.target.value)
+                        }
                         placeholder="Quantity"
                         type="number"
                         min="1"
-                        style={{width : "fit-content"}}
+                        style={{ width: "fit-content" }}
                       />
                       <input
                         className="ppe-input"
                         value={row.unit}
-                        onChange={e => updateItem(index, 'unit', e.target.value)}
+                        onChange={(e) =>
+                          updateItem(index, "unit", e.target.value)
+                        }
                         placeholder="Unit"
                         style={{ width: "fit-content" }} // Adjust width to fit content dynamically
                       />
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          justifyContent: "center",
+                        }}
+                      >
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                          style={{ fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', border: '1px solid #888', borderRadius: 4, color: '#444', width: 64, height: 32, padding: 0 }}
-                          onClick={() => {/* TODO: Add edit logic here */}}
+                          style={{
+                            fontSize: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "#fff",
+                            border: "1px solid #888",
+                            borderRadius: 4,
+                            color: "#444",
+                            width: 64,
+                            height: 32,
+                            padding: 0,
+                          }}
+                          onClick={() => {
+                            /* TODO: Add edit logic here */
+                          }}
                         >
                           <MdEdit />
                         </button>
@@ -428,7 +467,16 @@ const DistributionPage: React.FC = () => {
                           className="ppe-delete-btn"
                           onClick={() => removeItem(index)}
                           disabled={items.length === 1}
-                          style={{ fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', background: '#fff', border: '1px solid #ef4444', borderRadius: 4 }}
+                          style={{
+                            fontSize: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#ef4444",
+                            background: "#fff",
+                            border: "1px solid #ef4444",
+                            borderRadius: 4,
+                          }}
                         >
                           <MdDelete />
                         </button>
@@ -440,39 +488,52 @@ const DistributionPage: React.FC = () => {
               <div className="ppe-form-grid">
                 {/* ...existing code for form fields... */}
               </div>
-            
+
               <div className="ppe-buttons" style={{ marginTop: "18px" }}>
-                  <button
-                    className="ppe-btn-save"
-                    style={{ marginBottom: "10px" }}
-                    onClick={() => {
-                      // Add each item as a new record
-                      const newRecords = items.map((itm) => ({
-                        _id: Math.random().toString(36).substr(2, 9),
-                        itemName: itm.itemName,
-                        quantity: Number(itm.quantity),
-                        unit: itm.unit,
+                <button
+                  className="ppe-btn-save"
+                  onClick={async () => {
+                    try {
+                      const payload = {
+                        issuedTo: form.personName,
                         issueDate: form.issueDate,
-                        personName: form.personName,
                         location: form.location,
-                      }));
-                      setRecords((prev) => [...prev, ...newRecords]);
-                      // Reset items and form
-                      setItems([{ itemName: '', quantity: '', unit: '' }]);
+                        items: items
+                          .filter((i) => i.itemName && Number(i.quantity) > 0)
+                          .map((i) => ({
+                            itemName: i.itemName,
+                            unit: i.unit,
+                            qty: Number(i.quantity),
+                          })),
+                      };
+
+                      if (payload.items.length === 0) {
+                        toast.error("Please add at least one item");
+                        return;
+                      }
+
+                      await api.post("/issue/ppe", payload);
+
+                      setItems([{ itemName: "", quantity: "", unit: "" }]);
                       setForm({
-                        itemName: '',
-                        quantity: '',
-                        unit: '',
-                        issueDate: new Date().toISOString().split('T')[0],
-                        personName: '',
-                        location: '',
+                        itemName: "",
+                        quantity: "",
+                        unit: "",
+                        issueDate: new Date().toISOString().split("T")[0],
+                        personName: "",
+                        location: "",
                       });
-                      showToast('success', 'Items submitted!');
-                      setActiveTab('report');
-                    }}
+
+                      setActiveTab("report");
+                      fetchRecords();
+                    } catch {
+                      toast.error("Failed to issue PPE");
+                    }
+                  }}
                 >
                   Submit
                 </button>
+
                 <button
                   onClick={handleBack}
                   className="ppe-btn-back"
@@ -488,7 +549,10 @@ const DistributionPage: React.FC = () => {
         {/* REPORT SECTION */}
         {activeTab === "report" && (
           <React.Fragment>
-            <div className="ppe-filter-bar" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              className="ppe-filter-bar"
+              style={{ display: "flex", alignItems: "center", gap: "16px" }}
+            >
               <div className="ppe-search-box">
                 <span className="ppe-search-icon">🔍</span>
                 <input
@@ -505,26 +569,35 @@ const DistributionPage: React.FC = () => {
                 className="ppe-date-filter"
                 type="date"
                 value={filters.from}
-                onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, from: e.target.value })
+                }
                 style={{ width: "fit-content" }} // Adjusted width to fit content
               />
               <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={exportPDF} className="ppe-export-btn ppe-export-pdf">
+                <button
+                  onClick={exportPDF}
+                  className="ppe-export-btn ppe-export-pdf"
+                >
                   Export PDF
                 </button>
-                <button onClick={exportCSV} className="ppe-export-btn ppe-export-csv">
+                <button
+                  onClick={exportCSV}
+                  className="ppe-export-btn ppe-export-csv"
+                >
                   Export CSV
                 </button>
               </div>
             </div>
 
-            <div className="ppe-table-container" style={{ margin: "0 auto", maxWidth: 1000 }}>
+            <div
+              className="ppe-table-container"
+              style={{ margin: "0 auto", maxWidth: 1000 }}
+            >
               <table className="ppe-table">
                 <thead>
                   <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Unit</th>
+                    <th>Items</th>
                     <th>Date</th>
                     <th>Issued To</th>
                     <th>Location</th>
@@ -532,28 +605,31 @@ const DistributionPage: React.FC = () => {
                     <th>Delete</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {filteredRecords.length ? (
+                  {filteredRecords.length > 0 ? (
                     filteredRecords.map((r) => (
                       <tr key={r._id}>
-                        <td>{r.itemName}</td>
-                        <td>{r.quantity}</td>
-                        <td>{r.unit}</td>
+                        <td>
+                          {r.items
+                            .map((i) => `${i.itemName} (${i.qty} ${i.unit})`)
+                            .join(", ")}
+                        </td>
                         <td>{r.issueDate}</td>
-                        <td>{r.personName}</td>
-                        <td>{r.location}</td>
+                        <td>{r.issuedTo}</td>
+                        <td>{r.location || "-"}</td>
                         <td>
                           <button
-                            onClick={() => setEditRecord(r)}
                             className="ppe-action-btn ppe-edit-btn"
+                            onClick={() => setEditRecord(r)}
                           >
                             Edit
                           </button>
                         </td>
                         <td>
                           <button
-                            onClick={() => handleDelete(r._id)}
                             className="ppe-action-btn ppe-delete-btn"
+                            onClick={() => handleDelete(r._id)}
                           >
                             Delete
                           </button>
@@ -562,8 +638,8 @@ const DistributionPage: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: "center" }}>
-                        No records found.
+                      <td colSpan={6} style={{ textAlign: "center" }}>
+                        No records found
                       </td>
                     </tr>
                   )}
@@ -573,81 +649,88 @@ const DistributionPage: React.FC = () => {
           </React.Fragment>
         )}
 
-      {/* EDIT MODAL */}
-      {editRecord && (
-        <div className="ppe-modal-overlay">
-          <div className="ppe-modal">
-            <h3>EDIT DISTRIBUTION</h3>
+        {/* EDIT MODAL */}
+        {editRecord && (
+          <div className="ppe-modal-overlay">
+            <div className="ppe-modal">
+              <h3>EDIT DISTRIBUTION</h3>
 
-            <label>Item</label>
-            <input className="ppe-input" type="text" value={editRecord.itemName} readOnly />
+              <label>Item</label>
+              <input
+                className="ppe-input"
+                type="text"
+                value={editRecord.itemName}
+                readOnly
+              />
 
-            <label>Qty</label>
-            <input
-              className="ppe-input"
-              type="number"
-              value={editRecord.quantity}
-              onChange={(e) =>
-                setEditRecord({
-                  ...editRecord,
-                  quantity: Number(e.target.value),
-                })
-              }
-            />
+              <label>Qty</label>
+              <input
+                className="ppe-input"
+                type="number"
+                value={editRecord.quantity}
+                onChange={(e) =>
+                  setEditRecord({
+                    ...editRecord,
+                    quantity: Number(e.target.value),
+                  })
+                }
+              />
 
-            <label>Unit</label>
-            <input className="ppe-input" type="text" value={editRecord.unit} readOnly />
+              <label>Unit</label>
+              <input
+                className="ppe-input"
+                type="text"
+                value={editRecord.unit}
+                readOnly
+              />
 
-            <label>Date</label>
-            <input
-              className="ppe-input"
-              type="date"
-              value={editRecord.issueDate.split("T")[0]}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, issueDate: e.target.value })
-              }
-            />
+              <label>Date</label>
+              <input
+                className="ppe-input"
+                type="date"
+                value={editRecord.issueDate.split("T")[0]}
+                onChange={(e) =>
+                  setEditRecord({ ...editRecord, issueDate: e.target.value })
+                }
+              />
 
-            <label>Issued To</label>
-            <input
-              className="ppe-input"
-              type="text"
-              value={editRecord.personName}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, personName: e.target.value })
-              }
-            />
+              <label>Issued To</label>
+              <input
+                className="ppe-input"
+                type="text"
+                value={editRecord.personName}
+                onChange={(e) =>
+                  setEditRecord({ ...editRecord, personName: e.target.value })
+                }
+              />
 
-            <label>Location</label>
-            <input
-              className="ppe-input"
-              type="text"
-              value={editRecord.location}
-              onChange={(e) =>
-                setEditRecord({ ...editRecord, location: e.target.value })
-              }
-            />
+              <label>Location</label>
+              <input
+                className="ppe-input"
+                type="text"
+                value={editRecord.location}
+                onChange={(e) =>
+                  setEditRecord({ ...editRecord, location: e.target.value })
+                }
+              />
 
-            <div className="ppe-buttons" style={{ marginTop: "18px" }}>
-              <button
-                onClick={updateDistribution}
-                className="ppe-btn-save"
-              >
-                💾 Save
-              </button>
-              <button
-                onClick={() => setEditRecord(null)}
-                className="ppe-btn-back"
-              >
-                Cancel
-              </button>
+              <div className="ppe-buttons" style={{ marginTop: "18px" }}>
+                <button onClick={updateDistribution} className="ppe-btn-save">
+                  💾 Save
+                </button>
+                <button
+                  onClick={() => setEditRecord(null)}
+                  className="ppe-btn-back"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Back button moved above, below Save Distribution button in entry form */}
-    </div>
+        {/* Back button moved above, below Save Distribution button in entry form */}
+      </div>
     </div>
   );
 };

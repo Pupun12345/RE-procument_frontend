@@ -17,7 +17,7 @@ export default function PPERegistration() {
   useEffect(() => {
     const loadItems = async () => {
       try {
-        const res = await api.get("/items");
+        const res = await api.get("/items/ppe");
         setItems(res.data);
       } catch (err) {
         // Silently fail for now
@@ -27,7 +27,9 @@ export default function PPERegistration() {
     loadItems();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -44,7 +46,7 @@ export default function PPERegistration() {
     }
 
     try {
-      const res = await api.post("/items", {
+      const res = await api.post("/items/ppe", {
         itemName: formData.itemName,
         unit: finalUnit,
       });
@@ -56,9 +58,12 @@ export default function PPERegistration() {
         toast.success(`"${res.data.item.itemName}" added successfully!`);
       }
     } catch (err: any) {
-      // For now, just show success even if API fails
-      toast.success("Item added successfully!");
-      setFormData({ itemName: "", unit: "", customUnit: "" });
+      if (err.response?.status === 409) {
+        toast.error("Item already exists");
+      } else {
+        console.error("API failed:", err);
+        toast.error("Failed to add PPE item");
+      }
     }
   };
 
@@ -112,8 +117,16 @@ export default function PPERegistration() {
               </div>
             )}
             <div className="ppe-form-actions">
-              <button type="submit" className="ppe-btn">Submit</button>
-              <button type="button" className="ppe-btn" onClick={() => window.history.back()}>Back</button>
+              <button type="submit" className="ppe-btn">
+                Submit
+              </button>
+              <button
+                type="button"
+                className="ppe-btn"
+                onClick={() => window.history.back()}
+              >
+                Back
+              </button>
             </div>
           </form>
         </div>

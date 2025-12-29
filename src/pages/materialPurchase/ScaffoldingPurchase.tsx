@@ -2,10 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./purchase.css";
+import api from "../../api/axios";
 
 /* ================= TYPES ================= */
-type Party = { id: number; name: string };
-type ItemMaster = { id: number; name: string; unit: string };
+type Party = {
+  _id: string;
+  partyName: string;
+};
+
+type ItemMaster = {
+  _id: string;
+  itemName: string;
+  unit: string;
+};
 
 type Item = {
   name: string;
@@ -17,6 +26,7 @@ type Item = {
 };
 
 type Purchase = {
+  _id: string;
   partyName: string;
   invoiceNo: string;
   invoiceDate: string;
@@ -65,16 +75,34 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
-    fetch("/api/parties")
-      .then((r) => r.json())
-      .then(setParties)
-      .catch(() => setParties([]));
+    const loadMasters = async () => {
+      try {
+        const vendorsRes = await api.get("/vendors");
+        setParties(vendorsRes.data);
 
-    fetch("/api/items")
-      .then((r) => r.json())
-      .then(setItemMasters)
-      .catch(() => setItemMasters([]));
+        const itemsRes = await api.get("/items/scaffolding");
+        setItemMasters(itemsRes.data);
+      } catch (err) {
+        console.error("Failed to load master data", err);
+        setParties([]);
+        setItemMasters([]);
+      }
+    };
+
+    loadMasters();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "report") {
+      api
+        .get("/purchases/scaffolding")
+        .then((res) => setPurchases(res.data))
+        .catch((err) => {
+          console.error("Failed to load purchases", err);
+          setPurchases([]);
+        });
+    }
+  }, [activeTab]);
 
   /* ================= CALCULATIONS ================= */
   const subtotal = useMemo(
@@ -94,6 +122,16 @@ const PurchaseEntryPage: React.FC = () => {
   const total = subtotal + gstAmount;
 
   /* ================= ITEM HANDLERS ================= */
+  const handleEditPurchase = (purchase: Purchase) => {
+    setPartyName(purchase.partyName);
+    setInvoiceNo(purchase.invoiceNo);
+    setInvoiceDate(purchase.invoiceDate);
+    setItems(purchase.items);
+    setGstPercent(purchase.gstPercent);
+
+    setActiveTab("entry");
+  };
+
   const updateItem = (
     index: number,
     field: keyof Item,
@@ -104,8 +142,26 @@ const PurchaseEntryPage: React.FC = () => {
     setItems(updated);
   };
 
+  const handleDeletePurchase = async (id: string) => {
+    const confirm = window.confirm(
+      "Are you sure you want to delete this purchase?"
+    );
+    if (!confirm) return;
+
+    try {
+      await api.delete(`/purchases/scaffolding/${id}`);
+
+      // Refresh list after delete
+      const res = await api.get("/purchases/scaffolding");
+      setPurchases(res.data);
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Failed to delete purchase");
+    }
+  };
+
   const handleItemSelect = (index: number, name: string) => {
-    const selected = itemMasters.find((i) => i.name === name);
+    const selected = itemMasters.find((i) => i.itemName === name);
     const updated = [...items];
 
     updated[index] = {
@@ -122,32 +178,48 @@ const PurchaseEntryPage: React.FC = () => {
     setItems(items.filter((_, i) => i !== index));
 
   /* ================= SAVE PURCHASE ================= */
-  const savePurchase = () => {
+  const savePurchase = async () => {
     if (!partyName || !invoiceNo || !invoiceDate) {
       alert("Please fill all required fields");
       return;
     }
 
-    const newPurchase: Purchase = {
+    const payload = {
       partyName,
-      invoiceNo,
+      invoiceNo: invoiceNo, // ✅ FIX
       invoiceDate,
-      items,
+
+      items: items.map((i) => ({
+        name: i.name, // ✅ FIX
+        qty: Number(i.qty),
+        unit: i.unit,
+        uom: i.uom,
+        workOrderNo: i.workOrderNo,
+        rate: Number(i.rate),
+        amount: Number(i.qty || 0) * Number(i.rate || 0),
+      })),
+
       subtotal,
       gstPercent: Number(gstPercent || 0),
       gstAmount,
       total,
     };
 
-    setPurchases([...purchases, newPurchase]);
+    try {
+      await api.post("/purchases/scaffolding", payload);
 
-    setPartyName("");
-    setInvoiceNo("");
-    setInvoiceDate("");
-    setItems([emptyItem]);
-    setGstPercent("");
+      // reset form
+      setPartyName("");
+      setInvoiceNo("");
+      setInvoiceDate("");
+      setItems([emptyItem]);
+      setGstPercent("");
 
-    setActiveTab("report");
+      setActiveTab("report");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save purchase");
+    }
   };
 
   /* ================= ENTRY INVOICE PDF ================= */
@@ -216,7 +288,11 @@ const PurchaseEntryPage: React.FC = () => {
 
   return (
     <div className="purchase-container">
-      <h1>PURCHASE ENTRY</h1>
+      <h1>
+        {activeTab === "entry"
+          ? "SCAFFOLDING PURCHASE ENTRY"
+          : "SCAFFOLDING PURCHASE REPORT"}
+      </h1>
 
       {/* ================= TABS ================= */}
       <div className="tabs">
@@ -244,8 +320,8 @@ const PurchaseEntryPage: React.FC = () => {
           >
             <option value="">-- Select Party --</option>
             {parties.map((p) => (
-              <option key={p.id} value={p.name}>
-                {p.name}
+              <option key={p._id} value={p.partyName}>
+                {p.partyName}
               </option>
             ))}
           </select>
@@ -288,8 +364,8 @@ const PurchaseEntryPage: React.FC = () => {
                     >
                       <option value="">Select Item</option>
                       {itemMasters.map((im) => (
-                        <option key={im.id} value={im.name}>
-                          {im.name}
+                        <option key={im._id} value={im.itemName}>
+                          {im.itemName}
                         </option>
                       ))}
                     </select>
@@ -425,14 +501,13 @@ const PurchaseEntryPage: React.FC = () => {
           <table className="entry-table">
             <thead>
               <tr>
-                <th>Item Name</th>
-                <th>Unit</th>
-                <th>UOM</th>
-                <th>Qty</th>
-                <th>Work Order No</th>
-                <th>Rate</th>
-                <th>Amount</th>
-                <th>Action</th>
+                <th>Party Name</th>
+                <th>Invoice No</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total (₹)</th>
+                <th>Edit</th>
+                <th>Delete</th>
               </tr>
             </thead>
 
@@ -440,29 +515,40 @@ const PurchaseEntryPage: React.FC = () => {
               {purchases.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     style={{ textAlign: "center", padding: "20px" }}
                   >
                     No purchases found
                   </td>
                 </tr>
               ) : (
-                purchases.map((p, pIdx) =>
-                  p.items.map((i, idx) => (
-                    <tr key={`${pIdx}-${idx}`}>
-                      <td>{i.name}</td>
-                      <td>{i.unit}</td>
-                      <td>{i.uom}</td>
-                      <td>{i.qty}</td>
-                      <td>{i.workOrderNo}</td>
-                      <td>{i.rate}</td>
-                      <td className="amount">
-                        ₹{(Number(i.qty || 0) * Number(i.rate || 0)).toFixed(2)}
-                      </td>
-                      <td>-</td>
-                    </tr>
-                  ))
-                )
+                purchases.map((p) => (
+                  <tr key={p._id}>
+                    <td>{p.partyName}</td>
+                    <td>{p.invoiceNo}</td>
+                    <td>{p.invoiceDate}</td>
+                    <td>{p.items.map((i) => i.name).join(", ")}</td>
+                    <td className="amount">₹{p.total.toFixed(2)}</td>
+
+                    <td>
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEditPurchase(p)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeletePurchase(p._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

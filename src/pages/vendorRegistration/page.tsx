@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEdit } from "react-icons/fa";
-import toast, { Toaster } from 'react-hot-toast';
-import axios from 'axios';
+import toast, { Toaster } from "react-hot-toast";
+import api from "../../api/axios";
 import "./VendorRegistration.css";
 
 interface Vendor {
@@ -15,38 +15,40 @@ interface Vendor {
 export default function VendorForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Vendor>({
-    partyName: '',
-    address: '',
-    gstNumber: '',
-    contactNumber: ''
+    partyName: "",
+    address: "",
+    gstNumber: "",
+    contactNumber: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = '/api/vendors';
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     try {
-      const response = await axios.post(url, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.post("/vendors", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       if (response.status === 201) {
-        toast.success('Vendor registered successfully!');
+        toast.success("Vendor registered successfully!");
         setFormData({
-          partyName: '',
-          address: '',
-          gstNumber: '',
-          contactNumber: ''
+          partyName: "",
+          address: "",
+          gstNumber: "",
+          contactNumber: "",
         });
       }
     } catch (error) {
-      console.error('Error submitting vendor:', error);
-      toast.error('Server error. Please try again.');
+      console.error("Error submitting vendor:", error);
+      toast.error("Server error. Please try again.");
     }
   };
 
   const handleEditClick = () => {
     // Navigate to gateway page
-    navigate('/dashboard/vendor-gateway');
+    navigate("/dashboard/vendor-gateway");
   };
 
   const handleBackClick = () => {
@@ -84,7 +86,9 @@ export default function VendorForm() {
                 type="text"
                 placeholder="Enter party name"
                 value={formData.partyName}
-                onChange={(e) => setFormData({ ...formData, partyName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, partyName: e.target.value })
+                }
                 required
               />
             </div>
@@ -98,7 +102,9 @@ export default function VendorForm() {
                 id="address"
                 placeholder="Enter full address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 required
                 rows={4}
               />
@@ -114,7 +120,9 @@ export default function VendorForm() {
                 type="text"
                 placeholder="Enter your 15 character GST number"
                 value={formData.gstNumber}
-                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, gstNumber: e.target.value })
+                }
                 maxLength={15}
                 required
               />
@@ -130,7 +138,9 @@ export default function VendorForm() {
                 type="tel"
                 placeholder="Enter your 10 digit contact number"
                 value={formData.contactNumber}
-                onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, contactNumber: e.target.value })
+                }
                 maxLength={10}
                 required
               />
@@ -145,10 +155,7 @@ export default function VendorForm() {
               >
                 Back
               </button>
-              <button
-                type="submit"
-                className="vendor-reg-save-btn"
-              >
+              <button type="submit" className="vendor-reg-save-btn">
                 Submit
               </button>
             </div>
@@ -158,4 +165,3 @@ export default function VendorForm() {
     </>
   );
 }
-

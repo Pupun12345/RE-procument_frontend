@@ -21,7 +21,21 @@ const footerLinkStyle: CSSProperties = {
   transition: "all 0.25s ease",
 };
 
+const titleStyle: CSSProperties = {
+  textAlign: "center",
+  background: "linear-gradient(90deg,#4dafff,#b47bff)",
+  WebkitBackgroundClip: "text",
+  color: "transparent",
+  fontSize: 26,
+  fontWeight: 700,
+  marginBottom: 4,
+};
 
+const subtitleStyle: CSSProperties = {
+  textAlign: "center",
+  color: "#eee",
+  fontSize: 14,
+};
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,10 +50,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Redirect to dashboard if already logged in
-    if (token) {
-      navigate("/dashboard", { replace: true });
-    }
+    if (token) navigate("/dashboard", { replace: true });
   }, [token, navigate]);
 
   useEffect(() => {
@@ -68,28 +79,17 @@ export default function Login() {
     }
 
     const toastId = toast.loading("Signing in...");
-
     try {
       setLoading(true);
-
       const res = await api.post("/auth/login", { email, password });
-
       const { role, username, token } = res.data;
-      
-      // Set auth in Zustand store (will persist to localStorage)
       setAuth(role, username, token);
-
       toast.success("Login Successful", { id: toastId });
-
-      // Wait for Zustand persist to complete before navigating
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+      await new Promise((r) => setTimeout(r, 150));
       navigate("/dashboard", { replace: true });
     } catch (error) {
       const err = error as AxiosError<LoginErrorResponse>;
-      toast.error(err.response?.data?.message || "Login failed", {
-        id: toastId,
-      });
+      toast.error(err.response?.data?.message || "Login failed", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -98,41 +98,27 @@ export default function Login() {
   return (
     <div
       style={{
-        width: 430,
+        width: 420,
+        height: 440,
         background: "rgba(255,255,255,0.12)",
         backdropFilter: "blur(20px)",
-        padding: 40,
+        padding: "26px 32px",
         borderRadius: 22,
         boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
         color: "white",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
       }}
     >
-      <h2
-        style={{
-          textAlign: "center",
-          background: "linear-gradient(90deg,#4dafff,#b47bff)",
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-          fontSize: 28,
-          fontWeight: 700,
-        }}
-      >
-        E.PROCUREMENT
-      </h2>
+      {/* HEADER */}
+      <div>
+        <h2 style={titleStyle}>E.PROCUREMENT</h2>
+        <p style={subtitleStyle}>Welcome back! Please sign in</p>
+      </div>
 
-      <p style={{ textAlign: "center", marginTop: -5, color: "#eee" }}>
-        Welcome back! Please sign in
-      </p>
-
-      <div
-        style={{
-          marginTop: 30,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
-        {/* Email */}
+      {/* FORM */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ position: "relative" }}>
           <FaUser style={iconStyle} />
           <input
@@ -143,7 +129,6 @@ export default function Login() {
           />
         </div>
 
-        {/* Password */}
         <div style={{ position: "relative" }}>
           <FaLock style={iconStyle} />
           <input
@@ -162,8 +147,7 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Captcha */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={captchaBoxStyle}>{generatedCaptcha}</div>
           <button type="button" onClick={refreshCaptcha} style={refreshBtnStyle}>
             <FaSyncAlt />
@@ -176,77 +160,35 @@ export default function Login() {
           />
         </div>
 
-        {/* Button */}
         <Button
           type="primary"
           loading={loading}
           onClick={handleLogin}
-          style={{
-            width: "100%",
-            height: 50,
-            borderRadius: 12,
-            background: "linear-gradient(90deg,#4dafff,#b47bff)",
-            fontWeight: 600,
-          }}
+          style={loginBtnStyle}
         >
           Sign In
         </Button>
-        <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: 18,
-    fontSize: 13,
-  }}
->
-  <a
-    href="#"
-    style={footerLinkStyle}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.color = "#4dafff";
-      e.currentTarget.style.textShadow =
-        "0 0 10px rgba(77,175,255,0.6)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.color = "#cfe3ff";
-      e.currentTarget.style.textShadow = "none";
-    }}
-  >
-    Forgot User ID?
-  </a>
+      </div>
 
-  <a
-    href="#"
-    style={footerLinkStyle}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.color = "#4dafff";
-      e.currentTarget.style.textShadow =
-        "0 0 10px rgba(77,175,255,0.6)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.color = "#cfe3ff";
-      e.currentTarget.style.textShadow = "none";
-    }}
-  >
-    Forgot Password?
-  </a>
-</div>
-
-        
+      {/* FOOTER */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+        <a style={footerLinkStyle}>Forgot User ID?</a>
+        <a style={footerLinkStyle}>Forgot Password?</a>
       </div>
     </div>
   );
 }
 
-/* ---------------- Styles ---------------- */
+/* ---------------- Input Styles ---------------- */
 
 const inputStyle: CSSProperties = {
   width: "100%",
-  padding: "12px 45px",
+  padding: "10px 42px",
   borderRadius: 10,
   border: "1px solid rgba(255,255,255,0.25)",
   background: "rgba(0,0,0,0.3)",
   color: "white",
+  fontSize: 14,
   outline: "none",
 };
 
@@ -270,32 +212,43 @@ const eyeStyle: CSSProperties = {
 };
 
 const captchaBoxStyle: CSSProperties = {
-  width: 110,
-  height: 45,
+  width: 96,
+  height: 38,
+  borderRadius: 8,
+  fontWeight: 700,
+  fontSize: 13,
   background: "rgba(255,255,255,0.2)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: 8,
-  fontWeight: 700,
 };
 
 const refreshBtnStyle: CSSProperties = {
-  width: 45,
-  height: 45,
+  width: 38,
+  height: 38,
   borderRadius: 8,
-  border: "none",
   background: "rgba(255,255,255,0.15)",
+  border: "none",
   color: "white",
   cursor: "pointer",
 };
 
 const captchaInputStyle: CSSProperties = {
   flex: 1,
-  height: 45,
-  padding: "10px 12px",
+  height: 38,
+  padding: "8px 10px",
   borderRadius: 10,
   border: "1px solid rgba(255,255,255,0.25)",
   background: "rgba(0,0,0,0.25)",
   color: "white",
+  fontSize: 14,
+};
+
+const loginBtnStyle: CSSProperties = {
+  width: "100%",
+  height: 44,
+  borderRadius: 12,
+  background: "linear-gradient(90deg,#4dafff,#b47bff)",
+  fontWeight: 600,
+  fontSize: 15,
 };

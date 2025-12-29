@@ -199,9 +199,17 @@ button.download:hover {
   line-height: 48px;
 }
 
-.report-filters input:first-child {
-  width: 260px;              /* Search */
+/* ✅ Make all filter inputs SAME size */
+.report-filters input {
+  width: 220px;          /* 👈 same width for all */
+  height: 44px;          /* 👈 same height */
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid #000;
+  font-size: 14px;
+  box-sizing: border-box;
 }
+
 
 .report-filters input:nth-child(2),
 .report-filters input:nth-child(3) {
@@ -217,17 +225,7 @@ button.download:hover {
   white-space: nowrap;
 }
 
-/* Button sizing */
-.report-actions button {
-  height: 48px;
-  min-width: 140px;
-  padding: 0 26px;
-  border-radius: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+
 
 /* ================= BUTTON COLORS ================= */
 button.green {
@@ -281,19 +279,7 @@ button.orange:hover {
 }
 
 /* 🔍 Search Party Name — LARGE */
-.report-filters input:first-child {
-  flex: 1;              /* grows more */
-  min-width: 200px;     /* bigger box */
-  max-width: 300px;
-}
 
-/* 📅 Date Pickers — SMALL */
-.report-filters input:nth-child(2),
-.report-filters input:nth-child(3) {
-  flex: 0;
-  width: 160px;         /* smaller size */
-  min-width: 160px;
-}
 
 
 /* ================= ACTIONS ================= */
@@ -305,13 +291,13 @@ button.orange:hover {
   flex-shrink: 0;            /* ⬅ buttons never overflow */
 }
 
-/* Button sizing */
 .report-actions button {
-  height: 48px;
-  min-width: 140px;
-  padding: 0 26px;
-  border-radius: 12px;
+  height: 40px;          /* ⬅ smaller height */
+  min-width: 110px;      /* ⬅ narrower */
+  padding: 0 18px;       /* ⬅ less horizontal padding */
+  border-radius: 10px;   /* ⬅ slightly tighter */
   font-weight: 600;
+  font-size: 14px;       /* ⬅ keeps text clean */
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -483,4 +469,38 @@ button.orange:hover {
 
 .entry-delete:hover {
   background: #d9363e;
+}
+/* 🔴 DELETE BUTTON (ENTRY FORM) */
+button.delete {
+  background: #ef4444;        /* red */
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.delete:hover {
+  background: #dc2626;
+}
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.back-btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-btn:hover {
+  opacity: 0.9;
 }

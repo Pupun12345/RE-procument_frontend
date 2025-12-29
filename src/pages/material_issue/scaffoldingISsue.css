@@ -548,3 +548,40 @@ input[type="date"].ppe-input {
   }
 }
 
+/* ================= REPORT ACTION BUTTONS ================= */
+
+.report-edit-btn {
+  background: #16a34a;          /* green */
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.report-edit-btn:hover {
+  background: #15803d;
+}
+
+.report-delete-btn {
+  background: #dc2626;          /* red */
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.report-delete-btn:hover {
+  background: #b91c1c;
+}

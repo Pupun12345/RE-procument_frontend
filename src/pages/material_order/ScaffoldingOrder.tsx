@@ -1,15 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import "./scaffolding-order.css";
+import api from "../../api/axios";
+
+/* ================= TYPES ================= */
 
 interface MaterialRow {
   material: string;
+  unit: string;
   quantity: string;
   provider: string;
 }
 
+interface Item {
+  itemName: string;
+  unit: string;
+}
+
 interface Order {
+  _id: string;
   orderNo: string;
   supervisor: string;
   employeeId: string;
@@ -18,16 +28,24 @@ interface Order {
   materials: MaterialRow[];
 }
 
+interface Employee {
+  _id: string;
+  employeeName: string;
+  designation: string;
+  employeeCode: string;
+}
+
+/* ================= COMPONENT ================= */
+
 export default function ScaffoldingOrder() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
-  const [filters, setFilters] = useState({
-    fromDate: "",
-    toDate: "",
-    supervisor: "",
-    location: "",
-  });
+
+  const [items, setItems] = useState<Item[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [designation, setDesignation] = useState("Supervisor");
 
   const [form, setForm] = useState({
     supervisor: "",
@@ -37,12 +55,71 @@ export default function ScaffoldingOrder() {
   });
 
   const [materials, setMaterials] = useState<MaterialRow[]>([
-    { material: "", quantity: "", provider: "Ray Engineering" },
+    { material: "", unit: "", quantity: "", provider: "Ray Engineering" },
   ]);
 
   const [orders, setOrders] = useState<Order[]>([]);
 
-  /* ---------------- Handlers ---------------- */
+  const [filters, setFilters] = useState({
+    fromDate: "",
+    toDate: "",
+    supervisor: "",
+    location: "",
+  });
+
+  /* ================= API CALLS ================= */
+
+  const fetchItems = async () => {
+    const res = await api.get("/items/scaffolding");
+    setItems(res.data);
+  };
+
+  const fetchEmployeesByDesignation = async (desg: string) => {
+    try {
+      const res = await api.get(`/employees?designation=${desg}`);
+      setEmployees(res.data);
+    } catch {
+      toast.error("Failed to load employees");
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await api.get("/scaffolding/orders");
+      setOrders(res.data);
+    } catch {
+      toast.error("Failed to load orders");
+    }
+  };
+
+  /* ================= EFFECTS ================= */
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  useEffect(() => {
+    fetchEmployeesByDesignation(designation);
+  }, [designation]);
+
+  useEffect(() => {
+    if (activeTab === "report") {
+      fetchOrders();
+    }
+  }, [activeTab]);
+
+  /* ================= HANDLERS ================= */
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this order?")) return;
+
+    try {
+      await api.delete(`/scaffolding/orders/${id}`);
+      toast.success("Order deleted");
+      fetchOrders(); // 🔥 THIS updates the report
+    } catch {
+      toast.error("Failed to delete order");
+    }
+  };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,7 +128,7 @@ export default function ScaffoldingOrder() {
   const addMaterial = () => {
     setMaterials([
       ...materials,
-      { material: "", quantity: "", provider: "Ray Engineering" },
+      { material: "", unit: "", quantity: "", provider: "Ray Engineering" },
     ]);
   };
 
@@ -70,7 +147,7 @@ export default function ScaffoldingOrder() {
     setMaterials(updated);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (
       !form.supervisor ||
       !form.employeeId ||
@@ -88,27 +165,43 @@ export default function ScaffoldingOrder() {
       }
     }
 
-    const newOrder: Order = {
-      orderNo: `ORD-${new Date().getFullYear()}-${String(
-        orders.length + 1
-      ).padStart(3, "0")}`,
-      supervisor: form.supervisor,
-      employeeId: form.employeeId,
-      issueDate: form.issueDate,
-      location: form.location,
-      materials,
-    };
+    try {
+      await api.post("/scaffolding/orders", {
+        ...form,
+        materials: materials.map((m) => ({
+          material: m.material,
+          quantity: Number(m.quantity),
+          provider: m.provider,
+        })),
+      });
 
-    setOrders([...orders, newOrder]);
+      toast.success("Order saved successfully 🎉");
 
-    toast.success("Order saved successfully 🎉");
+      setForm({
+        supervisor: "",
+        employeeId: "",
+        issueDate: "",
+        location: "",
+      });
 
-    setActiveTab("report");
+      setMaterials([
+        { material: "", unit: "", quantity: "", provider: "Ray Engineering" },
+      ]);
+
+      setActiveTab("report");
+    } catch {
+      toast.error("Failed to save order");
+    }
   };
 
-  /* ---------------- UI ---------------- */
-  // ---------------- FILTERED ORDERS ----------------
+  /* ================= HELPERS ================= */
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-IN");
+
   const filteredOrders = orders.filter((order) => {
+    const orderDate = new Date(order.issueDate).toISOString().split("T")[0];
+
     return (
       (!filters.supervisor ||
         order.supervisor
@@ -118,10 +211,12 @@ export default function ScaffoldingOrder() {
         order.location
           .toLowerCase()
           .includes(filters.location.toLowerCase())) &&
-      (!filters.fromDate || order.issueDate >= filters.fromDate) &&
-      (!filters.toDate || order.issueDate <= filters.toDate)
+      (!filters.fromDate || orderDate >= filters.fromDate) &&
+      (!filters.toDate || orderDate <= filters.toDate)
     );
   });
+
+  /* ================= UI ================= */
 
   return (
     <div className="scaffold-card">
@@ -156,12 +251,20 @@ export default function ScaffoldingOrder() {
         <div className="scaffold-form">
           <div className="form-row">
             <div className="form-group">
-              <label>Supervisor Name *</label>
-              <input
-                name="supervisor"
+              <label>Supervisor *</label>
+              <select
                 value={form.supervisor}
-                onChange={handleFormChange}
-              />
+                onChange={(e) =>
+                  setForm({ ...form, supervisor: e.target.value })
+                }
+              >
+                <option value="">Select Supervisor</option>
+                {employees.map((emp) => (
+                  <option key={emp._id} value={emp.employeeName}>
+                    {emp.employeeName}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
@@ -206,6 +309,7 @@ export default function ScaffoldingOrder() {
             <div className="table-head">
               <span>#</span>
               <span>Material</span>
+              <span>Unit</span>
               <span>Qty</span>
               <span>Provider</span>
               <span>Action</span>
@@ -218,39 +322,54 @@ export default function ScaffoldingOrder() {
                 <div className="cell">
                   <select
                     value={row.material}
-                    onChange={(e) =>
-                      updateMaterial(i, "material", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const selected = items.find(
+                        (it) => it.itemName === e.target.value
+                      );
+
+                      const updated = [...materials];
+                      updated[i].material = e.target.value;
+                      updated[i].unit = selected?.unit || "";
+                      setMaterials(updated);
+                    }}
                   >
                     <option value="">Select</option>
-                    <option>Scaffold Pipe</option>
-                    <option>Coupler</option>
-                    <option>Plank</option>
+                    {items.map((item) => (
+                      <option key={item.itemName} value={item.itemName}>
+                        {item.itemName}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="cell">
-                  <select
+                  <input value={row.unit} readOnly />
+                </div>
+
+                <div className="cell">
+                  <input
                     value={row.quantity}
                     onChange={(e) =>
                       updateMaterial(i, "quantity", e.target.value)
                     }
-                  >
-                    <option value="">Qty</option>
-                    <option>10</option>
-                    <option>20</option>
-                    <option>50</option>
-                  </select>
+                  />
                 </div>
 
-                <div className="cell">
-                  <input value={row.provider} disabled />
+                <div className="cell provider-cell">
+                  <input
+                    value={row.provider}
+                    placeholder="Enter provider"
+                    onChange={(e) =>
+                      updateMaterial(i, "provider", e.target.value)
+                    }
+                  />
                 </div>
 
                 <div className="cell action-cell">
                   <button
                     className="delete-btn"
                     onClick={() => removeMaterial(i)}
+                    title="Delete row"
                   >
                     🗑
                   </button>
@@ -270,17 +389,11 @@ export default function ScaffoldingOrder() {
       {/* REPORT */}
       {activeTab === "report" && (
         <div className="report-section">
-          {/* Report Header */}
+          {/* ================= FILTERS ================= */}
           <div className="report-header">
             <h3>View Orders</h3>
-            <button className="close-btn" onClick={() => setActiveTab("entry")}>
-              ✕
-            </button>
           </div>
 
-          <hr />
-
-          {/* Filters */}
           <div className="report-filters">
             <div className="filter-group">
               <label>From Date</label>
@@ -341,12 +454,10 @@ export default function ScaffoldingOrder() {
             Clear All Filters
           </div>
 
-          {/* Count */}
           <p className="report-count">
             Showing {filteredOrders.length} of {orders.length} orders
           </p>
 
-          {/* Report Table */}
           <div className="report-table">
             <div className="table-head">
               <span>Order Number</span>
@@ -354,30 +465,107 @@ export default function ScaffoldingOrder() {
               <span>Employee ID</span>
               <span>Issue Date</span>
               <span>Location</span>
+              <span>Items</span>
               <span>Action</span>
             </div>
 
-            {filteredOrders.map((o, i) => (
-              <div className="table-row" key={i}>
+            {filteredOrders.map((o) => (
+              <div className="table-row" key={o._id}>
                 <div className="cell">{o.orderNo}</div>
                 <div className="cell">{o.supervisor}</div>
                 <div className="cell">{o.employeeId}</div>
-                <div className="cell">{o.issueDate}</div>
+                <div className="cell">{formatDate(o.issueDate)}</div>
                 <div className="cell">{o.location}</div>
+                <div className="cell items-cell">
+                  {o.materials.length} item{o.materials.length > 1 ? "s" : ""}
+                </div>
 
+                {/* ✅ ACTION CELL — MUST be last */}
                 <div className="cell action-cell">
                   <button
                     className="view-btn"
-                    onClick={() => {
-                      console.log("VIEW ORDER:", o);
-                      toast(`Viewing ${o.orderNo}`, { icon: "👁" });
-                    }}
+                    title="View"
+                    onClick={() => setViewOrder(o)}
                   >
                     👁
+                  </button>
+
+                  <button
+                    className="edit-btn"
+                    title="Edit"
+                    onClick={() => {
+                      setForm({
+                        supervisor: o.supervisor,
+                        employeeId: o.employeeId,
+                        issueDate: o.issueDate.split("T")[0],
+                        location: o.location,
+                      });
+                      setMaterials(o.materials);
+                      setActiveTab("entry");
+                    }}
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    className="delete-btn"
+                    title="Delete"
+                    onClick={() => handleDelete(o._id)}
+                  >
+                    🗑
                   </button>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      {/* ================= VIEW ORDER MODAL ================= */}
+      {activeTab === "report" && viewOrder && (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>Order Details</h3>
+              <button onClick={() => setViewOrder(null)}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <p>
+                <strong>Order No:</strong> {viewOrder.orderNo}
+              </p>
+              <p>
+                <strong>Supervisor:</strong> {viewOrder.supervisor}
+              </p>
+              <p>
+                <strong>Employee ID:</strong> {viewOrder.employeeId}
+              </p>
+              <p>
+                <strong>Date:</strong> {formatDate(viewOrder.issueDate)}
+              </p>
+              <p>
+                <strong>Location:</strong> {viewOrder.location}
+              </p>
+
+              <div className="material-table">
+                <div className="table-head">
+                  <span>#</span>
+                  <span>Material</span>
+                  <span>Unit</span>
+                  <span>Qty</span>
+                  <span>Provider</span>
+                </div>
+
+                {viewOrder.materials.map((m, i) => (
+                  <div className="table-row" key={i}>
+                    <div className="cell">{i + 1}</div>
+                    <div className="cell">{m.material}</div>
+                    <div className="cell">{m.unit}</div>
+                    <div className="cell">{m.quantity}</div>
+                    <div className="cell">{m.provider}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

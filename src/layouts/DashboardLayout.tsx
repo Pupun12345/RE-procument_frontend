@@ -318,7 +318,7 @@ export default function DashboardLayout({ children }: Props) {
               />
             </SubGroup>
 
-            <SubGroup label="Stock Report">
+            <SubGroup label="Stock Overview">
               <SubItem
                 label="PPE"
                 path="/dashboard/stock-report/ppe"
@@ -333,6 +333,17 @@ export default function DashboardLayout({ children }: Props) {
                 label="Scaffolding"
                 path="/dashboard/stock-report/scaffolding"
                 onNavigate={() => setOpenMenu(null)}
+              />
+            </SubGroup>
+            <SubGroup label="Final Report">
+              <SubItem
+                label="PPE"
+              />
+              <SubItem
+                label="Mechanical"
+              />
+              <SubItem
+                label="Scaffolding"
               />
             </SubGroup>
           </SidebarExpandable>

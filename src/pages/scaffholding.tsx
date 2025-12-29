@@ -24,7 +24,7 @@ export default function ScaffoldingRegistration() {
   useEffect(() => {
     const loadItems = async () => {
       try {
-        const res = await api.get("/scaffolding-items");
+        const res = await api.get("/items/scaffolding");
         if (res.data.success) {
           setItems(res.data.items);
         } else {
@@ -57,7 +57,7 @@ export default function ScaffoldingRegistration() {
     }
 
     try {
-      const res = await api.post("/scaffolding-items", {
+      const res = await api.post("/items/scaffolding", {
         itemName: formData.itemName,
         puw: formData.puw,
         unit: finalUnit,
@@ -145,52 +145,6 @@ export default function ScaffoldingRegistration() {
               <button type="button" className="scaffholding-btn" onClick={() => window.history.back()}>Back</button>
             </div>
           </form>
-          <div className="scaffholding-table-section">
-            <h2 className="scaffholding-table-title">Registered Materials</h2>
-            <div className="scaffholding-table-wrapper">
-              <table className="scaffholding-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Item Name</th>
-                    <th>PUW</th>
-                    <th>Unit</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '16px' }}>No items registered.</td>
-                    </tr>
-                  ) : (
-                    items.map((item, idx) => (
-                      <tr key={idx}>
-                        <td>{idx + 1}</td>
-                        <td>{item.itemName}</td>
-                        <td>{item.puw}</td>
-                        <td>{item.unit}</td>
-                        <td className="scaffholding-actions-cell">
-                          <button
-                            className="scaffholding-edit-btn"
-                            onClick={() => alert('Edit functionality to be implemented')}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="scaffholding-delete-btn"
-                            onClick={() => alert('Delete functionality to be implemented')}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </ProtectedRoute>

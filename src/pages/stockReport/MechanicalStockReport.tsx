@@ -28,7 +28,7 @@ const MechanicalStockReport: React.FC = () => {
         setLoading(true);
 
         const res = await fetch(
-          `http://localhost:5000/api/stocks?page=${page}&limit=${PAGE_SIZE}&search=${search}`
+          `http://localhost:4000/api/stock/mechanical?page=${page}&limit=${PAGE_SIZE}&search=${search}`
         );
 
         const result = await res.json();

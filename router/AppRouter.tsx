@@ -24,19 +24,24 @@ import ScaffoldingPurchase from "../src/pages/materialPurchase/ScaffoldingPurcha
 import PPEStockReport from "../src/pages/stockReport/PPEStockReport";
 import MechanicalStockReport from "../src/pages/stockReport/MechanicalStockReport";
 import ScaffoldingStockReport from "../src/pages/stockReport/ScaffoldingStockReport";
+import { RegistrationManager } from "../src/pages/RegistrationManager";
+import { MaterialPurchaseManager } from "../src/pages/MaterialPurchaseManager";
+import { MaterialIssueManager } from "../src/pages/MaterialIssueManager";
+import { MaterialReturnManager } from "../src/pages/MaterialReturnManager";
+import { StockOverviewManager } from "../src/pages/StockOverviewManager";
+import { FinalReportManager } from "../src/pages/FinalReportManager";
 
 export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
-           </ProtectedRoute> 
+          </ProtectedRoute>
         }
       />
       <Route
@@ -82,11 +87,9 @@ export default function AppRouter() {
       <Route
         path="/dashboard/vendor-gateway"
         element={
-          
-            <DashboardLayout>
-              <VendorGateway />
-            </DashboardLayout>
-         
+          <DashboardLayout>
+            <VendorGateway />
+          </DashboardLayout>
         }
       />
       <Route
@@ -99,7 +102,6 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
-    
       <Route
         path="/dashboard/registration/ppe"
         element={
@@ -119,9 +121,10 @@ export default function AppRouter() {
             </DashboardLayout>
           </ProtectedRoute>
         }
-      />''
+      />
+      ''
       <Route
-       path="/dashboard/material-issue/ppe-distribution"
+        path="/dashboard/material-issue/ppe-distribution"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -131,7 +134,7 @@ export default function AppRouter() {
         }
       />
       <Route
-       path="/dashboard/material-issue/mechanical-issue"
+        path="/dashboard/material-issue/mechanical-issue"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -141,7 +144,7 @@ export default function AppRouter() {
         }
       />
       <Route
-       path="/dashboard/material-issue/scaffholding-issue"
+        path="/dashboard/material-issue/scaffholding-issue"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -151,7 +154,7 @@ export default function AppRouter() {
         }
       />
       <Route
-       path="/dashboard/material-return/scaffholding-return"
+        path="/dashboard/material-return/scaffholding-return"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -161,7 +164,7 @@ export default function AppRouter() {
         }
       />
       <Route
-       path="/dashboard/material-return/mechanical-return"
+        path="/dashboard/material-return/mechanical-return"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -171,7 +174,7 @@ export default function AppRouter() {
         }
       />
       <Route
-       path="/dashboard/material-return/ppe-return"
+        path="/dashboard/material-return/ppe-return"
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -210,7 +213,6 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/dashboard/stock-report/ppe"
         element={
@@ -241,7 +243,66 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/dashboard/registration"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <RegistrationManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/material-purchase"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MaterialPurchaseManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/material-issue"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MaterialIssueManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/material-return"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <MaterialReturnManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/stock-overview"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <StockOverviewManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/final-report"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <FinalReportManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
     </Routes>
-    
   );
 }

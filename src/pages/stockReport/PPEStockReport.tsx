@@ -26,8 +26,9 @@ const PPEStockReport: React.FC = () => {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:5000/api/ppe-stocks?page=${page}&limit=${PAGE_SIZE}&search=${search}`
+          `http://localhost:4000/api/stock?page=${page}&limit=${PAGE_SIZE}&search=${search}`
         );
+
         const data = await res.json();
         setStocks(data.data);
         setTotal(data.total);
@@ -145,7 +146,9 @@ const PPEStockReport: React.FC = () => {
         <button disabled={page === 1} onClick={() => setPage(page - 1)}>
           Prev
         </button>
-        <span>Page {page} of {totalPages || 1}</span>
+        <span>
+          Page {page} of {totalPages || 1}
+        </span>
         <button
           disabled={page === totalPages || totalPages === 0}
           onClick={() => setPage(page + 1)}

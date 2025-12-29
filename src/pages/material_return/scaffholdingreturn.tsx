@@ -1,646 +1,932 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { MdDelete, MdEdit } from "react-icons/md";
+import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import "./scaffholdingreturn.css"
-import { FaPen, FaTrash } from "react-icons/fa";
-import { getReturnRecords, saveReturnRecord, deleteReturnRecord } from "../../services/itemsService";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import "./scaffoldingISsue.css";
 
-interface ReturnItem {
-  woNumber: string;
-  location: string;
-  tslManager: string;
-  supervisorName: string;
-  returnDate: string;
+// ====================== TYPES ======================
+interface Item {
   itemName: string;
-  unitWeight: number | string;
-  issuedQty: number | string;
-  issuedWeight: number | string;
   unit: string;
 }
+interface GroupedReportRow {
+  _id: string;
+  returnedBy: string;
+  issueDate: string;
+  location?: string;
+  woNumber?: string;
+  supervisorName?: string;
+  tslName?: string;
 
-interface SavedItem {
-  itemName: string;
-  unit: string;
+  itemsText: string;
+  totalQty: number;
 }
 
 interface ReturnRecord {
-  _id?: string;
-  woNumber: string;
-  location: string;
+  _id: string;
   personName: string;
   returnDate: string;
-  itemName: string;
-  unit: string;
-  unitWeight: number;
-  returnQuantity: number;
-  returnWeight: number;
+  location?: string;
+  woNumber?: string;
+  supervisorName?: string;
+  tslName?: string;
+  items: {
+    itemName: string;
+    unit: string;
+    quantity: number;
+    unitWeight?: number;
+    returnWeight?: number;
+  }[];
 }
 
-export default function ReturnPage() {
-    // Edit material row: populate formData with selected material row for editing
-    const [editingMaterialIdx, setEditingMaterialIdx] = useState<number | null>(null);
+interface Stock {
+  itemName: string;
+  qty: number;
+}
 
-    const handleEditMaterial = (idx: number) => {
-      const mat = materials[idx];
-      setFormData((prev) => ({
-        ...prev,
-        itemName: mat.itemName,
-        unitWeight: mat.unitWeight,
-        issuedQty: mat.returnQuantity,
-        issuedWeight: mat.returnWeight,
-        unit: mat.unit,
-      }));
-      setEditingMaterialIdx(idx);
-      showMessage("Material row loaded for editing");
-    };
+interface FormState {
+  itemName: string;
+  quantity: string;
+  unit: string;
+  issueDate: string;
+  personName: string;
+  location: string;
+  unitWeight?: string;
+  returnWeight?: string;
+  returnQuantity?: string;
+  woNumber?: string;
+  supervisorName?: string;
+  tslName?: string;
+}
 
-    const handleDeleteMaterial = (idx: number) => {
-      if (materials.length === 1) {
-        showMessage("At least one material is required");
-        return;
-      }
-      setMaterials(materials.filter((_, i) => i !== idx));
-      showMessage("Material removed");
-      // If editing the deleted row, reset editingMaterialIdx
-      if (editingMaterialIdx === idx) setEditingMaterialIdx(null);
-    };
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("entry");
-  const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+interface FilterState {
+  search: string;
+  from: string;
+  to: string;
+}
 
-
-  // Add Material Section State
+export default function ScaffoldingIssuePage() {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 20;
   interface MaterialRow {
+    qty: number;
     itemName: string;
-    quantity: string;
     unit: string;
+    unitWeight: string;
+    returnQuantity: string;
+    returnWeight: string;
   }
+  const formatDate = (date?: string) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const [materials, setMaterials] = useState<MaterialRow[]>([
-    { itemName: "", quantity: "", unit: "" }
+    {
+      itemName: "",
+      unit: "",
+      unitWeight: "",
+      returnQuantity: "",
+      returnWeight: "",
+    },
   ]);
 
+  const showToast = (type: "success" | "error", msg: string) => {
+    if (window && window["toast"]) {
+      window["toast"][type](msg);
+    } else {
+      if (type === "error") alert(msg);
+    }
+  };
+
   const addMaterial = () => {
-    setMaterials([...materials, { itemName: "", quantity: "", unit: "" }]);
-    showMessage("Item row added");
+    setMaterials([
+      ...materials,
+      {
+        itemName: "",
+        unit: "",
+        unitWeight: "",
+        returnQuantity: "",
+        returnWeight: "",
+      },
+    ]);
+    showToast("success", "Material row added");
   };
 
   const removeMaterial = (index: number) => {
     if (materials.length === 1) {
-      showMessage("At least one material is required");
+      showToast("error", "At least one material is required");
       return;
     }
     setMaterials(materials.filter((_, i) => i !== index));
-    showMessage("Material removed");
+    showToast("success", "Material removed");
   };
 
-  const updateMaterial = (index: number, key: keyof MaterialRow, value: string) => {
+  const updateMaterial = (
+    index: number,
+    key: keyof MaterialRow,
+    value: string
+  ) => {
     const updated = [...materials];
     updated[index][key] = value;
-
-    // Auto-update unit when itemName is selected in a material row
-    if (key === "itemName") {
-      const selected = savedItems.find((s) => s.itemName === value);
-      updated[index].unit = selected ? selected.unit : "";
+    // If unitWeight or returnQuantity changes, recalculate returnWeight
+    if (key === "unitWeight" || key === "returnQuantity") {
+      const unitWeightNum = parseFloat(
+        key === "unitWeight" ? value : updated[index].unitWeight || "0"
+      );
+      const returnQuantityNum = parseFloat(
+        key === "returnQuantity" ? value : updated[index].returnQuantity || "0"
+      );
+      let returnWeight = "";
+      if (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) {
+        returnWeight = (unitWeightNum * returnQuantityNum).toString();
+      }
+      updated[index].returnWeight = returnWeight;
     }
-
     setMaterials(updated);
   };
 
-  const [formData, setFormData] = useState<ReturnItem>({
-    woNumber: "",
-    location: "",
-    tslManager: "",
-    supervisorName: "",
-    returnDate: "",
+  const handleBack = () => {
+    navigate(-1);
+  };
+  const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
+  const [items, setItems] = useState<Item[]>([]);
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [newItem, setNewItem] = useState<Item>({ itemName: "", unit: "" });
+  const [records, setRecords] = useState<ReturnRecord[]>([]);
+  const [stock, setStock] = useState<Stock[]>([]);
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState<FormState>({
     itemName: "",
-    unitWeight: "",
-    issuedQty: "",
-    issuedWeight: "",
+    quantity: "",
     unit: "",
+    issueDate: new Date().toISOString().split("T")[0],
+    personName: "",
+    location: "",
+    unitWeight: "",
+    returnWeight: "",
+    returnQuantity: "",
+    woNumber: "",
+    supervisorName: "",
+    tslName: "",
   });
-  const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const [returnRecords, setReturnRecords] = useState<ReturnRecord[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [message, setMessage] = useState<string>("");
 
-  const showMessage = (msg: string) => {
-    setMessage(msg);
-    setTimeout(() => setMessage(""), 2500);
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    from: "",
+    to: "",
+  });
+
+  const [editRecord, setEditRecord] = useState<IssueRecord | null>(null);
+  const handleDelete = async (_id: string) => {
+    await api.delete(`/returns/scaffolding/${_id}`);
+    setRecords((prev) => prev.filter((r) => r._id !== _id));
+    showToast("success", "Issue deleted");
   };
 
-  // Load saved records from backend
-  useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        const records = await getReturnRecords();
-        setReturnRecords(records);
-      } catch (e) {
-        console.warn("Failed to load return records", e);
-      }
-    };
-    fetchRecords();
-  }, []);
-
-  // refresh records when switching to report tab (in case other pages updated storage)
-  useEffect(() => {
-    if (activeTab === "report") {
-      try {
-        const raw = localStorage.getItem("scaff_returnRecords");
-        if (raw) setReturnRecords(JSON.parse(raw));
-      } catch (e) {
-        console.warn("Failed to load saved return records", e);
-      }
-    }
-  }, [activeTab]);
-
-  // ✅ Updated handleChange with auto-calculation
-  const handleChange = (field: keyof ReturnItem, value: string | number) => {
-    let updated = { ...formData, [field]: value };
-
-    // Auto-update unit when selecting an item
+  const handleChange = (field: keyof FormState, value: string): void => {
     if (field === "itemName") {
-      const selected = savedItems.find((s) => s.itemName === value);
-      updated.unit = selected ? selected.unit : "";
+      const selected = items.find((i) => i.itemName === value);
+      setForm({
+        ...form,
+        itemName: value,
+        unit: selected ? selected.unit : "",
+      });
+    } else if (field === "unitWeight" || field === "returnQuantity") {
+      // Update the field, then recalculate returnWeight
+      const updatedForm = { ...form, [field]: value };
+      const unitWeightNum = parseFloat(
+        field === "unitWeight" ? value : updatedForm.unitWeight || "0"
+      );
+      const returnQuantityNum = parseFloat(
+        field === "returnQuantity" ? value : updatedForm.returnQuantity || "0"
+      );
+      let returnWeight = "";
+      if (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) {
+        returnWeight = (unitWeightNum * returnQuantityNum).toString();
+      }
+      setForm({ ...updatedForm, returnWeight });
+    } else {
+      setForm({ ...form, [field]: value });
     }
-
-    // Auto-calculate Return Weight = Unit Weight × Return Quantity
-    const qty = Number(field === "issuedQty" ? value : formData.issuedQty) || 0;
-    const unitWt =
-      Number(field === "unitWeight" ? value : formData.unitWeight) || 0;
-    updated.issuedWeight = qty * unitWt;
-
-    setFormData(updated);
   };
 
-  // Removed API call. Only local state update or validation can be done here.
-  const handleSave = async () => {
-    const hasValidMaterial = materials.some(
-      (m) => m.itemName && m.quantity !== "" && Number(m.quantity) > 0
-    );
-
-    if (!formData.location || !hasValidMaterial) {
-      showMessage("⚠️ Fill all required fields before saving");
+  const handleAddItem = () => {
+    if (!newItem.itemName.trim() || !newItem.unit.trim()) {
+      alert("Please enter both item name and unit.");
       return;
     }
-
-    const newRecords = materials.map((m) => ({
-      woNumber: formData.woNumber || "",
-      location: formData.location,
-      personName: formData.tslManager || formData.supervisorName || "",
-      returnDate: formData.returnDate || new Date().toISOString(),
-      itemName: m.itemName,
-      unit: m.unit || formData.unit || "",
-      unitWeight: 0,
-      returnQuantity: Number(m.quantity),
-      returnWeight: 0,
-    }));
-
-    try {
-      await Promise.all(newRecords.map((record) => saveReturnRecord(record)));
-      showMessage(editingId ? "✅ Return updated" : "✅ Return saved");
-      setEditingId(null);
-      setMaterials([{ itemName: "", quantity: "", unit: "" }]);
-      setFormData({
-        location: "",
-        supervisorName: "",
-        returnDate: "",
-        itemName: "",
-        issuedQty: "",
-        unit: "",
-      });
-      const updatedRecords = await getReturnRecords();
-      setReturnRecords(updatedRecords);
-    } catch (e) {
-      console.warn("Failed to save return records", e);
+    if (
+      items.some(
+        (i) =>
+          i.itemName.toLowerCase() === newItem.itemName.trim().toLowerCase()
+      )
+    ) {
+      alert("Item already exists.");
+      return;
     }
+    setItems((prev) => [
+      ...prev,
+      { itemName: newItem.itemName.trim(), unit: newItem.unit.trim() },
+    ]);
+    setShowAddItem(false);
+    setNewItem({ itemName: "", unit: "" });
   };
+  const reportRows = records.map((r) => ({
+    _id: r._id,
+    issueDate: r.returnDate,
+    returnedBy: r.personName,
 
-  const handleEdit = (record: ReturnRecord) => {
-    setActiveTab("entry");
-    setFormData({
-      woNumber: record.woNumber,
-      location: record.location,
-      tslManager: record.personName,
-      supervisorName: "",
-      returnDate: record.returnDate
-        ? new Date(record.returnDate).toISOString().split("T")[0]
-        : "",
-      itemName: record.itemName,
-      unitWeight: record.unitWeight,
-      issuedQty: record.returnQuantity,
-      issuedWeight: record.returnWeight,
-      unit: record.unit,
-    });
-    setEditingId(record._id || null);
-    showMessage("✏️ Editing existing record");
-  };
-  // ================= FILTER LOGIC =================
-  const filteredRecords = returnRecords.filter((r) => {
-    const matchesSearch =
-      r.woNumber.toLowerCase().includes(search) ||
-      r.itemName.toLowerCase().includes(search.toLowerCase()) ||
-      r.personName.toLowerCase().includes(search.toLowerCase()) ||
-      r.location.toLowerCase().includes(search.toLowerCase());
+    location: r.location,
+    woNumber: r.woNumber,
+    supervisorName: r.supervisorName,
+    tslName: r.tslName,
 
-    const recordDate = r.returnDate
-      ? new Date(r.returnDate).toISOString().split("T")[0]
-      : "";
+    itemsText: r.items.map((i) => `${i.itemName} (${i.quantity})`).join(", "),
 
-    const matchesFromDate = fromDate ? recordDate >= fromDate : true;
-    const matchesToDate = toDate ? recordDate <= toDate : true;
+    totalQty: r.items.reduce((sum, i) => sum + i.quantity, 0),
+  }));
 
-    return matchesSearch && matchesFromDate && matchesToDate;
+  const filteredRecords = reportRows.filter((r) => {
+    const searchText = (filters.search || "").toLowerCase();
+
+    const returnedBy = (r.returnedBy || "").toLowerCase();
+    const itemsText = (r.itemsText || "").toLowerCase();
+
+    return returnedBy.includes(searchText) || itemsText.includes(searchText);
   });
 
-  // Removed API call. Remove record from local state + storage.
-  const handleDelete = async (record) => {
-    const formattedDate = record.returnDate
-      ? new Date(record.returnDate).toISOString().split("T")[0]
-      : "";
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+  const paginatedRecords = filteredRecords.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
-    if (!window.confirm(`Delete ${record.itemName} returned on ${formattedDate}?`)) {
-      return;
-    }
-
-    try {
-      await deleteReturnRecord(record._id);
-      const updatedRecords = await getReturnRecords();
-      setReturnRecords(updatedRecords);
-      showMessage("🗑️ Return deleted");
-    } catch (e) {
-      console.warn("Failed to delete return record", e);
-    }
-  };
-  const exportCSV = () => {
-    const headers = [
-      "W/O No,Location,TSL Manager,Return Date,Item,Unit,Unit Wt,Return Qty,Return Wt",
-    ];
-
-    const rows = returnRecords.map((r) => [
-      r.woNumber,
-      r.location,
-      r.personName,
-      r.returnDate ? new Date(r.returnDate).toLocaleDateString() : "",
-      r.itemName,
-      r.unit,
-      r.unitWeight,
-      r.returnQuantity,
-      r.returnWeight,
-    ]);
-
-    let csvContent = headers.join("\n") + "\n";
-
-    rows.forEach((row) => {
-      csvContent += row.join(",") + "\n";
-    });
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "Return_Report.csv");
-    link.click();
-  };
-
-  const exportPDF = () => {
-    const doc = new jsPDF("p", "mm", "a4"); // Portrait orientation
-
+  const exportPDF = (): void => {
+    const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-
-    // Header function (similar to generateInvoicePDF)
     const addHeader = () => {
       doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("RAY ENGINEERING", 50, 15);
-
       doc.setFontSize(10);
       doc.text("Contact No: 9337670266", 50, 22);
       doc.text("E-Mail: accounts@rayengineering.co", 50, 28);
-
       doc.setLineWidth(0.5);
-      doc.line(10, 40, pageWidth - 10, 40);
-
+      doc.line(10, 40, 200, 40);
       doc.setFontSize(16);
-      doc.text("RETURN REPORT", pageWidth / 2, 55, { align: "center" });
+      doc.text("SCAFFOLDING ISSUE REPORT", pageWidth / 2, 55, {
+        align: "center",
+      });
     };
-
-    // Footer function (similar to generateInvoicePDF)
     const addFooter = (pageNum: number, totalPages: number) => {
       const footerY = pageHeight - 40;
-
-      doc.line(10, footerY, pageWidth - 10, footerY);
+      doc.line(10, footerY, 200, footerY);
       doc.setFontSize(9);
-
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
         footerY + 8
       );
-
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
-        pageWidth / 3,
+        75,
         footerY + 8
       );
-
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        (pageWidth / 3) * 2,
+        150,
         footerY + 8
       );
     };
-
-    // Draw first page header
     addHeader();
-
-    // Generate the table using autoTable
     autoTable(doc, {
       startY: 65,
       margin: { top: 60, bottom: 50 },
-
       head: [
         [
-          "W/O No",
-          "Location",
-          "TSL Manager",
-          "Return Date",
           "Item",
           "Unit",
-          "Unit Wt",
-          "Return Qty",
-          "Return Wt",
+          "Date",
+          "Person",
+          "Location",
+          "W/O Number",
+          "Supervisor Name",
+          "TSL Name",
+          "Unit Weight",
+          "Issued Weight",
+          "Issued Quantity",
         ],
       ],
-
-      body: returnRecords.map((r) => [
-        r.woNumber,
-        r.location,
-        r.personName,
-        r.returnDate ? new Date(r.returnDate).toLocaleDateString() : "",
+      body: filteredRecords.map((r) => [
         r.itemName,
         r.unit,
-        r.unitWeight,
-        r.returnQuantity,
-        r.returnWeight,
+        r.issueDate,
+        r.returnedBy,
+        r.location || "",
+        r.woNumber || "",
+        r.supervisorName || "",
+        r.tslName || "",
+        r.unitWeight || "",
+        r.returnWeight || "",
+        r.qty,
       ]),
-
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
       theme: "grid",
-
       didDrawPage: () => {
         addHeader();
       },
     });
-
-    // Add footers to all pages
     const totalPages = doc.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      addFooter(i, totalPages);
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      addFooter(p, totalPages);
     }
-
-    // Save PDF
-    doc.save("Return_Report.pdf");
+    doc.save("Scaffolding_Issue_Report.pdf");
   };
 
+  const exportCSV = (): void => {
+    const headers = [
+      "Item",
+      "Unit",
+      "Date",
+      "Person",
+      "Location",
+      "W/O Number",
+      "Supervisor Name",
+      "TSL Name",
+      "Unit Weight",
+      "Issued Weight",
+      "Issued Quantity",
+    ];
+    const rows = filteredRecords.map((r) => [
+      r.itemName,
+      r.unit,
+      r.issueDate,
+      r.returnedBy,
+      r.location,
+      r.woNumber || "",
+      r.supervisorName || "",
+      r.tslName || "",
+      r.unitWeight || "",
+      r.returnWeight || "",
+      r.qty || "",
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "Scaffolding_Issue_Report.csv";
+    link.click();
+  };
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await api.get("/items/scaffolding");
+        setItems(response.data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+    fetchItems();
+  }, []);
+  useEffect(() => {
+    const fetchIssues = async () => {
+      const res = await api.get("/returns/scaffolding");
+      setRecords(res.data);
+    };
+    fetchIssues();
+  }, []);
+  useEffect(() => {
+    console.log("ALL RECORDS:", records);
+  }, [records]);
+  useEffect(() => {
+    if (activeTab === "report") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFilters({ search: "", from: "", to: "" });
+      setCurrentPage(1);
+    }
+  }, [activeTab]);
+
   return (
-
-    <div className="sr-container">
-      <div className="sr-content">
-        <h1 className="sr-title">RETURN MATERIALS</h1>
-        {message && <div className="sr-toast">{message}</div>}
-
-        <div className="sr-tabs">
+    <div className="ppe-container">
+      <div className="ppe-content">
+        <h2 className="ppe-title">SCAFFOLDING RETURN</h2>
+        <div className="ppe-tabs">
           <button
-            className={`sr-tab${activeTab === "entry" ? " active" : ""}`}
+            className={activeTab === "entry" ? "ppe-tab active" : "ppe-tab"}
             onClick={() => setActiveTab("entry")}
           >
             Entry Form
           </button>
           <button
-            className={`sr-tab${activeTab === "report" ? " active" : ""}`}
+            className={activeTab === "report" ? "ppe-tab active" : "ppe-tab"}
             onClick={() => setActiveTab("report")}
           >
             Report
           </button>
         </div>
-
         {activeTab === "entry" && (
-          <div className="sr-form-card">
-            <div className="sr-form-grid">
-              <input
-                className="sr-input"
-                placeholder="W/O Number"
-                value={formData.woNumber}
-                onChange={(e) => handleChange("woNumber", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                placeholder="Location / Site"
-                value={formData.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                placeholder="TSL Manager"
-                value={formData.tslManager}
-                onChange={(e) => handleChange("tslManager", e.target.value)}
-              />
-              <input
-                className="sr-input"
-                type="date"
-                value={formData.returnDate}
-                onChange={(e) => handleChange("returnDate", e.target.value)}
-              />
-            
-            </div>
-
-            {/* --- Add Material Section --- */}
-            <div className="sr-materials-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 50 }}>
-              <label style={{ fontSize: 14, fontWeight: 500 }}>Materials</label>
-              <button type="button" className="sr-add-btn" onClick={addMaterial}>
-                + Add Material
-              </button>
-            </div>
-            <div className="sr-material-table">
-              <div className="sr-table-head" style={{ display: "grid", gridTemplateColumns: "48px 2fr 1.2fr 1.2fr 100px", alignItems: "center" }}>
-                <div>#</div>
-                <div>Item</div>
-                <div>Return Quantity</div>
-                <div>Unit</div>
-                <div>Action</div>
-              </div>
-              {materials.map((row, idx) => (
-                <div className="sr-table-row" key={idx} style={{ display: "grid", gridTemplateColumns: "48px 2fr 1.2fr 1.2fr 100px", alignItems: "center", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
-                  <div>{idx + 1}</div>
-                  <select
-                    className="sr-material-input"
-                    value={row.itemName}
-                    onChange={(e) => updateMaterial(idx, "itemName", e.target.value)}
-                  >
-                    <option value="">Select Item</option>
-                    {savedItems.map((item, i) => (
-                      <option key={i} value={item.itemName}>{item.itemName}</option>
-                    ))}
-                  </select>
+          <React.Fragment>
+            <div
+              className="ppe-form-card"
+              style={{ margin: "0 auto", maxWidth: 900 }}
+            >
+              <div className="ppe-form-grid">
+                <div className="ppe-form-group">
                   <input
-                    className="sr-material-input"
-                    value={row.quantity}
-                    onChange={(e) => updateMaterial(idx, "quantity", e.target.value)}
-                    placeholder="Return Quantity"
-                    type="number"
+                    className="ppe-input"
+                    type="date"
+                    value={form.issueDate}
+                    onChange={(e) => handleChange("issueDate", e.target.value)}
                   />
-                  <select
-                    className="sr-material-input"
-                    value={row.unit}
-                    onChange={(e) => updateMaterial(idx, "unit", e.target.value)}
-                  >
-                    <option value="">Select Unit</option>
-                    <option value="kg">kg</option>
-                    <option value="pcs">pcs</option>
-                    <option value="liters">liters</option>
-                    {/* Add more units as needed */}
-                  </select>
-                  <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                    <button
-                      type="button"
-                      className="sr-edit-btn"
-                      title="Edit"
-                      style={{ background: "#3B82F6", color: "white", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: "pointer" }}
-                      onClick={() => alert('Edit functionality to be implemented')}
-                    >
-                      <FaPen size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className="sr-delete-btn"
-                      title="Delete"
-                      style={{ background: "#EF4444", color: "white", border: "none", borderRadius: "6px", padding: "6px 10px", cursor: materials.length === 1 ? "not-allowed" : "pointer", opacity: materials.length === 1 ? 0.4 : 1 }}
-                      onClick={() => removeMaterial(idx)}
-                      disabled={materials.length === 1}
-                    >
-                      <FaTrash size={16} />
-                    </button>
-                  </div>
                 </div>
-              ))}
-            </div>
-      
+                <div className="ppe-form-group">
+                  <input
+                    className="ppe-input"
+                    type="text"
+                    placeholder="W/O Number"
+                    value={form.woNumber || ""}
+                    onChange={(e) => handleChange("woNumber", e.target.value)}
+                  />
+                </div>
+                <div className="ppe-form-group">
+                  <input
+                    className="ppe-input"
+                    type="text"
+                    placeholder="Supervisor Name"
+                    value={form.supervisorName || ""}
+                    onChange={(e) =>
+                      handleChange("supervisorName", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="ppe-form-group">
+                  <input
+                    className="ppe-input"
+                    type="text"
+                    placeholder="TSL Name"
+                    value={form.tslName || ""}
+                    onChange={(e) => handleChange("tslName", e.target.value)}
+                  />
+                </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24 }}>
-              <button className="sr-btn-save" onClick={handleSave}>
-                💾 {editingId ? "Update Return" : "Save Return"}
-              </button>
-              <button className="sr-btn-save" onClick={() => navigate(-1)}>
-                Back
-              </button>
+                <div className="ppe-form-group">
+                  <input
+                    className="ppe-input"
+                    type="text"
+                    placeholder="Issued To (Person Name) *"
+                    value={form.personName}
+                    onChange={(e) => handleChange("personName", e.target.value)}
+                  />
+                </div>
+                <div className="ppe-form-group">
+                  <input
+                    className="ppe-input"
+                    type="text"
+                    placeholder="Location / Site"
+                    value={form.location}
+                    onChange={(e) => handleChange("location", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <div className="ppe-materials-header">
+                  <label>
+                    Materials <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="ppe-add-btn"
+                    onClick={addMaterial}
+                  >
+                    ＋ Add Material
+                  </button>
+                </div>
+                <div className="ppe-material-table">
+                  <div
+                    className="ppe-table-head"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span>#</span>
+                    <span>Item Name</span>
+                    <span>Unit</span>
+                    <span>Unit Weight</span>
+                    <span>Issued Quantity</span>
+                    <span>Issued Weight</span>
+                    <span>Action</span>
+                  </div>
+                  {materials.map((row, index) => (
+                    <div
+                      className="ppe-table-row"
+                      key={index}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span>{index + 1}</span>
+                      <select
+                        className="ppe-input"
+                        value={row.itemName}
+                        onChange={(e) => {
+                          const selected = items.find(
+                            (i) => i.itemName === e.target.value
+                          );
+
+                          updateMaterial(index, "itemName", e.target.value);
+                          updateMaterial(index, "unit", selected?.unit || "");
+                        }}
+                      >
+                        <option value="">Select Item</option>
+                        {items.map((item) => (
+                          <option key={item.itemName} value={item.itemName}>
+                            {item.itemName}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        className="ppe-input"
+                        value={row.unit}
+                        readOnly
+                        placeholder="Unit"
+                      />
+
+                      <input
+                        className="ppe-input"
+                        value={row.unitWeight}
+                        onChange={(e) =>
+                          updateMaterial(index, "unitWeight", e.target.value)
+                        }
+                        placeholder="Unit Weight"
+                        type="number"
+                        min="0"
+                      />
+                      <input
+                        className="ppe-input"
+                        value={row.returnQuantity}
+                        onChange={(e) =>
+                          updateMaterial(
+                            index,
+                            "returnQuantity",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Return Quantity"
+                        type="number"
+                        min="0"
+                      />
+                      <input
+                        className="ppe-input"
+                        value={row.returnWeight}
+                        onChange={(e) =>
+                          updateMaterial(index, "returnWeight", e.target.value)
+                        }
+                        placeholder="Return Weight"
+                        type="number"
+                        min="0"
+                        readOnly
+                      />
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <button
+                          className="ppe-action-btn ppe-edit-btn"
+                          type="button"
+                          style={{
+                            fontSize: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "#fff",
+                            border: "1px solid #888",
+                            borderRadius: 4,
+                            color: "#444",
+                            width: 32,
+                            height: 32,
+                            padding: 0,
+                          }}
+                          onClick={() => {
+                            /* TODO: Add edit logic here */
+                          }}
+                        >
+                          <MdEdit />
+                        </button>
+                        <button
+                          className="ppe-delete-btn"
+                          onClick={() => removeMaterial(index)}
+                          disabled={materials.length === 1}
+                          style={{
+                            fontSize: 20,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#ef4444",
+                            background: "#fff",
+                            border: "1px solid #ef4444",
+                            borderRadius: 4,
+                          }}
+                        >
+                          <MdDelete />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="ppe-form-grid"></div>
+              <div className="ppe-buttons" style={{ marginTop: "18px" }}>
+                <button
+                  className="ppe-btn-save"
+                  onClick={async () => {
+                    // 1️⃣ Basic validation
+                    if (!form.personName || materials.length === 0) {
+                      showToast("error", "Missing required fields");
+                      return;
+                    }
+
+                    // 2️⃣ Build payload ONCE
+                    const payload = {
+                      woNumber: form.woNumber,
+                      location: form.location,
+                      personName: form.personName,
+                      supervisorName: form.supervisorName, // ✅
+                      tslName: form.tslName, // ✅
+                      returnDate: form.issueDate,
+
+                      items: materials.map((m) => ({
+                        itemName: m.itemName,
+                        unit: m.unit,
+                        quantity: Number(m.returnQuantity),
+                      })),
+                    };
+
+                    if (payload.items.length === 0) {
+                      showToast("error", "No valid items to issue");
+                      return;
+                    }
+
+                    try {
+                      // 3️⃣ POST ONCE
+                      await api.post("/returns/scaffolding", payload);
+
+                      // 4️⃣ FETCH AFTER SAVE
+                      const res = await api.get("/returns/scaffolding");
+                      setRecords(res.data);
+
+                      // 5️⃣ RESET FORM
+                      setMaterials([
+                        {
+                          itemName: "",
+                          unit: "",
+                          unitWeight: "",
+                          returnQuantity: "",
+                          returnWeight: "",
+                        },
+                      ]);
+
+                      setForm({
+                        itemName: "",
+                        quantity: "",
+                        unit: "",
+                        issueDate: new Date().toISOString().split("T")[0],
+                        personName: "",
+                        location: "",
+                        unitWeight: "",
+                        returnWeight: "",
+                        returnQuantity: "",
+                        woNumber: "",
+                        supervisorName: "",
+                        tslName: "",
+                      });
+
+                      showToast("success", "Materials issued successfully");
+                      setActiveTab("report");
+                    } catch (err) {
+                      console.error(err);
+                      showToast("error", "Failed to return materials");
+                    }
+                  }}
+                >
+                  Submit
+                </button>
+
+                <button
+                  onClick={handleBack}
+                  className="ppe-btn-back"
+                  style={{ marginTop: 0 }}
+                >
+                  Back
+                </button>
+              </div>
             </div>
-          </div>
+          </React.Fragment>
         )}
-
         {activeTab === "report" && (
-          <>
-            <div className="sr-filter-bar">
+          <React.Fragment>
+            <div className="ppe-filter-bar">
+              <div className="ppe-search-box">
+                <span className="ppe-search-icon">🔍</span>
+                <input
+                  className="ppe-search-input"
+                  type="text"
+                  placeholder="Search Item / Person"
+                  value={filters.search}
+                  onChange={(e) => {
+                    setFilters({ ...filters, search: e.target.value });
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+
               <input
-                type="text"
-                placeholder="🔍Item / Person / Location"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="sr-search-input"
-              />
-
-               <input
+                className="ppe-date-filter"
                 type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="sr-date-filter"
-                style={{width:"fit-content"}}
+                value={filters.to}
+                onChange={(e) => {
+                  setFilters({ ...filters, to: e.target.value });
+                  setCurrentPage(1);
+                }}
+                style={{ width: "150px" }}
               />
-
-              <button className="sr-export-btn sr-export-pdf" style={{marginLeft:"400px"}} onClick={exportPDF}>
-                Download Report
+              <button
+                onClick={exportPDF}
+                className="ppe-export-btn ppe-export-pdf"
+              >
+                Export PDF
               </button>
-
-              <button className="sr-export-btn sr-export-csv" onClick={exportCSV}>
+              <button
+                onClick={exportCSV}
+                className="ppe-export-btn ppe-export-csv"
+              >
                 Export CSV
               </button>
             </div>
-
-            <div className="sr-table-container">
-              <table className="sr-table">
+            <div
+              className="ppe-table-container"
+              style={{ margin: "0 auto", maxWidth: 1000 }}
+            >
+              <table className="ppe-table">
                 <thead>
                   <tr>
-                    <th>W/O No</th>
+                    <th>Date</th>
+                    <th>Issued To</th>
                     <th>Location</th>
-                    <th>TSL Manager</th>
-                    <th>Return Date</th>
-                    <th>Item</th>
-                    <th>Unit</th>
-                    <th>Unit Wt</th>
-                    <th>Return Qty</th>
-                    <th>Return Wt</th>
+                    <th>W/O Number</th>
+                    <th>Supervisor</th>
+                    <th>TSL</th>
+                    <th>Items Issued</th>
+                    <th>Total Qty</th>
                     <th>Edit</th>
                     <th>Delete</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {filteredRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={10} style={{ textAlign: "center" }}>
-                        No Records Found
+                  {paginatedRecords.map((r) => (
+                    <tr key={r._id}>
+                      <td>{formatDate(r.issueDate)}</td>
+                      <td>{r.returnedBy}</td>
+                      <td>{r.location || "-"}</td>
+                      <td>{r.woNumber || "-"}</td>
+                      <td>{r.supervisorName || "-"}</td>
+                      <td>{r.tslName || "-"}</td>
+                      <td>{r.itemsText}</td>
+                      <td>{r.totalQty}</td>
+                      <td>
+                        <button
+                          className="report-edit-btn"
+                          onClick={() => setEditRecord(r)}
+                        >
+                          <MdEdit />
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          className="report-delete-btn"
+                          onClick={() => handleDelete(r._id)}
+                        >
+                          <MdDelete />
+                        </button>
                       </td>
                     </tr>
-                  ) : (
-                    filteredRecords.map((r) => (
-                      <tr key={r._id}>
-                        <td>{r.woNumber}</td>
-                        <td>{r.location}</td>
-                        <td>{r.personName}</td>
-                        <td>
-                          {r.returnDate
-                            ? new Date(r.returnDate).toLocaleDateString()
-                            : ""}
-                        </td>
-                        <td>{r.itemName}</td>
-                        <td>{r.unit}</td>
-                        <td>{r.unitWeight}</td>
-                        <td>{r.returnQuantity}</td>
-                        <td>{r.returnWeight}</td>
-                        <td>
-                          <button
-                            className="sr-action-btn sr-edit-btn"
-                            onClick={() => handleEdit(r)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="sr-action-btn sr-delete-btn"
-                            onClick={() => handleDelete(r)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  margin: "24px 0",
+                }}
+              >
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: "8px 16px",
+                    marginRight: 8,
+                    borderRadius: 6,
+                    border: "1px solid #d1d5db",
+                    background: currentPage === 1 ? "#f3f4f6" : "#fff",
+                    color: "#374151",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Previous
+                </button>
+                <span
+                  style={{
+                    fontWeight: 500,
+                    margin: "0 12px",
+                    color: "#374151",
+                  }}
+                >
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: "8px 16px",
+                    marginLeft: 8,
+                    borderRadius: 6,
+                    border: "1px solid #d1d5db",
+                    background: currentPage === totalPages ? "#f3f4f6" : "#fff",
+                    color: "#374151",
+                    cursor:
+                      currentPage === totalPages ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </React.Fragment>
+        )}
+        {editRecord && (
+          <div className="modal-backdrop">
+            <div className="modal-card">
+              <h3>Edit Issue</h3>
 
-            {/* Removed Back button from report section to avoid confusion */}
-          </>
+              <label>Issued Quantity</label>
+              <input
+                type="number"
+                value={editRecord.qty ?? ""}
+                onChange={(e) =>
+                  setEditRecord({
+                    ...editRecord,
+                    qty: Number(e.target.value),
+                  })
+                }
+              />
+
+              <label>Returned By</label>
+              <input
+                value={editRecord.returnedBy ?? ""}
+                onChange={(e) =>
+                  setEditRecord({
+                    ...editRecord,
+                    returnedBy: e.target.value,
+                  })
+                }
+              />
+
+              <button onClick={() => setEditRecord(null)}>Close</button>
+            </div>
+          </div>
         )}
       </div>
-    </div>  
+    </div>
   );
 }
-//updated delete button

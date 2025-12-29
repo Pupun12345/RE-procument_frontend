@@ -33,7 +33,7 @@ export function VendorGateway() {
     end: null as Date | null,
   });
 
-  const url = "http://localhost:5000"; // Replace with your API URL
+  const url = "http://localhost:4000"; // Replace with your API URL
 
   // Fetch vendors
   useEffect(() => {

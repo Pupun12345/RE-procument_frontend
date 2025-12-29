@@ -2,21 +2,31 @@ import React, { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./purchase.css";
+import api from "../../api/axios";
 
 /* ================= TYPES ================= */
-type Party = { id: number; name: string };
-type ItemMaster = { id: number; name: string; unit: string };
+type Party = {
+  _id: string;
+  partyName: string;
+};
+
+type ItemMaster = {
+  _id: string;
+  itemName: string;
+  unit: string;
+};
 
 type Item = {
-  name: string;
+  itemName: string;
   qty: number | "";
   unit: string;
   rate: number | "";
 };
 
 type Purchase = {
+  _id?: string;
   partyName: string;
-  invoiceNo: string;
+  invoiceNumber: string;
   invoiceDate: string;
   items: Item[];
   subtotal: number;
@@ -36,7 +46,7 @@ declare module "jspdf" {
 
 /* ================= EMPTY ITEM ================= */
 const emptyItem: Item = {
-  name: "",
+  itemName: "",
   qty: "",
   unit: "",
   rate: "",
@@ -51,7 +61,7 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= ENTRY STATE ================= */
   const [partyName, setPartyName] = useState("");
-  const [invoiceNo, setInvoiceNo] = useState("");
+  const [invoiceNumber, setinvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [gstPercent, setGstPercent] = useState<number | "">("");
   const [items, setItems] = useState<Item[]>([emptyItem]);
@@ -61,16 +71,53 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
-    fetch("/api/parties")
-      .then((r) => r.json())
-      .then(setParties)
-      .catch(() => setParties([]));
+    const loadMasters = async () => {
+      try {
+        const vendorsRes = await api.get("/vendors");
+        setParties(vendorsRes.data);
 
-    fetch("/api/items")
-      .then((r) => r.json())
-      .then(setItemMasters)
-      .catch(() => setItemMasters([]));
+        const itemsRes = await api.get("/items/ppe");
+        setItemMasters(itemsRes.data);
+      } catch (err) {
+        console.error("Failed to load vendors/items", err);
+        setParties([]);
+        setItemMasters([]);
+      }
+    };
+
+    loadMasters();
   }, []);
+  /* ================= FETCH BACKEND DATA ================= */
+  useEffect(() => {
+    const loadMasters = async () => {
+      try {
+        const vendorsRes = await api.get("/vendors");
+        setParties(vendorsRes.data);
+
+        const itemsRes = await api.get("/items/ppe");
+        setItemMasters(itemsRes.data);
+      } catch (err) {
+        console.error("Failed to load vendors/items", err);
+        setParties([]);
+        setItemMasters([]);
+      }
+    };
+
+    loadMasters();
+  }, []);
+
+  /* ================= LOAD REPORT FROM BACKEND ================= */
+  useEffect(() => {
+    if (activeTab === "report") {
+      api
+        .get("/purchases/ppe")
+        .then((res) => setPurchases(res.data))
+        .catch((err) => {
+          console.error("Failed to load purchases", err);
+          setPurchases([]);
+        });
+    }
+  }, [activeTab]);
 
   /* ================= CALCULATIONS ================= */
   const subtotal = useMemo(
@@ -101,12 +148,12 @@ const PurchaseEntryPage: React.FC = () => {
   };
 
   const handleItemSelect = (index: number, name: string) => {
-    const selected = itemMasters.find((i) => i.name === name);
+    const selected = itemMasters.find((i) => i.itemName === name);
     const updated = [...items];
 
     updated[index] = {
       ...updated[index],
-      name,
+      itemName: name,
       unit: selected?.unit || "",
     };
 
@@ -116,7 +163,7 @@ const PurchaseEntryPage: React.FC = () => {
     const selected = purchases[index];
 
     setPartyName(selected.partyName);
-    setInvoiceNo(selected.invoiceNo);
+    setinvoiceNumber(selected.invoiceNumber);
     setInvoiceDate(selected.invoiceDate);
     setItems(selected.items);
     setGstPercent(selected.gstPercent);
@@ -125,10 +172,21 @@ const PurchaseEntryPage: React.FC = () => {
     setActiveTab("entry");
   };
 
-  const handleDeletePurchase = (index: number) => {
+  const handleDeletePurchase = async (index: number) => {
+    const purchase = purchases[index];
+    if (!purchase?._id) return;
+
     if (!window.confirm("Are you sure you want to delete this purchase?"))
       return;
-    setPurchases(purchases.filter((_, i) => i !== index));
+
+    try {
+      await api.delete(`/purchases/ppe/${purchase._id}`);
+      const res = await api.get("/purchases/ppe");
+      setPurchases(res.data);
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Failed to delete purchase");
+    }
   };
 
   const addItem = () => setItems([...items, emptyItem]);
@@ -136,32 +194,45 @@ const PurchaseEntryPage: React.FC = () => {
     setItems(items.filter((_, i) => i !== index));
 
   /* ================= SAVE PURCHASE ================= */
-  const savePurchase = () => {
-    if (!partyName || !invoiceNo || !invoiceDate) {
+  const savePurchase = async () => {
+    if (!partyName || !invoiceNumber || !invoiceDate) {
       alert("Please fill all required fields");
       return;
     }
 
-    const newPurchase: Purchase = {
+    const payload = {
       partyName,
-      invoiceNo,
+      invoiceNumber: invoiceNumber, // backend name
       invoiceDate,
-      items,
+
+      items: items.map((i) => ({
+        itemName: i.itemName, // backend name
+        qty: Number(i.qty),
+        unit: i.unit,
+        rate: Number(i.rate),
+        amount: Number(i.qty || 0) * Number(i.rate || 0),
+      })),
+
       subtotal,
       gstPercent: Number(gstPercent || 0),
       gstAmount,
       total,
     };
 
-    setPurchases([...purchases, newPurchase]);
+    try {
+      await api.post("/purchases/ppe", payload);
 
-    setPartyName("");
-    setInvoiceNo("");
-    setInvoiceDate("");
-    setItems([emptyItem]);
-    setGstPercent("");
+      setPartyName("");
+      setinvoiceNumber("");
+      setInvoiceDate("");
+      setItems([emptyItem]);
+      setGstPercent("");
 
-    setActiveTab("report");
+      setActiveTab("report");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save purchase");
+    }
   };
 
   /* ================= ENTRY INVOICE PDF ================= */
@@ -173,7 +244,7 @@ const PurchaseEntryPage: React.FC = () => {
       startY: 25,
       head: [["Item", "Qty", "Unit", "Rate", "Amount"]],
       body: items.map((i) => [
-        i.name,
+        i.itemName,
         i.qty,
         i.unit,
         i.rate,
@@ -195,9 +266,9 @@ const PurchaseEntryPage: React.FC = () => {
       head: [["Party", "Invoice", "Date", "Items", "Total"]],
       body: purchases.map((p) => [
         p.partyName,
-        p.invoiceNo,
+        p.invoiceNumber,
         p.invoiceDate,
-        p.items.map((i) => i.name).join(", "),
+        p.items.map((i) => i.itemName).join(", "),
         `₹${p.total.toFixed(2)}`,
       ]),
       headStyles: { fillColor: [0, 0, 0] },
@@ -212,9 +283,9 @@ const PurchaseEntryPage: React.FC = () => {
       ["Party", "Invoice", "Date", "Items", "Total"],
       ...purchases.map((p) => [
         p.partyName,
-        p.invoiceNo,
+        p.invoiceNumber,
         p.invoiceDate,
-        p.items.map((i) => i.name).join("|"),
+        p.items.map((i) => i.itemName).join("|"),
         p.total,
       ]),
     ]
@@ -258,16 +329,16 @@ const PurchaseEntryPage: React.FC = () => {
           >
             <option value="">-- Select Party --</option>
             {parties.map((p) => (
-              <option key={p.id} value={p.name}>
-                {p.name}
+              <option key={p._id} value={p.partyName}>
+                {p.partyName}
               </option>
             ))}
           </select>
 
           <label>Invoice Number</label>
           <input
-            value={invoiceNo}
-            onChange={(e) => setInvoiceNo(e.target.value)}
+            value={invoiceNumber}
+            onChange={(e) => setinvoiceNumber(e.target.value)}
           />
 
           <label>Invoice Date</label>
@@ -293,13 +364,13 @@ const PurchaseEntryPage: React.FC = () => {
                 <tr key={idx}>
                   <td>
                     <select
-                      value={i.name}
+                      value={i.itemName}
                       onChange={(e) => handleItemSelect(idx, e.target.value)}
                     >
                       <option value="">Select Item</option>
                       {itemMasters.map((im) => (
-                        <option key={im.id} value={im.name}>
-                          {im.name}
+                        <option key={im._id} value={im.itemName}>
+                          {im.itemName}
                         </option>
                       ))}
                     </select>
@@ -395,7 +466,6 @@ const PurchaseEntryPage: React.FC = () => {
               <input type="date" />
               <input type="date" />
             </div>
-
             <div className="report-actions">
               <button className="green" onClick={exportPDF}>
                 Download PDF
@@ -423,9 +493,9 @@ const PurchaseEntryPage: React.FC = () => {
               {purchases.map((p, i) => (
                 <tr key={i}>
                   <td>{p.partyName}</td>
-                  <td>{p.invoiceNo}</td>
+                  <td>{p.invoiceNumber}</td>
                   <td>{p.invoiceDate}</td>
-                  <td>{p.items.map((x) => x.name).join(", ")}</td>
+                  <td>{p.items.map((x) => x.itemName).join(", ")}</td>
                   <td className="amount">₹{p.total.toFixed(2)}</td>
 
                   <td>

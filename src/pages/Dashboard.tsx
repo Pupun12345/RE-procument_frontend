@@ -31,6 +31,7 @@ export default function Dashboard() {
           color="#8b5cf6"
           title="Registration"
           desc="Generate and view business reports and analytics"
+          onClick={() => navigate("/dashboard/registration")}
         />
         
         <ModuleCard

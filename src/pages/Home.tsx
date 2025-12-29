@@ -6,7 +6,11 @@ const { Header, Content, Footer } = Layout;
 export default function Home() {
   return (
     <Layout
-      style={{ minHeight: "100vh", position: "relative", color: "white" }}
+      style={{
+        height: "100vh",
+        overflow: "hidden",
+        position: "relative",
+      }}
     >
       {/* Background */}
       <div
@@ -30,28 +34,34 @@ export default function Home() {
         }}
       />
 
-      <Header style={{ height: 0, padding: 0, background: "transparent" }} />
+      <Header style={{ height: 0 }} />
 
       <Content
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          padding: "90px 6%",
-          gap: 60,
+          height: "100%",
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "stretch", // ❌ no vertical centering
+          padding: "0 6%",
           zIndex: 2,
-          flexWrap: "wrap",
         }}
       >
         {/* LEFT BRAND */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            paddingTop: 40,
+            gap: 14,
+          }}
+        >
           <img src="/ray-log.png" width={48} alt="Ray Engineering Logo" />
           <span
             style={{
               fontSize: 24,
               fontWeight: 700,
               letterSpacing: "0.6px",
-              color: "#ffffff", // ✅ PURE WHITE
+              color: "#fff",
               whiteSpace: "nowrap",
             }}
           >
@@ -59,22 +69,32 @@ export default function Home() {
           </span>
         </div>
 
-        {/* RIGHT LOGIN */}
-        <Login />
+        {/* RIGHT LOGIN PANEL */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <Login />
+        </div>
       </Content>
 
       <Footer
         style={{
+          position: "absolute",
+          bottom: 10,
+          width: "100%",
           textAlign: "center",
           background: "transparent",
-          color: "#ffffffdb",
-          fontWeight: 600,
-          marginBottom: 15,
+          color: "#ffffffcc",
+          fontSize: 13,
           zIndex: 2,
         }}
       >
-        © {new Date().getFullYear()} RAY ENGINEERING HRMS | Powered by SMARTNEX
-        Technologies
+        © {new Date().getFullYear()} RAY ENGINEERING RE-PROCUREMENT | Powered by
+        SMARTNEXTechnologies
       </Footer>
     </Layout>
   );
