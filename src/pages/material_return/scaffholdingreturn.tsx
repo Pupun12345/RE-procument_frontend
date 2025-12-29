@@ -185,7 +185,23 @@ export default function ScaffoldingIssuePage() {
     to: "",
   });
 
-  const [editRecord, setEditRecord] = useState<IssueRecord | null>(null);
+  interface EditableIssueRecord {
+    _id: string;
+    itemIndex: number;
+    itemName: string;
+    quantity: number;
+    unit?: string;
+    issueDate?: string;
+    returnedBy?: string;
+    location?: string;
+    woNumber?: string;
+    supervisorName?: string;
+    tslName?: string;
+  }
+
+  const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(
+    null
+  );
   const handleDelete = async (_id: string) => {
     await api.delete(`/returns/scaffolding/${_id}`);
     setRecords((prev) => prev.filter((r) => r._id !== _id));
@@ -216,6 +232,64 @@ export default function ScaffoldingIssuePage() {
       setForm({ ...updatedForm, returnWeight });
     } else {
       setForm({ ...form, [field]: value });
+    }
+  };
+
+  // Open edit modal for a scaffolding return (default first item)
+  const openEdit = (r: ReturnRecord, itemIndex = 0) => {
+    const item = r.items[itemIndex] || { itemName: "", quantity: 0, unit: "" };
+    setEditRecord({
+      _id: r._id,
+      itemIndex,
+      itemName: item.itemName,
+      quantity: item.quantity,
+      unit: item.unit,
+      issueDate: r.returnDate,
+      returnedBy: r.personName,
+      location: r.location,
+      woNumber: r.woNumber,
+      supervisorName: r.supervisorName,
+      tslName: r.tslName,
+    });
+  };
+
+  const updateIssue = async () => {
+    if (!editRecord) return;
+    try {
+      const orig = records.find((x) => x._id === editRecord._id);
+      const updatedItems = orig ? [...orig.items] : [];
+
+      if (updatedItems.length === 0) {
+        updatedItems.push({
+          itemName: editRecord.itemName,
+          quantity: editRecord.quantity,
+          unit: editRecord.unit || "",
+        });
+      } else {
+        updatedItems[editRecord.itemIndex] = {
+          itemName: editRecord.itemName,
+          quantity: editRecord.quantity,
+          unit: editRecord.unit || "",
+        };
+      }
+
+      const payload = {
+        personName: editRecord.returnedBy,
+        returnDate: editRecord.issueDate,
+        location: editRecord.location,
+        woNumber: editRecord.woNumber,
+        supervisorName: editRecord.supervisorName,
+        tslName: editRecord.tslName,
+        items: updatedItems,
+      };
+
+      await api.put(`/returns/scaffolding/${editRecord._id}`, payload);
+      showToast("success", "Updated successfully");
+      setEditRecord(null);
+      const res = await api.get("/returns/scaffolding");
+      setRecords(res.data);
+    } catch (err) {
+      showToast("error", "Failed to update record");
     }
   };
 
@@ -617,18 +691,19 @@ export default function ScaffoldingIssuePage() {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                          style={{
+                            style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "#fff",
+                            background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
                             color: "#444",
-                            width: 32,
+                            width: 50,
                             height: 32,
                             padding: 0,
+                            minWidth:50
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -640,14 +715,14 @@ export default function ScaffoldingIssuePage() {
                           className="ppe-delete-btn"
                           onClick={() => removeMaterial(index)}
                           disabled={materials.length === 1}
-                          style={{
-                            fontSize: 20,
+                        style={{
+                            fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "#ef4444",
-                            background: "#fff",
-                            border: "1px solid #ef4444",
+                            color: "#000000ff",
+                            background: "#ff0000ff",
+                            border: "1px solid #ff0000ff",
                             borderRadius: 4,
                           }}
                         >
@@ -820,7 +895,10 @@ export default function ScaffoldingIssuePage() {
                       <td>
                         <button
                           className="report-edit-btn"
-                          onClick={() => setEditRecord(r)}
+                          onClick={() => {
+                            const orig = records.find((rec) => rec._id === r._id);
+                            if (orig) openEdit(orig);
+                          }}
                         >
                           <MdEdit />
                         </button>
@@ -895,19 +973,38 @@ export default function ScaffoldingIssuePage() {
           </React.Fragment>
         )}
         {editRecord && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
+          <div
+            className="modal-backdrop"
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+            }}
+          >
+            <div
+              className="modal-card"
+              style={{
+                width: "min(720px, 95%)",
+                maxHeight: "70vh",
+                overflowY: "auto",
+                padding: 20,
+                borderRadius: 8,
+                background: "#fff",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+              }}
+            >
               <h3>Edit Issue</h3>
 
               <label>Issued Quantity</label>
               <input
                 type="number"
-                value={editRecord.qty ?? ""}
+                value={editRecord.quantity ?? ""}
                 onChange={(e) =>
-                  setEditRecord({
-                    ...editRecord,
-                    qty: Number(e.target.value),
-                  })
+                  setEditRecord({ ...editRecord, quantity: Number(e.target.value) })
                 }
               />
 
@@ -915,14 +1012,16 @@ export default function ScaffoldingIssuePage() {
               <input
                 value={editRecord.returnedBy ?? ""}
                 onChange={(e) =>
-                  setEditRecord({
-                    ...editRecord,
-                    returnedBy: e.target.value,
-                  })
+                  setEditRecord({ ...editRecord, returnedBy: e.target.value })
                 }
               />
 
-              <button onClick={() => setEditRecord(null)}>Close</button>
+              <div style={{ marginTop: 18 }}>
+                <button onClick={updateIssue} style={{ marginRight: 8 }}>
+                  Save
+                </button>
+                <button onClick={() => setEditRecord(null)}>Cancel</button>
+              </div>
             </div>
           </div>
         )}

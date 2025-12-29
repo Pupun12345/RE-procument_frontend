@@ -1,3 +1,25 @@
+/* Modal overlay for inline edit (matches PPEreturn.tsx style) */
+.ppe-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 2000;
+  padding: 20px;
+}
+
+.ppe-modal {
+  width: min(720px, 95%);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.2);
+}
+
 /* ================= MATERIALS ================= */
 .ppe-materials-header {
   display: flex;
@@ -260,6 +282,7 @@ input[type="date"].ppe-input {
   box-shadow: 0 2px 8px rgba(3, 2, 19, 0.08);
   margin-bottom: 10px;
 }
+
 
 .ppe-btn-save:hover {
   background-color: #3341db;

@@ -5,6 +5,7 @@ import autoTable from "jspdf-autotable";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./scaffoldingISsue.css";
+import "./PPEDistribution.css";
 
 // ====================== TYPES ======================
 interface Item {
@@ -63,6 +64,18 @@ interface FilterState {
   search: string;
   from: string;
   to: string;
+}
+
+interface EditableIssue {
+  _id: string;
+  qty: number;
+  issuedTo: string;
+  issueDate: string;
+  location?: string;
+  woNumber?: string;
+  supervisorName?: string;
+  tslName?: string;
+  items: { itemName: string; unit: string; qty: number }[];
 }
 
 export default function ScaffoldingIssuePage() {
@@ -174,7 +187,51 @@ export default function ScaffoldingIssuePage() {
     to: "",
   });
 
-  const [editRecord, setEditRecord] = useState<IssueRecord | null>(null);
+  const [editRecord, setEditRecord] = useState<EditableIssue | null>(null);
+
+  const openEdit = (r: IssueRecord) => {
+    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    setEditRecord({
+      _id: r._id,
+      qty: first.qty || 0,
+      issuedTo: r.issuedTo,
+      issueDate: r.issueDate,
+      location: r.location,
+      woNumber: r.woNumber,
+      supervisorName: r.supervisorName,
+      tslName: r.tslName,
+      items: r.items || [],
+    });
+  };
+
+  const updateIssue = async () => {
+    if (!editRecord) return;
+    try {
+      const itemsPayload = editRecord.items.map((it, idx) =>
+        idx === 0 ? { itemName: it.itemName, unit: it.unit, qty: editRecord.qty } : { itemName: it.itemName, unit: it.unit, qty: it.qty }
+      );
+
+      const payload = {
+        issuedTo: editRecord.issuedTo,
+        issueDate: editRecord.issueDate,
+        location: editRecord.location,
+        woNumber: editRecord.woNumber,
+        supervisorName: editRecord.supervisorName,
+        tslName: editRecord.tslName,
+        items: itemsPayload,
+      };
+
+      await api.put(`/issue/scaffolding/${editRecord._id}`, payload);
+      // refresh list
+      const res = await api.get("/issue/scaffolding");
+      setRecords(res.data);
+      setEditRecord(null);
+      showToast("success", "Updated successfully");
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Failed to update issue");
+    }
+  };
   const handleDelete = async (_id: string) => {
     await api.delete(`/issue/scaffolding/${_id}`);
     setRecords((prev) => prev.filter((r) => r._id !== _id));
@@ -605,18 +662,19 @@ export default function ScaffoldingIssuePage() {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                          style={{
+                         style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "#fff",
+                            background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
                             color: "#444",
-                            width: 32,
+                            width: 50,
                             height: 32,
                             padding: 0,
+                            minWidth: 30
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -629,13 +687,13 @@ export default function ScaffoldingIssuePage() {
                           onClick={() => removeMaterial(index)}
                           disabled={materials.length === 1}
                           style={{
-                            fontSize: 20,
+                            fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "#ef4444",
-                            background: "#fff",
-                            border: "1px solid #ef4444",
+                            color: "#000000ff",
+                            background: "#ff0000ff",
+                            border: "1px solid #ff0000ff",
                             borderRadius: 4,
                           }}
                         >
@@ -812,7 +870,7 @@ export default function ScaffoldingIssuePage() {
                       <td>
                         <button
                           className="report-edit-btn"
-                          onClick={() => setEditRecord(r)}
+                          onClick={() => openEdit(r)}
                         >
                           <MdEdit />
                         </button>
@@ -887,8 +945,8 @@ export default function ScaffoldingIssuePage() {
           </React.Fragment>
         )}
         {editRecord && (
-          <div className="modal-backdrop">
-            <div className="modal-card">
+          <div className="ppe-modal-overlay">
+            <div className="ppe-modal">
               <h3>Edit Issue</h3>
 
               <label>Issued Quantity</label>
@@ -914,7 +972,10 @@ export default function ScaffoldingIssuePage() {
                 }
               />
 
-              <button onClick={() => setEditRecord(null)}>Close</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={updateIssue} className="ppe-btn-save">Save</button>
+                <button onClick={() => setEditRecord(null)} className="ppe-btn-back">Cancel</button>
+              </div>
             </div>
           </div>
         )}

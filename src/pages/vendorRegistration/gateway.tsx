@@ -220,7 +220,7 @@ export function VendorGateway() {
 
   return (
     <div className="gateway-container">
-      <div className="gateway-content">
+      <div className="gateway-content" style={{ position: 'relative' }}>
         {/* Header */}
         <div className="gateway-header">
           <h1 className="gateway-title">VENDOR GATEWAY</h1>
@@ -286,14 +286,18 @@ export function VendorGateway() {
                       <td>{party.publishedDate}</td>
                       <td className="gateway-actions-cell">
                         <button
+                          className="edit-btn"
                           onClick={() => handleEdit(party)}
                           title="Edit"
+                          aria-label={`Edit ${party.name}`}
                         >
                           <Edit />
                         </button>
                         <button
+                          className="delete-btn"
                           onClick={() => handleDelete(party.id)}
                           title="Delete"
+                          aria-label={`Delete ${party.name}`}
                         >
                           <Trash2 />
                         </button>
@@ -313,9 +317,10 @@ export function VendorGateway() {
           <div
             className="gateway-modal-overlay"
             onClick={() => setEditingParty(null)}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           >
             <div
-              className="gateway-modal-content"
+              className="gateway-modal-content gateway-edit-modal-content"
               onClick={(e) => e.stopPropagation()}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
@@ -369,6 +374,7 @@ export function VendorGateway() {
           <div
             className="gateway-modal-overlay"
             onClick={() => setShowFilter(false)}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           >
             <div
               className="gateway-modal-content"

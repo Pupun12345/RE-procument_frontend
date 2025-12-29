@@ -112,7 +112,21 @@ const DistributionPage: React.FC = () => {
     to: "",
   });
 
-  const [editRecord, setEditRecord] = useState<DistributionRecord | null>(null);
+  // Editable shape for modal
+  interface EditableReturnRecord {
+    _id: string;
+    itemIndex: number;
+    itemName: string;
+    quantity: number;
+    unit: string;
+    issueDate: string;
+    personName: string;
+    location: string;
+  }
+
+  const [editRecord, setEditRecord] = useState<EditableReturnRecord | null>(
+    null
+  );
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
@@ -147,7 +161,7 @@ const DistributionPage: React.FC = () => {
   // ====================== HANDLERS ======================
   const handleChange = (field: keyof FormState, value: string): void => {
     if (field === "itemName") {
-      const selected = stockItems.find((s) => s.itemName === e.target.value);
+      const selected = stockItems.find((s) => s.itemName === value);
       setForm({
         ...form,
         itemName: value,
@@ -155,6 +169,57 @@ const DistributionPage: React.FC = () => {
       });
     } else {
       setForm({ ...form, [field]: value });
+    }
+  };
+
+  // Open edit modal for a record (edits first item by default)
+  const openEdit = (r: ReturnRecord, itemIndex = 0) => {
+    const item = r.items[itemIndex] || { itemName: "", quantity: 0, unit: "" };
+    setEditRecord({
+      _id: r._id,
+      itemIndex,
+      itemName: item.itemName,
+      quantity: item.quantity,
+      unit: item.unit,
+      issueDate: r.returnDate,
+      personName: r.personName,
+      location: r.location,
+    });
+  };
+
+  const updateDistribution = async () => {
+    if (!editRecord) return;
+    try {
+      const orig = records.find((x) => x._id === editRecord._id);
+      const updatedItems = orig ? [...orig.items] : [];
+
+      if (updatedItems.length === 0) {
+        updatedItems.push({
+          itemName: editRecord.itemName,
+          quantity: editRecord.quantity,
+          unit: editRecord.unit,
+        });
+      } else {
+        updatedItems[editRecord.itemIndex] = {
+          itemName: editRecord.itemName,
+          quantity: editRecord.quantity,
+          unit: editRecord.unit,
+        };
+      }
+
+      const payload = {
+        personName: editRecord.personName,
+        returnDate: editRecord.issueDate,
+        location: editRecord.location,
+        items: updatedItems,
+      };
+
+      await api.put(`/returns/${editRecord._id}`, payload);
+      toast.success("Updated successfully");
+      setEditRecord(null);
+      fetchRecords();
+    } catch (err) {
+      toast.error("Failed to update record");
     }
   };
 
@@ -446,18 +511,19 @@ const DistributionPage: React.FC = () => {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                          style={{
+                           style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "#fff",
+                            background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
                             color: "#444",
-                            width: 64,
+                            width: 50,
                             height: 32,
                             padding: 0,
+                            minWidth:50
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -469,14 +535,14 @@ const DistributionPage: React.FC = () => {
                           className="ppe-delete-btn"
                           onClick={() => removeItem(index)}
                           disabled={items.length === 1}
-                          style={{
+                         style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "#ef4444",
-                            background: "#fff",
-                            border: "1px solid #ef4444",
+                            color: "#000000ff",
+                            background: "#ff0000ff",
+                            border: "1px solid #ff0000ff",
                             borderRadius: 4,
                           }}
                         >
@@ -624,7 +690,7 @@ const DistributionPage: React.FC = () => {
                         <td>
                           <button
                             className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => setEditRecord(r)}
+                            onClick={() => openEdit(r)}
                           >
                             Edit
                           </button>
@@ -654,9 +720,31 @@ const DistributionPage: React.FC = () => {
 
         {/* EDIT MODAL */}
         {editRecord && (
-          <div className="ppe-modal-overlay">
-            <div className="ppe-modal">
-              <h3>EDIT DISTRIBUTION</h3>
+          <div
+            className="ppe-modal-overlay"
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+            }}
+          >
+            <div
+              className="ppe-modal"
+              style={{
+                width: "min(720px, 95%)",
+                maxHeight: "70vh",
+                overflowY: "auto",
+                padding: 20,
+                borderRadius: 8,
+                background: "#fff",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
+              }}
+            >
+              <h3 style={{ marginTop: 0 }}>EDIT DISTRIBUTION</h3>
 
               <label>Item</label>
               <input

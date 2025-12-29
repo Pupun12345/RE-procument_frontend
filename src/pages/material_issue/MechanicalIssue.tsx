@@ -46,6 +46,18 @@ interface FilterState {
   to: string;
 }
 
+// Editable shape used by the edit modal
+interface EditableRecord {
+  _id: string;
+  itemName: string;
+  quantity: number;
+  unit: string;
+  issueDate: string;
+  personName: string;
+  location: string;
+  items: Item[];
+}
+
 // ====================== MAIN COMPONENT ======================
 
 const DistributionPage: React.FC = () => {
@@ -108,7 +120,43 @@ const DistributionPage: React.FC = () => {
     to: "",
   });
 
-  const [editRecord, setEditRecord] = useState<DistributionRecord | null>(null);
+  const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
+
+  // Open edit modal and map backend record shape into editable shape
+  const openEdit = (r: DistributionRecord) => {
+    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    setEditRecord({
+      _id: r._id,
+      itemName: first.itemName,
+      quantity: (first.qty as number) || 0,
+      unit: first.unit || "",
+      issueDate: r.issueDate,
+      personName: r.issuedTo,
+      location: r.location || "",
+      items: r.items || [],
+    });
+  };
+
+  // Update distribution on server
+  const updateDistribution = async () => {
+    if (!editRecord) return;
+
+    try {
+      const payload = {
+        issuedTo: editRecord.personName,
+        issueDate: editRecord.issueDate,
+        location: editRecord.location,
+        items: editRecord.items.map((it) => ({ itemName: it.itemName, unit: it.unit, qty: it.qty })),
+      };
+
+      await api.put(`/issue/mechanical/${editRecord._id}`, payload);
+      toast.success("Updated successfully");
+      setEditRecord(null);
+      fetchRecords();
+    } catch (err) {
+      toast.error("Failed to update distribution");
+    }
+  };
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
@@ -450,18 +498,19 @@ setStockItems(data);
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                          style={{
+                            style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "#fff",
+                            background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
                             color: "#444",
-                            width: 64,
+                            width: 50,
                             height: 32,
                             padding: 0,
+                            minWidth:50
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -478,9 +527,9 @@ setStockItems(data);
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "#ef4444",
-                            background: "#fff",
-                            border: "1px solid #ef4444",
+                            color: "#000000ff",
+                            background: "#ff0000ff",
+                            border: "1px solid #ff0000ff",
                             borderRadius: 4,
                           }}
                         >
@@ -627,7 +676,7 @@ setStockItems(data);
                         <td>
                           <button
                             className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => setEditRecord(r)}
+                            onClick={() => openEdit(r)}
                           >
                             Edit
                           </button>

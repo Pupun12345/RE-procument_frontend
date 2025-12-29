@@ -245,11 +245,64 @@ const PurchaseEntryPage: React.FC = () => {
     doc.save("invoice.pdf");
   };
 
-  /* ================= REPORT PDF (UNCHANGED) ================= */
+  /* ================= REPORT PDF (BRANDED) ================= */
   const exportPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const addHeader = () => {
+      try {
+        doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
+      } catch (e) {
+        // ignore missing image
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("RAY ENGINEERING", 50, 15);
+
+      doc.setFontSize(10);
+      doc.text("Contact No: 9337670266", 50, 22);
+      doc.text("E-Mail: accounts@rayengineering.co", 50, 28);
+
+      doc.setLineWidth(0.5);
+      doc.line(10, 40, pageWidth - 10, 40);
+
+      doc.setFontSize(16);
+      doc.text("SCAFFOLDING PURCHASE REPORT", pageWidth / 2, 55, { align: "center" });
+    };
+
+    const addFooter = (pageNum: number, totalPages: number) => {
+      const footerY = pageHeight - 40;
+      doc.line(10, footerY, pageWidth - 10, footerY);
+      doc.setFontSize(9);
+
+      doc.text(
+        "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
+        10,
+        footerY + 8
+      );
+
+      doc.text(
+        "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
+        pageWidth / 2 - 10,
+        footerY + 8
+      );
+
+      doc.text(
+        `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
+        pageWidth - 80,
+        footerY + 8
+      );
+    };
+
+    addHeader();
 
     autoTable(doc, {
+      startY: 65,
+      margin: { top: 60, bottom: 50 },
       head: [["Party", "Invoice", "Date", "Items", "Total"]],
       body: purchases.map((p) => [
         p.partyName,
@@ -258,10 +311,21 @@ const PurchaseEntryPage: React.FC = () => {
         p.items.map((i) => i.name).join(", "),
         `₹${p.total.toFixed(2)}`,
       ]),
-      headStyles: { fillColor: [0, 0, 0] },
+      styles: { fontSize: 9, halign: "center", cellPadding: 3 },
+      headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
+      theme: "grid",
+      didDrawPage: () => {
+        addHeader();
+      },
     });
 
-    doc.save("purchase_report.pdf");
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      addFooter(p, totalPages);
+    }
+
+    doc.save("scaffolding_purchase_report.pdf");
   };
 
   /* ================= EXPORT CSV (UNCHANGED) ================= */

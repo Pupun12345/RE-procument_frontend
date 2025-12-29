@@ -61,6 +61,7 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
+  align-items: center;
 }
 
 .gateway-search-wrapper {
@@ -71,11 +72,33 @@ body {
 
 .gateway-search-input {
   width: 100%;
-  padding: 10px 12px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 10px 12px 10px 56px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 14px;
   color: var(--foreground);
+}
+
+.gateway-search-icon {
+  position: absolute;
+  left: 8px;
+  top: 40%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-foreground);
+  pointer-events: none;
+  height: calc(100% - 8px);
+  width: 30px;
+}
+
+.gateway-search-icon svg {
+  width: auto;
+  height: 100%;
+  display: block;
 }
 
 .gateway-action-btn {
@@ -95,7 +118,7 @@ body {
   min-height: 0;
   line-height: 1;
   white-space: nowrap;
-  margin-top: 32px;
+  margin: 0;
 }
 
 /* Match button classes used in JSX */
@@ -127,6 +150,48 @@ body {
 .vendor-filter-preset-button:hover,
 .gateway-action-btn:hover {
   filter: brightness(0.95);
+}
+
+/* Edit / Delete action buttons (table) */
+.edit-btn,
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
+
+/* Ensure action buttons in the table row align horizontally */
+.gateway-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.edit-btn:hover {
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.35);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.delete-btn:hover {
+  box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
 }
 
 .gateway-list-section {
@@ -163,7 +228,55 @@ body {
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 520px;
+  box-sizing: border-box;
+}
+
+/* Constrain edit modal height so it stays compact with sidebar toggles */
+.gateway-edit-modal-content {
+  max-height: 56vh;
+  overflow-y: auto;
+}
+
+/* Modal form elements */
+.gateway-modal-content label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--secondary-foreground);
+}
+
+.gateway-modal-content input,
+.gateway-modal-content .gateway-search-input,
+.gateway-modal-content .react-datepicker-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+.gateway-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.gateway-modal-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.gateway-modal-btn.save {
+  background: #28a745;
+  color: #fff;
+}
+
+.gateway-modal-btn.cancel {
+  background: #e0e0e0;
+  color: #111;
 }
 
 /* Responsive Styles */
@@ -189,6 +302,26 @@ body {
   .gateway-modal-content {
     padding: 16px;
   }
+
+  .gateway-modal-content {
+    max-width: none;
+    width: calc(100% - 32px);
+  }
+
+  .gateway-modal-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .gateway-modal-btn {
+    width: 100%;
+  }
+
+  .gateway-action-btn {
+    width: 100%;
+    height: 44px;
+    margin-top: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -198,7 +331,8 @@ body {
 
   .gateway-search-input {
     font-size: 12px;
-    padding: 8px 10px;
+    height: 44px;
+    padding: 8px 10px 8px 44px;
   }
 
   .gateway-action-btn {

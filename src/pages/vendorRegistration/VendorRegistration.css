@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 3px;
   position: relative;
 }
 
@@ -57,7 +57,7 @@
 .vendor-reg-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 3px;
 }
 
 .vendor-reg-field {

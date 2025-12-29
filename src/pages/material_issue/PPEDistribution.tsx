@@ -46,6 +46,17 @@ interface FilterState {
   to: string;
 }
 
+interface EditableRecord {
+  _id: string;
+  itemName: string;
+  quantity: number;
+  unit: string;
+  issueDate: string;
+  personName: string;
+  location: string;
+  items: Item[];
+}
+
 // ====================== MAIN COMPONENT ======================
 
 const DistributionPage: React.FC = () => {
@@ -108,7 +119,46 @@ const DistributionPage: React.FC = () => {
     to: "",
   });
 
-  const [editRecord, setEditRecord] = useState<DistributionRecord | null>(null);
+  const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
+
+  const openEdit = (r: DistributionRecord) => {
+    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    setEditRecord({
+      _id: r._id,
+      itemName: first.itemName,
+      quantity: first.qty || 0,
+      unit: first.unit || "",
+      issueDate: r.issueDate,
+      personName: r.issuedTo,
+      location: r.location || "",
+      items: r.items || [],
+    });
+  };
+
+  const updateDistribution = async () => {
+    if (!editRecord) return;
+    try {
+      // ensure items array reflects edited quantity for the first item
+      const itemsPayload = editRecord.items.map((it, idx) =>
+        idx === 0 ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity } : { itemName: it.itemName, unit: it.unit, qty: it.qty }
+      );
+
+      const payload = {
+        issuedTo: editRecord.personName,
+        issueDate: editRecord.issueDate,
+        location: editRecord.location,
+        items: itemsPayload,
+      };
+
+      await api.put(`/issue/ppe/${editRecord._id}`, payload);
+      toast.success("Updated successfully");
+      setEditRecord(null);
+      fetchRecords();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update record");
+    }
+  };
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
@@ -449,13 +499,14 @@ const DistributionPage: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            background: "#fff",
+                            background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
                             color: "#444",
-                            width: 64,
+                            width: 50,
                             height: 32,
                             padding: 0,
+                            minWidth:50
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -472,9 +523,9 @@ const DistributionPage: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: "#ef4444",
-                            background: "#fff",
-                            border: "1px solid #ef4444",
+                            color: "#000000ff",
+                            background: "#ff0000ff",
+                            border: "1px solid #ff0000ff",
                             borderRadius: 4,
                           }}
                         >
@@ -621,7 +672,7 @@ const DistributionPage: React.FC = () => {
                         <td>
                           <button
                             className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => setEditRecord(r)}
+                            onClick={() => openEdit(r)}
                           >
                             Edit
                           </button>
