@@ -63,7 +63,7 @@ interface FormState {
 interface FilterState {
   search: string;
   from: string;
-  to: string;
+  qty?: number;
 }
 
 interface EditableIssue {
@@ -74,6 +74,9 @@ interface EditableIssue {
   location?: string;
   woNumber?: string;
   supervisorName?: string;
+    unitWeight?: number | string;
+    issuedQuantity?: number | string;
+    issuedWeight?: number | string;
   tslName?: string;
   items: { itemName: string; unit: string; qty: number }[];
 }
@@ -190,26 +193,67 @@ export default function ScaffoldingIssuePage() {
   const [editRecord, setEditRecord] = useState<EditableIssue | null>(null);
 
   const openEdit = (r: IssueRecord) => {
-    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    const mapped = (r.items || []).map((it) => ({
+      itemName: it.itemName,
+      unit: it.unit,
+      qty: it.qty || 0,
+      unitWeight: (it as any).unitWeight ?? "",
+      issuedQuantity: (it as any).issuedQuantity ?? it.qty ?? 0,
+      issuedWeight: (it as any).issuedWeight ?? "",
+    }));
+
     setEditRecord({
       _id: r._id,
-      qty: first.qty || 0,
+      qty: mapped.length > 0 ? mapped[0].qty : 0,
       issuedTo: r.issuedTo,
       issueDate: r.issueDate,
       location: r.location,
       woNumber: r.woNumber,
       supervisorName: r.supervisorName,
       tslName: r.tslName,
-      items: r.items || [],
+      items: mapped,
     });
+  };
+
+  const updateEditItem = (
+    index: number,
+    key: "qty" | "unitWeight" | "issuedQuantity",
+    value: string
+  ) => {
+    if (!editRecord) return;
+    const updated = { ...editRecord } as EditableIssue;
+    const itemsCopy = updated.items.map((it) => ({ ...it }));
+    if (key === "qty") {
+      itemsCopy[index].qty = Number(value) || 0;
+      if (!itemsCopy[index].issuedQuantity) itemsCopy[index].issuedQuantity = itemsCopy[index].qty;
+    } else if (key === "unitWeight") {
+      itemsCopy[index].unitWeight = value;
+    } else if (key === "issuedQuantity") {
+      itemsCopy[index].issuedQuantity = value;
+    }
+
+    const uw = parseFloat(String(itemsCopy[index].unitWeight || "0"));
+    const iq = parseFloat(String(itemsCopy[index].issuedQuantity ?? itemsCopy[index].qty ?? "0"));
+    if (!isNaN(uw) && !isNaN(iq)) {
+      itemsCopy[index].issuedWeight = uw * iq;
+    }
+
+    updated.items = itemsCopy;
+    updated.qty = itemsCopy.length > 0 ? itemsCopy[0].qty : 0;
+    setEditRecord(updated);
   };
 
   const updateIssue = async () => {
     if (!editRecord) return;
     try {
-      const itemsPayload = editRecord.items.map((it, idx) =>
-        idx === 0 ? { itemName: it.itemName, unit: it.unit, qty: editRecord.qty } : { itemName: it.itemName, unit: it.unit, qty: it.qty }
-      );
+      const itemsPayload = editRecord.items.map((it) => ({
+        itemName: it.itemName,
+        unit: it.unit,
+        qty: Number(it.qty) || 0,
+        unitWeight: Number(it.unitWeight) || 0,
+        issuedQuantity: Number(it.issuedQuantity) || Number(it.qty) || 0,
+        issuedWeight: Number(it.issuedWeight) || 0,
+      }));
 
       const payload = {
         issuedTo: editRecord.issuedTo,
@@ -946,33 +990,125 @@ export default function ScaffoldingIssuePage() {
         )}
         {editRecord && (
           <div className="ppe-modal-overlay">
-            <div className="ppe-modal">
+            <div
+              className="ppe-modal"
+              style={{ maxHeight: '70vh', overflowY: 'auto', padding: 16 }}
+            >
               <h3>Edit Issue</h3>
 
-              <label>Issued Quantity</label>
-              <input
-                type="number"
-                value={editRecord.qty ?? ""}
-                onChange={(e) =>
-                  setEditRecord({
-                    ...editRecord,
-                    qty: Number(e.target.value),
-                  })
-                }
-              />
+              <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
+                <label>Issue Date</label>
+                <input
+                  type="date"
+                  value={editRecord.issueDate}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, issueDate: e.target.value })
+                  }
+                />
 
-              <label>Issued To</label>
-              <input
-                value={editRecord.issuedTo ?? ""}
-                onChange={(e) =>
-                  setEditRecord({
-                    ...editRecord,
-                    issuedTo: e.target.value,
-                  })
-                }
-              />
+                <label>Issued To</label>
+                <input
+                  value={editRecord.issuedTo ?? ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, issuedTo: e.target.value })
+                  }
+                />
 
-              <div style={{ display: 'flex', gap: 8 }}>
+                <label>W/O Number</label>
+                <input
+                  value={editRecord.woNumber ?? ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, woNumber: e.target.value })
+                  }
+                />
+
+                <label>Supervisor Name</label>
+                <input
+                  value={editRecord.supervisorName ?? ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, supervisorName: e.target.value })
+                  }
+                />
+
+                <label>TSL Name</label>
+                <input
+                  value={editRecord.tslName ?? ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, tslName: e.target.value })
+                  }
+                />
+
+                <label>Location / Site</label>
+                <input
+                  value={editRecord.location ?? ""}
+                  onChange={(e) =>
+                    setEditRecord({ ...editRecord, location: e.target.value })
+                  }
+                />
+              </div>
+
+              <div style={{ marginTop: 8 }}>
+                <label style={{ fontWeight: 600 }}>Items</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                  {editRecord.items.map((it, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        border: '1px solid #e5e7eb',
+                        padding: 8,
+                        borderRadius: 6,
+                        display: 'grid',
+                        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                        gap: 8,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{it.itemName}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>{it.unit}</div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Qty</label>
+                        <input
+                          type="number"
+                          value={it.qty ?? 0}
+                          onChange={(e) => updateEditItem(idx, 'qty', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Unit Weight</label>
+                        <input
+                          type="number"
+                          value={String(it.unitWeight ?? '')}
+                          onChange={(e) => updateEditItem(idx, 'unitWeight', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Issued Qty</label>
+                        <input
+                          type="number"
+                          value={String(it.issuedQuantity ?? it.qty ?? 0)}
+                          onChange={(e) => updateEditItem(idx, 'issuedQuantity', e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Issued Weight</label>
+                        <input
+                          type="number"
+                          value={String(it.issuedWeight ?? '')}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 <button onClick={updateIssue} className="ppe-btn-save">Save</button>
                 <button onClick={() => setEditRecord(null)} className="ppe-btn-back">Cancel</button>
               </div>

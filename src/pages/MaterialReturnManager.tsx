@@ -25,7 +25,7 @@ export function MaterialReturnManager() {
 
         {/* Category Cards */}
         <div className="grid grid-cols-3 gap-6">
-          <ReturnCard
+          {/* <ReturnCard
             title="PPE"
             desc="Return PPE materials"
             icon={ShieldCheck}
@@ -33,7 +33,7 @@ export function MaterialReturnManager() {
             onClick={() =>
               navigate("/dashboard/material-return/ppe-return")
             }
-          />
+          /> */}
 
           <ReturnCard
             title="Mechanical"

@@ -301,11 +301,11 @@ export default function DashboardLayout({ children }: Props) {
             </SubGroup>
 
             <SubGroup label="Material Return">
-              <SubItem
+              {/* <SubItem
                 label="PPE"
                 path="/dashboard/material-return/ppe-return"
                 onNavigate={() => setOpenMenu(null)}
-              />
+              /> */}
               <SubItem
                 label="Mechanical"
                 path="/dashboard/material-return/mechanical-return"
@@ -504,6 +504,25 @@ export default function DashboardLayout({ children }: Props) {
   );
 }
 
+// Icon color mapping helper
+function getIconColor(label: string) {
+  const map: Record<string, string> = {
+    Dashboard: '#2563eb',
+    Registration: '#0ea5a4',
+    'Store Management': '#7c3aed',
+    'Material Purchase': '#059669',
+    'Material orders': '#f97316',
+    'Material Issue': '#ef4444',
+    'Material Return': '#0ea5a4',
+    'Stock Overview': '#0f766e',
+    HRMS: '#ef4444',
+    'Vehicle Management': '#f59e0b',
+    Settings: '#6b7280',
+    'Help & Support': '#06b6d4',
+  };
+  return map[label] || '#111827';
+}
+
 /* ================= Components ================= */
 
 function SidebarButton({
@@ -517,8 +536,8 @@ function SidebarButton({
 }) {
   return (
     <div style={sidebarItemStyle} onClick={onClick}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {icon}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ color: getIconColor(label), display: 'inline-flex', alignItems: 'center' }}>{icon}</span>
         {label}
       </div>
     </div>
@@ -541,8 +560,8 @@ function SidebarExpandable({
   return (
     <>
       <div style={sidebarItemStyle} onClick={onClick}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {icon}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ color: getIconColor(label), display: 'inline-flex', alignItems: 'center' }}>{icon}</span>
           {label}
         </div>
         {open ? <FiChevronDown /> : <FiChevronRight />}

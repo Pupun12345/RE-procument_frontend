@@ -187,21 +187,23 @@ export default function ScaffoldingIssuePage() {
 
   interface EditableIssueRecord {
     _id: string;
-    itemIndex: number;
-    itemName: string;
-    quantity: number;
-    unit?: string;
-    issueDate?: string;
-    returnedBy?: string;
+    returnDate?: string;
+    personName?: string;
     location?: string;
     woNumber?: string;
     supervisorName?: string;
     tslName?: string;
+    items: {
+      itemName: string;
+      unit: string;
+      quantity: number;
+      unitWeight?: number | string;
+      returnQuantity?: number | string;
+      returnWeight?: number | string;
+    }[];
   }
 
-  const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(
-    null
-  );
+  const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(null);
   const handleDelete = async (_id: string) => {
     await api.delete(`/returns/scaffolding/${_id}`);
     setRecords((prev) => prev.filter((r) => r._id !== _id));
@@ -235,52 +237,76 @@ export default function ScaffoldingIssuePage() {
     }
   };
 
-  // Open edit modal for a scaffolding return (default first item)
-  const openEdit = (r: ReturnRecord, itemIndex = 0) => {
-    const item = r.items[itemIndex] || { itemName: "", quantity: 0, unit: "" };
+  // Open edit modal for a scaffolding return
+  const openEdit = (r: ReturnRecord) => {
+    const mapped = (r.items || []).map((it) => ({
+      itemName: it.itemName,
+      unit: it.unit,
+      quantity: it.quantity || 0,
+      unitWeight: (it as any).unitWeight ?? "",
+      returnQuantity: (it as any).returnQuantity ?? it.quantity ?? 0,
+      returnWeight: (it as any).returnWeight ?? "",
+    }));
+
     setEditRecord({
       _id: r._id,
-      itemIndex,
-      itemName: item.itemName,
-      quantity: item.quantity,
-      unit: item.unit,
-      issueDate: r.returnDate,
-      returnedBy: r.personName,
+      returnDate: r.returnDate,
+      personName: r.personName,
       location: r.location,
       woNumber: r.woNumber,
       supervisorName: r.supervisorName,
       tslName: r.tslName,
+      items: mapped,
     });
+  };
+
+  const updateEditItem = (
+    index: number,
+    key: "quantity" | "unitWeight" | "returnQuantity",
+    value: string
+  ) => {
+    if (!editRecord) return;
+    const updated = { ...editRecord } as EditableIssueRecord;
+    const itemsCopy = updated.items.map((it) => ({ ...it }));
+    if (key === "quantity") {
+      itemsCopy[index].quantity = Number(value) || 0;
+      if (!itemsCopy[index].returnQuantity) itemsCopy[index].returnQuantity = itemsCopy[index].quantity;
+    } else if (key === "unitWeight") {
+      itemsCopy[index].unitWeight = value;
+    } else if (key === "returnQuantity") {
+      itemsCopy[index].returnQuantity = value;
+    }
+
+    const uw = parseFloat(String(itemsCopy[index].unitWeight || "0"));
+    const rq = parseFloat(String(itemsCopy[index].returnQuantity ?? itemsCopy[index].quantity ?? "0"));
+    if (!isNaN(uw) && !isNaN(rq)) {
+      itemsCopy[index].returnWeight = uw * rq;
+    }
+
+    updated.items = itemsCopy;
+    setEditRecord(updated);
   };
 
   const updateIssue = async () => {
     if (!editRecord) return;
     try {
-      const orig = records.find((x) => x._id === editRecord._id);
-      const updatedItems = orig ? [...orig.items] : [];
-
-      if (updatedItems.length === 0) {
-        updatedItems.push({
-          itemName: editRecord.itemName,
-          quantity: editRecord.quantity,
-          unit: editRecord.unit || "",
-        });
-      } else {
-        updatedItems[editRecord.itemIndex] = {
-          itemName: editRecord.itemName,
-          quantity: editRecord.quantity,
-          unit: editRecord.unit || "",
-        };
-      }
+      const itemsPayload = editRecord.items.map((it) => ({
+        itemName: it.itemName,
+        unit: it.unit,
+        quantity: Number(it.quantity) || 0,
+        unitWeight: Number(it.unitWeight) || 0,
+        returnQuantity: Number(it.returnQuantity) || Number(it.quantity) || 0,
+        returnWeight: Number(it.returnWeight) || 0,
+      }));
 
       const payload = {
-        personName: editRecord.returnedBy,
-        returnDate: editRecord.issueDate,
+        personName: editRecord.personName,
+        returnDate: editRecord.returnDate,
         location: editRecord.location,
         woNumber: editRecord.woNumber,
         supervisorName: editRecord.supervisorName,
         tslName: editRecord.tslName,
-        items: updatedItems,
+        items: itemsPayload,
       };
 
       await api.put(`/returns/scaffolding/${editRecord._id}`, payload);
@@ -997,30 +1023,84 @@ export default function ScaffoldingIssuePage() {
                 boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
               }}
             >
-              <h3>Edit Issue</h3>
+              <h3>Edit Return</h3>
 
-              <label>Issued Quantity</label>
-              <input
-                type="number"
-                value={editRecord.quantity ?? ""}
-                onChange={(e) =>
-                  setEditRecord({ ...editRecord, quantity: Number(e.target.value) })
-                }
-              />
+              <div style={{ display: 'grid', gap: 8 }}>
+                <label>Return Date</label>
+                <input
+                  type="date"
+                  value={editRecord.returnDate ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, returnDate: e.target.value })}
+                />
 
-              <label>Returned By</label>
-              <input
-                value={editRecord.returnedBy ?? ""}
-                onChange={(e) =>
-                  setEditRecord({ ...editRecord, returnedBy: e.target.value })
-                }
-              />
+                <label>Returned By</label>
+                <input
+                  value={editRecord.personName ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, personName: e.target.value })}
+                />
 
-              <div style={{ marginTop: 18 }}>
-                <button onClick={updateIssue} style={{ marginRight: 8 }}>
-                  Save
-                </button>
-                <button onClick={() => setEditRecord(null)}>Cancel</button>
+                <label>W/O Number</label>
+                <input
+                  value={editRecord.woNumber ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, woNumber: e.target.value })}
+                />
+
+                <label>Supervisor Name</label>
+                <input
+                  value={editRecord.supervisorName ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, supervisorName: e.target.value })}
+                />
+
+                <label>TSL Name</label>
+                <input
+                  value={editRecord.tslName ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, tslName: e.target.value })}
+                />
+
+                <label>Location / Site</label>
+                <input
+                  value={editRecord.location ?? ''}
+                  onChange={(e) => setEditRecord({ ...editRecord, location: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <label style={{ fontWeight: 600 }}>Items</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                  {editRecord.items.map((it, idx) => (
+                    <div key={idx} style={{ border: '1px solid #e5e7eb', padding: 8, borderRadius: 6, display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 8, alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{it.itemName}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>{it.unit}</div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Qty</label>
+                        <input type="number" value={it.quantity ?? 0} onChange={(e) => updateEditItem(idx, 'quantity', e.target.value)} />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Unit Weight</label>
+                        <input type="number" value={String(it.unitWeight ?? '')} onChange={(e) => updateEditItem(idx, 'unitWeight', e.target.value)} />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Return Qty</label>
+                        <input type="number" value={String(it.returnQuantity ?? it.quantity ?? 0)} onChange={(e) => updateEditItem(idx, 'returnQuantity', e.target.value)} />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: 12 }}>Return Weight</label>
+                        <input type="number" value={String(it.returnWeight ?? '')} readOnly />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                <button onClick={updateIssue} className="ppe-btn-save">Save</button>
+                <button onClick={() => setEditRecord(null)} className="ppe-btn-back">Cancel</button>
               </div>
             </div>
           </div>
