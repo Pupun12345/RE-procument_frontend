@@ -58,6 +58,7 @@ const MechanicalPurchasePage: React.FC = () => {
   /* ================= MASTER DATA ================= */
   const [parties, setParties] = useState<Party[]>([]);
   const [itemMasters, setItemMasters] = useState<ItemMaster[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   /* ================= ENTRY STATE ================= */
   const [partyName, setPartyName] = useState("");
@@ -141,17 +142,19 @@ const MechanicalPurchasePage: React.FC = () => {
     setItems(updated);
   };
   const handleEditPurchase = (index: number) => {
-    const selected = purchases[index];
+  const selected = purchases[index];
 
-    setPartyName(selected.partyName);
-    setinvoiceNumber(selected.invoiceNumber);
-    setInvoiceDate(selected.invoiceDate);
-    setItems(selected.items);
-    setGstPercent(selected.gstPercent);
+  setEditingId(selected._id || null); // 🔑 STORE ID
 
-    setPurchases(purchases.filter((_, i) => i !== index));
-    setActiveTab("entry");
-  };
+  setPartyName(selected.partyName);
+  setinvoiceNumber(selected.invoiceNumber);
+  setInvoiceDate(selected.invoiceDate);
+  setItems(selected.items);
+  setGstPercent(selected.gstPercent);
+
+  setActiveTab("entry");
+};
+
 
   const handleDeletePurchase = async (index: number) => {
     const purchase = purchases[index];
@@ -176,45 +179,52 @@ const MechanicalPurchasePage: React.FC = () => {
 
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
-    if (!partyName || !invoiceNumber || !invoiceDate) {
-      alert("Please fill all required fields");
-      return;
-    }
+  if (!partyName || !invoiceNumber || !invoiceDate) {
+    alert("Please fill all required fields");
+    return;
+  }
 
-    const payload = {
-      partyName,
-      invoiceNumber: invoiceNumber, // backend name
-      invoiceDate,
-
-      items: items.map((i) => ({
-        itemName: i.itemName, // backend name
-        qty: Number(i.qty),
-        unit: i.unit,
-        rate: Number(i.rate),
-        amount: Number(i.qty || 0) * Number(i.rate || 0),
-      })),
-
-      subtotal,
-      gstPercent: Number(gstPercent || 0),
-      gstAmount,
-      total,
-    };
-
-    try {
-      await api.post("/purchases/mechanical", payload);
-
-      setPartyName("");
-      setinvoiceNumber("");
-      setInvoiceDate("");
-      setItems([emptyItem]);
-      setGstPercent("");
-
-      setActiveTab("report");
-    } catch (err) {
-      console.error("Save failed", err);
-      alert("Failed to save purchase");
-    }
+  const payload = {
+    partyName,
+    invoiceNumber,
+    invoiceDate,
+    items: items.map((i) => ({
+      itemName: i.itemName,
+      qty: Number(i.qty),
+      unit: i.unit,
+      rate: Number(i.rate),
+      amount: Number(i.qty || 0) * Number(i.rate || 0),
+    })),
+    subtotal,
+    gstPercent: Number(gstPercent || 0),
+    gstAmount,
+    total,
   };
+
+  try {
+    if (editingId) {
+      // ✅ UPDATE
+      await api.put(`/purchases/mechanical/${editingId}`, payload);
+    } else {
+      // ✅ CREATE
+      await api.post("/purchases/mechanical", payload);
+    }
+
+    // reset form
+    setEditingId(null);
+    setPartyName("");
+    setinvoiceNumber("");
+    setInvoiceDate("");
+    setItems([emptyItem]);
+    setGstPercent("");
+
+    setActiveTab("report");
+  } catch (err) {
+    console.error("Save failed", err);
+    alert("Failed to save purchase");
+  }
+};
+
 
   /* ================= ENTRY INVOICE PDF ================= */
   const downloadInvoicePDF = () => {

@@ -52,7 +52,7 @@ interface FilterState {
 
 // ====================== MAIN COMPONENT ======================
 
-const OldRegistrationReturnPage: React.FC = () => {
+const DistributionPage: React.FC = () => {
   const [records, setRecords] = useState<ReturnRecord[]>([]);
   // Item row type for dynamic items
   interface ItemRow {
@@ -81,11 +81,11 @@ const OldRegistrationReturnPage: React.FC = () => {
   // Modal state for adding item
   const fetchRecords = async () => {
     try {
-      const res = await api.get("/old-registration-returns");
+      const res = await api.get("returns/old");
 
       setRecords(Array.isArray(res.data) ? res.data : []);
     } catch {
-      toast.error("Failed to fetch old registration returns");
+      toast.error("Failed to fetch old returns");
       setRecords([]);
     }
   };
@@ -112,7 +112,7 @@ const OldRegistrationReturnPage: React.FC = () => {
     to: "",
   });
 
-  // Editable shape for modal
+  // Editable shape for the modal (maps a ReturnRecord + a specific item index)
   interface EditableReturnRecord {
     _id: string;
     itemIndex: number;
@@ -130,59 +130,18 @@ const OldRegistrationReturnPage: React.FC = () => {
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this old registration return?")) return;
+    if (!window.confirm("Delete this old return?")) return;
 
     try {
-      await api.delete(`/old-registration-returns/${id}`);
-      toast.success("Deleted successfully");
+      await api.delete(`/returns/old/${id}`);
+      toast("success");
       fetchRecords();
     } catch {
-      toast.error("Failed to delete");
+      toast("error");
     }
   };
 
-  // ====================== FETCH DATA ======================
-  // Fetch items from backend on component mount
-  useEffect(() => {
-    const fetchStock = async () => {
-      try {
-        // Load all items from mechanical, scaffolding, and PPE
-        const [mechanicalRes, scaffoldingRes, ppeRes] = await Promise.all([
-          api.get("/items/mechanical"),
-          api.get("/items/scaffolding"),
-          api.get("/items/ppe"),
-        ]);
-
-        const allItems = [
-          ...mechanicalRes.data,
-          ...scaffoldingRes.data,
-          ...ppeRes.data,
-        ];
-
-        setStockItems(allItems);
-      } catch (err) {
-        toast.error("Failed to load stock items");
-      }
-    };
-
-    fetchStock();
-  }, []);
-
-  // ====================== HANDLERS ======================
-  const handleChange = (field: keyof FormState, value: string): void => {
-    if (field === "itemName") {
-      const selected = stockItems.find((s) => s.itemName === value);
-      setForm({
-        ...form,
-        itemName: value,
-        unit: selected ? selected.unit : "",
-      });
-    } else {
-      setForm({ ...form, [field]: value });
-    }
-  };
-
-  // Open edit modal for a record (edits first item by default)
+  // Open edit modal for a record. By default edits the first item (index 0).
   const openEdit = (r: ReturnRecord, itemIndex = 0) => {
     const item = r.items[itemIndex] || { itemName: "", quantity: 0, unit: "" };
     setEditRecord({
@@ -199,10 +158,13 @@ const OldRegistrationReturnPage: React.FC = () => {
 
   const updateDistribution = async () => {
     if (!editRecord) return;
+
     try {
+      // find original record to preserve other items
       const orig = records.find((x) => x._id === editRecord._id);
       const updatedItems = orig ? [...orig.items] : [];
 
+      // ensure the index exists
       if (updatedItems.length === 0) {
         updatedItems.push({
           itemName: editRecord.itemName,
@@ -224,12 +186,44 @@ const OldRegistrationReturnPage: React.FC = () => {
         items: updatedItems,
       };
 
-      await api.put(`/old-registration-returns/${editRecord._id}`, payload);
+      await api.put(`/returns/old/${editRecord._id}`, payload);
+
       toast.success("Updated successfully");
       setEditRecord(null);
       fetchRecords();
     } catch (err) {
       toast.error("Failed to update record");
+    }
+  };
+
+  // ====================== FETCH DATA ======================
+  // Fetch items from backend on component mount
+  useEffect(() => {
+    const fetchStock = async () => {
+      try {
+        const res = await api.get("/old-stock");
+
+        // 🔑 FIX IS HERE
+        setStockItems(Array.isArray(res.data?.data) ? res.data.data : []);
+      } catch (err) {
+        toast("Failed to load stock items");
+      }
+    };
+
+    fetchStock();
+  }, []);
+
+  // ====================== HANDLERS ======================
+  const handleChange = (field: keyof FormState, value: string): void => {
+    if (field === "itemName") {
+      const selected = stockItems.find((s) => s.itemName === value);
+      setForm({
+        ...form,
+        itemName: value,
+        unit: selected ? selected.unit : "",
+      });
+    } else {
+      setForm({ ...form, [field]: value });
     }
   };
 
@@ -278,7 +272,7 @@ const OldRegistrationReturnPage: React.FC = () => {
       doc.line(10, 40, 200, 40);
 
       doc.setFontSize(16);
-      doc.text("OLD REGISTRATION RETURN REPORT", pageWidth / 2, 55, {
+      doc.text("OLD RETURN REPORT", pageWidth / 2, 55, {
         align: "center",
       });
     };
@@ -323,16 +317,14 @@ const OldRegistrationReturnPage: React.FC = () => {
 
       head: [["Item", "Qty", "Unit", "Date", "Person", "Location"]],
 
-      body: filteredRecords.flatMap((r) =>
-        r.items.map((item) => [
-          item.itemName,
-          item.quantity,
-          item.unit,
-          new Date(r.returnDate).toLocaleDateString(),
-          r.personName,
-          r.location,
-        ])
-      ),
+      body: filteredRecords.map((r) => [
+        r.itemName,
+        r.quantity,
+        r.unit,
+        r.issueDate,
+        r.personName,
+        r.location,
+      ]),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
@@ -356,27 +348,25 @@ const OldRegistrationReturnPage: React.FC = () => {
     // ------------------------------------------
     // SAVE PDF
     // ------------------------------------------
-    doc.save("Old_Registration_Return_Report.pdf");
+    doc.save("PPE_Distribution_Report.pdf");
   };
 
   const exportCSV = (): void => {
     const headers = ["Item", "Quantity", "Unit", "Date", "Person", "Location"];
-    const rows = filteredRecords.flatMap((r) =>
-      r.items.map((item) => [
-        item.itemName,
-        item.quantity,
-        item.unit,
-        new Date(r.returnDate).toLocaleDateString(),
-        r.personName,
-        r.location,
-      ])
-    );
+    const rows = filteredRecords.map((r) => [
+      r.itemName,
+      r.quantity,
+      r.unit,
+      r.issueDate,
+      r.personName,
+      r.location,
+    ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
-    link.download = "Old_Registration_Return_Report.csv";
+    link.download = "PPE_Distribution_Report.csv";
     link.click();
   };
   const addItem = () => {
@@ -391,7 +381,7 @@ const OldRegistrationReturnPage: React.FC = () => {
   return (
     <div className="ppe-container">
       <div className="ppe-content">
-        <h2 className="ppe-title">OLD REGISTRATION RETURN</h2>
+        <h2 className="ppe-title">OLD RETURN</h2>
 
         <div className="ppe-tabs">
           <button
@@ -525,7 +515,7 @@ const OldRegistrationReturnPage: React.FC = () => {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                           style={{
+                            style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
@@ -594,8 +584,7 @@ const OldRegistrationReturnPage: React.FC = () => {
                         return;
                       }
 
-                      await api.post("/old-registration-returns", payload);
-                      toast.success("Saved successfully");
+                      await api.post("returns/old", payload);
 
                       setItems([{ itemName: "", quantity: "", unit: "" }]);
                       setForm({
@@ -610,7 +599,7 @@ const OldRegistrationReturnPage: React.FC = () => {
                       setActiveTab("report");
                       fetchRecords();
                     } catch {
-                      toast.error("Failed to save");
+                      toast.error("Failed to issue PPE");
                     }
                   }}
                 >
@@ -759,7 +748,7 @@ const OldRegistrationReturnPage: React.FC = () => {
                 boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
               }}
             >
-              <h3 style={{ marginTop: 0 }}>EDIT REGISTRATION RETURN</h3>
+              <h3 style={{ marginTop: 0 }}>EDIT DISTRIBUTION</h3>
 
               <label>Item</label>
               <input
@@ -841,4 +830,4 @@ const OldRegistrationReturnPage: React.FC = () => {
   );
 };
 
-export default OldRegistrationReturnPage;
+export default DistributionPage;

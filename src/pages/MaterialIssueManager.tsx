@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck, Wrench, Boxes } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Wrench, Boxes, Archive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function MaterialIssueManager() {
@@ -53,6 +53,13 @@ export function MaterialIssueManager() {
             onClick={() =>
               navigate("/dashboard/material-issue/scaffholding-issue")
             }
+          />
+          <IssueCard
+            title="Old"
+            desc="Issue old materials"
+            icon={Archive}
+            color="#64748b" // slate-500
+            onClick={() => navigate("/dashboard/material-issue/old-registration")}
           />
         </div>
       </main>

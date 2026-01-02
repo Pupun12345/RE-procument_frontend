@@ -272,7 +272,7 @@ const DistributionPage: React.FC = () => {
       doc.line(10, 40, 200, 40);
 
       doc.setFontSize(16);
-      doc.text("PPE DISTRIBUTION REPORT", pageWidth / 2, 55, {
+      doc.text("MECHANICAL RETURN REPORT", pageWidth / 2, 55, {
         align: "center",
       });
     };

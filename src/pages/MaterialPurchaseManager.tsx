@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck, Wrench, Boxes } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Wrench, Boxes, Archive } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function MaterialPurchaseManager() {
@@ -48,6 +48,14 @@ export function MaterialPurchaseManager() {
             icon={Boxes}
             color="#ef4444"
             onClick={() => navigate("/dashboard/material-purchase/scaffolding")}
+          />
+          {/* Old */}
+          <PurchaseCard
+            title="Old"
+            desc="Purchase old materials"
+            icon={Archive}
+            color="#64748b" // slate-500
+            onClick={() => navigate("/dashboard/material-purchase/old-registration")}
           />
         </div>
       </main>

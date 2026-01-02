@@ -52,7 +52,7 @@ const emptyItem: Item = {
   rate: "",
 };
 
-const OldRegistrationPage: React.FC = () => {
+const PurchaseEntryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
 
   /* ================= MASTER DATA ================= */
@@ -68,6 +68,7 @@ const OldRegistrationPage: React.FC = () => {
 
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
@@ -76,20 +77,26 @@ const OldRegistrationPage: React.FC = () => {
         const vendorsRes = await api.get("/vendors");
         setParties(vendorsRes.data);
 
-        // Load all items from mechanical, scaffolding, and PPE
-        const [mechanicalRes, scaffoldingRes, ppeRes] = await Promise.all([
-          api.get("/items/mechanical"),
-          api.get("/items/scaffolding"),
-          api.get("/items/ppe"),
-        ]);
+        const itemsRes = await api.get("/old-items");
+        setItemMasters(itemsRes.data);
+      } catch (err) {
+        console.error("Failed to load vendors/items", err);
+        setParties([]);
+        setItemMasters([]);
+      }
+    };
 
-        const allItems = [
-          ...mechanicalRes.data,
-          ...scaffoldingRes.data,
-          ...ppeRes.data,
-        ];
+    loadMasters();
+  }, []);
+  /* ================= FETCH BACKEND DATA ================= */
+  useEffect(() => {
+    const loadMasters = async () => {
+      try {
+        const vendorsRes = await api.get("/vendors");
+        setParties(vendorsRes.data);
 
-        setItemMasters(allItems);
+        const itemsRes = await api.get("/old-items");
+        setItemMasters(itemsRes.data);
       } catch (err) {
         console.error("Failed to load vendors/items", err);
         setParties([]);
@@ -104,7 +111,7 @@ const OldRegistrationPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === "report") {
       api
-        .get("/old-registrations")
+        .get("/purchases/old")
         .then((res) => setPurchases(res.data))
         .catch((err) => {
           console.error("Failed to load purchases", err);
@@ -153,9 +160,10 @@ const OldRegistrationPage: React.FC = () => {
 
     setItems(updated);
   };
-
   const handleEditPurchase = (index: number) => {
     const selected = purchases[index];
+
+    setEditingId(selected._id || null); // 🔑 KEY FIX
 
     setPartyName(selected.partyName);
     setinvoiceNumber(selected.invoiceNumber);
@@ -163,7 +171,6 @@ const OldRegistrationPage: React.FC = () => {
     setItems(selected.items);
     setGstPercent(selected.gstPercent);
 
-    setPurchases(purchases.filter((_, i) => i !== index));
     setActiveTab("entry");
   };
 
@@ -175,8 +182,8 @@ const OldRegistrationPage: React.FC = () => {
       return;
 
     try {
-      await api.delete(`/old-registrations/${purchase._id}`);
-      const res = await api.get("/old-registrations");
+      await api.delete(`/purchases/old/${purchase._id}`);
+      const res = await api.get("/purchases/old");
       setPurchases(res.data);
     } catch (err) {
       console.error("Delete failed", err);
@@ -197,7 +204,7 @@ const OldRegistrationPage: React.FC = () => {
 
     const payload = {
       partyName,
-      invoiceNumber: invoiceNumber,
+      invoiceNumber,
       invoiceDate,
 
       items: items.map((i) => ({
@@ -215,8 +222,16 @@ const OldRegistrationPage: React.FC = () => {
     };
 
     try {
-      await api.post("/old-registrations", payload);
+      if (editingId) {
+        // ✅ UPDATE EXISTING
+        await api.put(`/purchases/old/${editingId}`, payload);
+      } else {
+        // ✅ CREATE NEW
+        await api.post("/purchases/old", payload);
+      }
 
+      // reset form
+      setEditingId(null);
       setPartyName("");
       setinvoiceNumber("");
       setInvoiceDate("");
@@ -250,7 +265,7 @@ const OldRegistrationPage: React.FC = () => {
     const finalY = doc.lastAutoTable?.finalY ?? 40;
     doc.text(`Total: ₹${total.toFixed(2)}`, 150, finalY + 10);
 
-    doc.save("old_registration_invoice.pdf");
+    doc.save("invoice.pdf");
   };
 
   /* ================= REPORT PDF (BRANDED) ================= */
@@ -279,7 +294,7 @@ const OldRegistrationPage: React.FC = () => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFontSize(16);
-      doc.text("OLD REGISTRATION REPORT", pageWidth / 2, 55, { align: "center" });
+      doc.text("Old PURCHASE REPORT", pageWidth / 2, 55, { align: "center" });
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {
@@ -333,7 +348,7 @@ const OldRegistrationPage: React.FC = () => {
       addFooter(p, totalPages);
     }
 
-    doc.save("old_registration_report.pdf");
+    doc.save("ppe_purchase_report.pdf");
   };
 
   /* ================= EXPORT CSV (UNCHANGED) ================= */
@@ -354,13 +369,13 @@ const OldRegistrationPage: React.FC = () => {
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "old_registration_report.csv";
+    a.download = "purchase_report.csv";
     a.click();
   };
 
   return (
     <div className="purchase-container">
-      <h1>OLD REGISTRATION</h1>
+      <h1>PURCHASE ENTRY</h1>
 
       {/* ================= TABS ================= */}
       <div className="tabs">
@@ -517,7 +532,7 @@ const OldRegistrationPage: React.FC = () => {
       {/* ================= REPORT ================= */}
       {activeTab === "report" && (
         <>
-          <h2 className="report-title">OLD REGISTRATION REPORT</h2>
+          <h2 className="report-title">OLD PURCHASE REPORT</h2>
 
           <div className="report-toolbar">
             <div className="report-filters">
@@ -584,4 +599,4 @@ const OldRegistrationPage: React.FC = () => {
   );
 };
 
-export default OldRegistrationPage;
+export default PurchaseEntryPage;

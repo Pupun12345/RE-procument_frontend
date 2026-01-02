@@ -26,7 +26,7 @@ const OldRegistrationStockReport: React.FC = () => {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:4000/api/old-registration-stock?page=${page}&limit=${PAGE_SIZE}&search=${search}`
+          `http://localhost:4000/api/old-stock?page=${page}&limit=${PAGE_SIZE}&search=${search}`
         );
 
         const data = await res.json();
@@ -87,30 +87,51 @@ const OldRegistrationStockReport: React.FC = () => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFontSize(16);
-      doc.text("OLD REGISTRATION STOCK REPORT", pageWidth / 2, 55, { align: "center" });
+      doc.text("OLD STOCK REPORT", pageWidth / 2, 55, { align: "center" });
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {
-      const footerY = pageHeight - 40;
-      doc.line(10, footerY, pageWidth - 10, footerY);
-      doc.setFontSize(9);
+      const footerTop = pageHeight - 45;
 
+      // horizontal line
+      doc.setLineWidth(0.5);
+      doc.line(10, footerTop, pageWidth - 10, footerTop);
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+
+      const colWidth = (pageWidth - 20) / 3;
+
+      // LEFT COLUMN — Registrations
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 8
+        footerTop + 8,
+        { maxWidth: colWidth }
       );
 
+      // MIDDLE COLUMN — Address
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
-        pageWidth / 2 - 10,
-        footerY + 8
+        10 + colWidth,
+        footerTop + 8,
+        { maxWidth: colWidth }
       );
 
+      // RIGHT COLUMN — Contact
       doc.text(
-        `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        pageWidth - 80,
-        footerY + 8
+        "Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co",
+        10 + colWidth * 2,
+        footerTop + 8,
+        { maxWidth: colWidth }
+      );
+
+      // PAGE NUMBER (bottom-right, clean)
+      doc.text(
+        `Page ${pageNum} / ${totalPages}`,
+        pageWidth - 10,
+        pageHeight - 10,
+        { align: "right" }
       );
     };
 
@@ -145,11 +166,11 @@ const OldRegistrationStockReport: React.FC = () => {
 
   return (
     <div className={styles.page}>
-      <h2 className={styles.title}>OLD REGISTRATION STOCK OVERVIEW</h2>
+      <h2 className={styles.title}>OLD STOCK OVERVIEW</h2>
 
       <div className={styles.controls}>
         <input
-          placeholder="🔍 Search old registration item..."
+          placeholder="🔍 Search old item..."
           value={search}
           onChange={(e) => {
             setPage(1);
@@ -166,7 +187,7 @@ const OldRegistrationStockReport: React.FC = () => {
 
       <div className={styles.tableCard}>
         {loading ? (
-          <p className={styles.loading}>Loading old registration stock...</p>
+          <p className={styles.loading}>Loading old stock...</p>
         ) : (
           <table className={styles.table}>
             <thead>

@@ -59,7 +59,7 @@ interface EditableRecord {
 
 // ====================== MAIN COMPONENT ======================
 
-const OldRegistrationIssuePage: React.FC = () => {
+const DistributionPage: React.FC = () => {
   const [records, setRecords] = useState<DistributionRecord[]>([]);
   // Item row type for dynamic items
   interface ItemRow {
@@ -87,15 +87,15 @@ const OldRegistrationIssuePage: React.FC = () => {
 
   // Modal state for adding item
   const fetchRecords = async () => {
-  try {
-    const res = await api.get("/old-registration-issues");
+    try {
+      const res = await api.get("/issue/old");
 
-    setRecords(Array.isArray(res.data) ? res.data : []);
-  } catch {
-    toast.error("Failed to fetch old registration issues");
-    setRecords([]);
-  }
-};
+      setRecords(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      toast.error("Failed to fetch OLD issues");
+      setRecords([]);
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -122,7 +122,10 @@ const OldRegistrationIssuePage: React.FC = () => {
   const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
 
   const openEdit = (r: DistributionRecord) => {
-    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    const first =
+      r.items && r.items.length > 0
+        ? r.items[0]
+        : { itemName: "", unit: "", qty: 0 };
     setEditRecord({
       _id: r._id,
       itemName: first.itemName,
@@ -140,7 +143,9 @@ const OldRegistrationIssuePage: React.FC = () => {
     try {
       // ensure items array reflects edited quantity for the first item
       const itemsPayload = editRecord.items.map((it, idx) =>
-        idx === 0 ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity } : { itemName: it.itemName, unit: it.unit, qty: it.qty }
+        idx === 0
+          ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity }
+          : { itemName: it.itemName, unit: it.unit, qty: it.qty }
       );
 
       const payload = {
@@ -150,7 +155,7 @@ const OldRegistrationIssuePage: React.FC = () => {
         items: itemsPayload,
       };
 
-      await api.put(`/old-registration-issues/${editRecord._id}`, payload);
+      await api.put(`/issue/old/${editRecord._id}`, payload);
       toast.success("Updated successfully");
       setEditRecord(null);
       fetchRecords();
@@ -162,14 +167,14 @@ const OldRegistrationIssuePage: React.FC = () => {
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this old registration issue?")) return;
+    if (!window.confirm("Delete this OLD issue?")) return;
 
     try {
-      await api.delete(`/old-registration-issues/${id}`);
-      toast.success("Deleted successfully");
+      await api.delete(`/issue/old/${id}`);
+      toast("success");
       fetchRecords();
     } catch {
-      toast.error("Failed to delete");
+      toast("error");
     }
   };
 
@@ -178,22 +183,12 @@ const OldRegistrationIssuePage: React.FC = () => {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        // Load all items from mechanical, scaffolding, and PPE
-        const [mechanicalRes, scaffoldingRes, ppeRes] = await Promise.all([
-          api.get("/items/mechanical"),
-          api.get("/items/scaffolding"),
-          api.get("/items/ppe"),
-        ]);
+        const res = await api.get("/old-stock");
 
-        const allItems = [
-          ...mechanicalRes.data,
-          ...scaffoldingRes.data,
-          ...ppeRes.data,
-        ];
-
-        setStockItems(allItems);
+        // 🔑 FIX IS HERE
+        setStockItems(Array.isArray(res.data?.data) ? res.data.data : []);
       } catch (err) {
-        toast.error("Failed to load stock items");
+        showToast("error", "Failed to load stock items");
       }
     };
 
@@ -203,7 +198,7 @@ const OldRegistrationIssuePage: React.FC = () => {
   // ====================== HANDLERS ======================
   const handleChange = (field: keyof FormState, value: string): void => {
     if (field === "itemName") {
-      const selected = stockItems.find((s) => s.itemName === value);
+      const selected = stockItems.find((s) => s.itemName === e.target.value);
       setForm({
         ...form,
         itemName: value,
@@ -217,24 +212,22 @@ const OldRegistrationIssuePage: React.FC = () => {
   // Add item logic
 
   const filteredRecords = records.filter((r) => {
-  const search = filters.search.toLowerCase();
+    const search = filters.search.toLowerCase();
 
-  const itemMatch = r.items.some(i =>
-    i.itemName.toLowerCase().includes(search)
-  );
+    const itemMatch = r.items.some((i) =>
+      i.itemName.toLowerCase().includes(search)
+    );
 
-  const personMatch = r.issuedTo.toLowerCase().includes(search);
+    const personMatch = r.issuedTo.toLowerCase().includes(search);
 
-  const date = new Date(r.issueDate);
-  const from = filters.from ? new Date(filters.from) : null;
-  const to = filters.to ? new Date(filters.to) : null;
+    const date = new Date(r.issueDate);
+    const from = filters.from ? new Date(filters.from) : null;
+    const to = filters.to ? new Date(filters.to) : null;
 
-  const dateMatch =
-    (!from || date >= from) &&
-    (!to || date <= to);
+    const dateMatch = (!from || date >= from) && (!to || date <= to);
 
-  return (itemMatch || personMatch) && dateMatch;
-});
+    return (itemMatch || personMatch) && dateMatch;
+  });
 
   // ====================== EXPORT ======================
   const exportPDF = (): void => {
@@ -261,7 +254,7 @@ const OldRegistrationIssuePage: React.FC = () => {
       doc.line(10, 40, 200, 40);
 
       doc.setFontSize(16);
-      doc.text("OLD REGISTRATION ISSUE REPORT", pageWidth / 2, 55, {
+      doc.text("OLD DISTRIBUTION REPORT", pageWidth / 2, 55, {
         align: "center",
       });
     };
@@ -306,16 +299,14 @@ const OldRegistrationIssuePage: React.FC = () => {
 
       head: [["Item", "Qty", "Unit", "Date", "Person", "Location"]],
 
-      body: filteredRecords.flatMap((r) =>
-        r.items.map((item) => [
-          item.itemName,
-          item.qty,
-          item.unit,
-          new Date(r.issueDate).toLocaleDateString(),
-          r.issuedTo,
-          r.location,
-        ])
-      ),
+      body: filteredRecords.map((r) => [
+        r.itemName,
+        r.quantity,
+        r.unit,
+        r.issueDate,
+        r.personName,
+        r.location,
+      ]),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
@@ -339,27 +330,25 @@ const OldRegistrationIssuePage: React.FC = () => {
     // ------------------------------------------
     // SAVE PDF
     // ------------------------------------------
-    doc.save("Old_Registration_Issue_Report.pdf");
+    doc.save("PPE_Distribution_Report.pdf");
   };
 
   const exportCSV = (): void => {
     const headers = ["Item", "Quantity", "Unit", "Date", "Person", "Location"];
-    const rows = filteredRecords.flatMap((r) =>
-      r.items.map((item) => [
-        item.itemName,
-        item.qty,
-        item.unit,
-        new Date(r.issueDate).toLocaleDateString(),
-        r.issuedTo,
-        r.location,
-      ])
-    );
+    const rows = filteredRecords.map((r) => [
+      r.itemName,
+      r.quantity,
+      r.unit,
+      r.issueDate,
+      r.personName,
+      r.location,
+    ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
-    link.download = "Old_Registration_Issue_Report.csv";
+    link.download = "PPE_Distribution_Report.csv";
     link.click();
   };
   const addItem = () => {
@@ -374,7 +363,7 @@ const OldRegistrationIssuePage: React.FC = () => {
   return (
     <div className="ppe-container">
       <div className="ppe-content">
-        <h2 className="ppe-title">OLD REGISTRATION ISSUE</h2>
+        <h2 className="ppe-title">OLD ISSUE</h2>
 
         <div className="ppe-tabs">
           <button
@@ -520,7 +509,7 @@ const OldRegistrationIssuePage: React.FC = () => {
                             width: 50,
                             height: 32,
                             padding: 0,
-                            minWidth:50
+                            minWidth: 50,
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -577,8 +566,7 @@ const OldRegistrationIssuePage: React.FC = () => {
                         return;
                       }
 
-                      await api.post("/old-registration-issues", payload);
-                      toast.success("Issue saved successfully");
+                      await api.post("/issue/old", payload);
 
                       setItems([{ itemName: "", quantity: "", unit: "" }]);
                       setForm({
@@ -593,7 +581,7 @@ const OldRegistrationIssuePage: React.FC = () => {
                       setActiveTab("report");
                       fetchRecords();
                     } catch {
-                      toast.error("Failed to issue old registration");
+                      toast.error("Failed to issue PPE");
                     }
                   }}
                 >
@@ -681,7 +669,9 @@ const OldRegistrationIssuePage: React.FC = () => {
                             .map((i) => `${i.itemName} (${i.qty} ${i.unit})`)
                             .join(", ")}
                         </td>
-                        <td>{new Date(r.issueDate).toLocaleDateString()}</td>
+                        <td>
+                          {new Date(r.issueDate).toLocaleDateString("en-IN")}
+                        </td>
                         <td>{r.issuedTo}</td>
                         <td>{r.location || "-"}</td>
                         <td>
@@ -719,7 +709,7 @@ const OldRegistrationIssuePage: React.FC = () => {
         {editRecord && (
           <div className="ppe-modal-overlay">
             <div className="ppe-modal">
-              <h3>EDIT OLD REGISTRATION ISSUE</h3>
+              <h3>EDIT DISTRIBUTION</h3>
 
               <label>Item</label>
               <input
@@ -801,4 +791,4 @@ const OldRegistrationIssuePage: React.FC = () => {
   );
 };
 
-export default OldRegistrationIssuePage;
+export default DistributionPage;

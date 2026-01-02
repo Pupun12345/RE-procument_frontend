@@ -72,6 +72,7 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
@@ -123,6 +124,8 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= ITEM HANDLERS ================= */
   const handleEditPurchase = (purchase: Purchase) => {
+    setEditingId(purchase._id); // 🔑 STORE ID
+
     setPartyName(purchase.partyName);
     setInvoiceNo(purchase.invoiceNo);
     setInvoiceDate(purchase.invoiceDate);
@@ -186,11 +189,10 @@ const PurchaseEntryPage: React.FC = () => {
 
     const payload = {
       partyName,
-      invoiceNo: invoiceNo, // ✅ FIX
+      invoiceNo,
       invoiceDate,
-
       items: items.map((i) => ({
-        name: i.name, // ✅ FIX
+        name: i.name,
         qty: Number(i.qty),
         unit: i.unit,
         uom: i.uom,
@@ -198,7 +200,6 @@ const PurchaseEntryPage: React.FC = () => {
         rate: Number(i.rate),
         amount: Number(i.qty || 0) * Number(i.rate || 0),
       })),
-
       subtotal,
       gstPercent: Number(gstPercent || 0),
       gstAmount,
@@ -206,9 +207,16 @@ const PurchaseEntryPage: React.FC = () => {
     };
 
     try {
-      await api.post("/purchases/scaffolding", payload);
+      if (editingId) {
+        // ✅ UPDATE
+        await api.put(`/purchases/scaffolding/${editingId}`, payload);
+      } else {
+        // ✅ CREATE
+        await api.post("/purchases/scaffolding", payload);
+      }
 
       // reset form
+      setEditingId(null);
       setPartyName("");
       setInvoiceNo("");
       setInvoiceDate("");
@@ -271,7 +279,9 @@ const PurchaseEntryPage: React.FC = () => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFontSize(16);
-      doc.text("SCAFFOLDING PURCHASE REPORT", pageWidth / 2, 55, { align: "center" });
+      doc.text("SCAFFOLDING PURCHASE REPORT", pageWidth / 2, 55, {
+        align: "center",
+      });
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {

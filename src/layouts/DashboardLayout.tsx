@@ -249,7 +249,7 @@ export default function DashboardLayout({ children }: Props) {
               onNavigate={() => setOpenMenu(null)}
             />
             <SubItem
-              label="Old Registration"
+              label="Old"
               path="/dashboard/registration/old-registration"
               onNavigate={() => setOpenMenu(null)}
             />
@@ -278,7 +278,7 @@ export default function DashboardLayout({ children }: Props) {
                 onNavigate={() => setOpenMenu(null)}
               />
               <SubItem
-                label="Old Registration"
+                label="Old"
                 path="/dashboard/material-purchase/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
@@ -309,7 +309,7 @@ export default function DashboardLayout({ children }: Props) {
                 onNavigate={() => setOpenMenu(null)}
               />
               <SubItem
-                label="Old Registration"
+                label="Old"
                 path="/dashboard/material-issue/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
@@ -332,7 +332,7 @@ export default function DashboardLayout({ children }: Props) {
                 onNavigate={() => setOpenMenu(null)}
               />
               <SubItem
-                label="Old Registration"
+                label="Old"
                 path="/dashboard/material-return/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
@@ -355,7 +355,7 @@ export default function DashboardLayout({ children }: Props) {
                 onNavigate={() => setOpenMenu(null)}
               />
               <SubItem
-                label="Old Registration"
+                label="Old"
                 path="/dashboard/stock-report/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />

@@ -17,7 +17,7 @@ export default function OldRegistrationRegistration() {
   useEffect(() => {
     const loadItems = async () => {
       try {
-        const res = await api.get("/items/old-registration");
+        const res = await api.get("/old-items");
         setItems(res.data);
       } catch (err) {
         // Silently fail for now
@@ -46,7 +46,7 @@ export default function OldRegistrationRegistration() {
     }
 
     try {
-      const res = await api.post("/items/old-registration", {
+      const res = await api.post("/old-items", {
         itemName: formData.itemName,
         unit: finalUnit,
       });

@@ -386,7 +386,7 @@ export default function ScaffoldingIssuePage() {
       doc.setLineWidth(0.5);
       doc.line(10, 40, 200, 40);
       doc.setFontSize(16);
-      doc.text("SCAFFOLDING ISSUE REPORT", pageWidth / 2, 55, {
+      doc.text("SCAFFOLDING RETURN REPORT", pageWidth / 2, 55, {
         align: "center",
       });
     };

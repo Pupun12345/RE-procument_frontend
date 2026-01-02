@@ -68,7 +68,7 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-
+  const [editingId, setEditingId] = useState<string | null>(null);
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
     const loadMasters = async () => {
@@ -162,13 +162,14 @@ const PurchaseEntryPage: React.FC = () => {
   const handleEditPurchase = (index: number) => {
     const selected = purchases[index];
 
+    setEditingId(selected._id || null); // 🔑 IMPORTANT
+
     setPartyName(selected.partyName);
     setinvoiceNumber(selected.invoiceNumber);
     setInvoiceDate(selected.invoiceDate);
     setItems(selected.items);
     setGstPercent(selected.gstPercent);
 
-    setPurchases(purchases.filter((_, i) => i !== index));
     setActiveTab("entry");
   };
 
@@ -195,45 +196,52 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
-    if (!partyName || !invoiceNumber || !invoiceDate) {
-      alert("Please fill all required fields");
-      return;
-    }
+  if (!partyName || !invoiceNumber || !invoiceDate) {
+    alert("Please fill all required fields");
+    return;
+  }
 
-    const payload = {
-      partyName,
-      invoiceNumber: invoiceNumber, // backend name
-      invoiceDate,
-
-      items: items.map((i) => ({
-        itemName: i.itemName, // backend name
-        qty: Number(i.qty),
-        unit: i.unit,
-        rate: Number(i.rate),
-        amount: Number(i.qty || 0) * Number(i.rate || 0),
-      })),
-
-      subtotal,
-      gstPercent: Number(gstPercent || 0),
-      gstAmount,
-      total,
-    };
-
-    try {
-      await api.post("/purchases/ppe", payload);
-
-      setPartyName("");
-      setinvoiceNumber("");
-      setInvoiceDate("");
-      setItems([emptyItem]);
-      setGstPercent("");
-
-      setActiveTab("report");
-    } catch (err) {
-      console.error("Save failed", err);
-      alert("Failed to save purchase");
-    }
+  const payload = {
+    partyName,
+    invoiceNumber,
+    invoiceDate,
+    items: items.map((i) => ({
+      itemName: i.itemName,
+      qty: Number(i.qty),
+      unit: i.unit,
+      rate: Number(i.rate),
+      amount: Number(i.qty || 0) * Number(i.rate || 0),
+    })),
+    subtotal,
+    gstPercent: Number(gstPercent || 0),
+    gstAmount,
+    total,
   };
+
+  try {
+    if (editingId) {
+      // ✅ UPDATE existing record
+      await api.put(`/purchases/ppe/${editingId}`, payload);
+    } else {
+      // ✅ CREATE new record
+      await api.post("/purchases/ppe", payload);
+    }
+
+    // reset form
+    setEditingId(null);
+    setPartyName("");
+    setinvoiceNumber("");
+    setInvoiceDate("");
+    setItems([emptyItem]);
+    setGstPercent("");
+
+    setActiveTab("report");
+  } catch (err) {
+    console.error("Save failed", err);
+    alert("Failed to save purchase");
+  }
+};
+
 
   /* ================= ENTRY INVOICE PDF ================= */
   const downloadInvoicePDF = () => {
