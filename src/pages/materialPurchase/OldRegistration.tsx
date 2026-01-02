@@ -5,6 +5,11 @@ import "./purchase.css";
 import api from "../../api/axios";
 
 /* ================= TYPES ================= */
+type Party = {
+  _id: string;
+  partyName: string;
+};
+
 type ItemMaster = {
   _id: string;
   itemName: string;
@@ -13,14 +18,21 @@ type ItemMaster = {
 
 type Item = {
   itemName: string;
+  qty: number | "";
   unit: string;
-  issuedWeight: number | "";
+  rate: number | "";
 };
 
-type OldRegistration = {
+type Purchase = {
   _id?: string;
-  date: string;
+  partyName: string;
+  invoiceNumber: string;
+  invoiceDate: string;
   items: Item[];
+  subtotal: number;
+  gstPercent: number;
+  gstAmount: number;
+  total: number;
 };
 
 /* ================= jsPDF TYPE ================= */
@@ -35,30 +47,35 @@ declare module "jspdf" {
 /* ================= EMPTY ITEM ================= */
 const emptyItem: Item = {
   itemName: "",
+  qty: "",
   unit: "",
-  issuedWeight: "",
+  rate: "",
 };
 
 const OldRegistrationPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
 
   /* ================= MASTER DATA ================= */
+  const [parties, setParties] = useState<Party[]>([]);
   const [itemMasters, setItemMasters] = useState<ItemMaster[]>([]);
 
   /* ================= ENTRY STATE ================= */
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [partyName, setPartyName] = useState("");
+  const [invoiceNumber, setinvoiceNumber] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState("");
+  const [gstPercent, setGstPercent] = useState<number | "">("");
   const [items, setItems] = useState<Item[]>([emptyItem]);
 
   /* ================= REPORT STATE ================= */
-  const [registrations, setRegistrations] = useState<OldRegistration[]>([]);
-  const [searchText, setSearchText] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
     const loadMasters = async () => {
       try {
+        const vendorsRes = await api.get("/vendors");
+        setParties(vendorsRes.data);
+
         // Load all items from mechanical, scaffolding, and PPE
         const [mechanicalRes, scaffoldingRes, ppeRes] = await Promise.all([
           api.get("/items/mechanical"),
@@ -74,7 +91,8 @@ const OldRegistrationPage: React.FC = () => {
 
         setItemMasters(allItems);
       } catch (err) {
-        console.error("Failed to load items", err);
+        console.error("Failed to load vendors/items", err);
+        setParties([]);
         setItemMasters([]);
       }
     };
@@ -87,13 +105,30 @@ const OldRegistrationPage: React.FC = () => {
     if (activeTab === "report") {
       api
         .get("/old-registrations")
-        .then((res) => setRegistrations(res.data))
+        .then((res) => setPurchases(res.data))
         .catch((err) => {
-          console.error("Failed to load old registrations", err);
-          setRegistrations([]);
+          console.error("Failed to load purchases", err);
+          setPurchases([]);
         });
     }
   }, [activeTab]);
+
+  /* ================= CALCULATIONS ================= */
+  const subtotal = useMemo(
+    () =>
+      items.reduce(
+        (sum, i) => sum + Number(i.qty || 0) * Number(i.rate || 0),
+        0
+      ),
+    [items]
+  );
+
+  const gstAmount = useMemo(
+    () => (subtotal * Number(gstPercent || 0)) / 100,
+    [subtotal, gstPercent]
+  );
+
+  const total = subtotal + gstAmount;
 
   /* ================= ITEM HANDLERS ================= */
   const updateItem = (
@@ -119,30 +154,33 @@ const OldRegistrationPage: React.FC = () => {
     setItems(updated);
   };
 
-  const handleEditRegistration = (index: number) => {
-    const selected = registrations[index];
+  const handleEditPurchase = (index: number) => {
+    const selected = purchases[index];
 
-    setDate(selected.date);
+    setPartyName(selected.partyName);
+    setinvoiceNumber(selected.invoiceNumber);
+    setInvoiceDate(selected.invoiceDate);
     setItems(selected.items);
+    setGstPercent(selected.gstPercent);
 
-    setRegistrations(registrations.filter((_, i) => i !== index));
+    setPurchases(purchases.filter((_, i) => i !== index));
     setActiveTab("entry");
   };
 
-  const handleDeleteRegistration = async (index: number) => {
-    const registration = registrations[index];
-    if (!registration?._id) return;
+  const handleDeletePurchase = async (index: number) => {
+    const purchase = purchases[index];
+    if (!purchase?._id) return;
 
-    if (!window.confirm("Are you sure you want to delete this registration?"))
+    if (!window.confirm("Are you sure you want to delete this purchase?"))
       return;
 
     try {
-      await api.delete(`/old-registrations/${registration._id}`);
+      await api.delete(`/old-registrations/${purchase._id}`);
       const res = await api.get("/old-registrations");
-      setRegistrations(res.data);
+      setPurchases(res.data);
     } catch (err) {
       console.error("Delete failed", err);
-      alert("Failed to delete registration");
+      alert("Failed to delete purchase");
     }
   };
 
@@ -150,33 +188,69 @@ const OldRegistrationPage: React.FC = () => {
   const removeItem = (index: number) =>
     setItems(items.filter((_, i) => i !== index));
 
-  /* ================= SAVE REGISTRATION ================= */
-  const saveRegistration = async () => {
-    if (!date || items.length === 0) {
+  /* ================= SAVE PURCHASE ================= */
+  const savePurchase = async () => {
+    if (!partyName || !invoiceNumber || !invoiceDate) {
       alert("Please fill all required fields");
       return;
     }
 
     const payload = {
-      date,
+      partyName,
+      invoiceNumber: invoiceNumber,
+      invoiceDate,
+
       items: items.map((i) => ({
         itemName: i.itemName,
+        qty: Number(i.qty),
         unit: i.unit,
-        issuedWeight: Number(i.issuedWeight),
+        rate: Number(i.rate),
+        amount: Number(i.qty || 0) * Number(i.rate || 0),
       })),
+
+      subtotal,
+      gstPercent: Number(gstPercent || 0),
+      gstAmount,
+      total,
     };
 
     try {
       await api.post("/old-registrations", payload);
 
-      setDate(new Date().toISOString().split("T")[0]);
+      setPartyName("");
+      setinvoiceNumber("");
+      setInvoiceDate("");
       setItems([emptyItem]);
+      setGstPercent("");
 
       setActiveTab("report");
     } catch (err) {
       console.error("Save failed", err);
-      alert("Failed to save registration");
+      alert("Failed to save purchase");
     }
+  };
+
+  /* ================= ENTRY INVOICE PDF ================= */
+  const downloadInvoicePDF = () => {
+    const doc = new jsPDF();
+    doc.text("PURCHASE INVOICE", 14, 15);
+
+    autoTable(doc, {
+      startY: 25,
+      head: [["Item", "Qty", "Unit", "Rate", "Amount"]],
+      body: items.map((i) => [
+        i.itemName,
+        i.qty,
+        i.unit,
+        i.rate,
+        (Number(i.qty || 0) * Number(i.rate || 0)).toFixed(2),
+      ]),
+    });
+
+    const finalY = doc.lastAutoTable?.finalY ?? 40;
+    doc.text(`Total: ₹${total.toFixed(2)}`, 150, finalY + 10);
+
+    doc.save("old_registration_invoice.pdf");
   };
 
   /* ================= REPORT PDF (BRANDED) ================= */
@@ -205,9 +279,7 @@ const OldRegistrationPage: React.FC = () => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFontSize(16);
-      doc.text("OLD REGISTRATION REPORT", pageWidth / 2, 55, {
-        align: "center",
-      });
+      doc.text("OLD REGISTRATION REPORT", pageWidth / 2, 55, { align: "center" });
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {
@@ -236,20 +308,17 @@ const OldRegistrationPage: React.FC = () => {
 
     addHeader();
 
-    const filteredData = getFilteredData();
-
     autoTable(doc, {
       startY: 65,
       margin: { top: 60, bottom: 50 },
-      head: [["Date", "Item Name", "Unit", "Issued Weight"]],
-      body: filteredData.flatMap((r) =>
-        r.items.map((item) => [
-          r.date,
-          item.itemName,
-          item.unit,
-          item.issuedWeight,
-        ])
-      ),
+      head: [["Party", "Invoice", "Date", "Items", "Total"]],
+      body: purchases.map((p) => [
+        p.partyName,
+        p.invoiceNumber,
+        p.invoiceDate,
+        p.items.map((i) => i.itemName).join(", "),
+        `₹${p.total.toFixed(2)}`,
+      ]),
       styles: { fontSize: 9, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
       theme: "grid",
@@ -267,15 +336,17 @@ const OldRegistrationPage: React.FC = () => {
     doc.save("old_registration_report.pdf");
   };
 
-  /* ================= EXPORT CSV ================= */
+  /* ================= EXPORT CSV (UNCHANGED) ================= */
   const exportCSV = () => {
-    const filteredData = getFilteredData();
-
     const csv = [
-      ["Date", "Item Name", "Unit", "Issued Weight"],
-      ...filteredData.flatMap((r) =>
-        r.items.map((item) => [r.date, item.itemName, item.unit, item.issuedWeight])
-      ),
+      ["Party", "Invoice", "Date", "Items", "Total"],
+      ...purchases.map((p) => [
+        p.partyName,
+        p.invoiceNumber,
+        p.invoiceDate,
+        p.items.map((i) => i.itemName).join("|"),
+        p.total,
+      ]),
     ]
       .map((r) => r.join(","))
       .join("\n");
@@ -286,25 +357,6 @@ const OldRegistrationPage: React.FC = () => {
     a.download = "old_registration_report.csv";
     a.click();
   };
-
-  /* ================= FILTER DATA ================= */
-  const getFilteredData = () => {
-    return registrations.filter((r) => {
-      const matchesSearch =
-        !searchText ||
-        r.items.some((item) =>
-          item.itemName.toLowerCase().includes(searchText.toLowerCase())
-        ) ||
-        r.date.includes(searchText);
-
-      const matchesDateFrom = !dateFrom || r.date >= dateFrom;
-      const matchesDateTo = !dateTo || r.date <= dateTo;
-
-      return matchesSearch && matchesDateFrom && matchesDateTo;
-    });
-  };
-
-  const filteredData = getFilteredData();
 
   return (
     <div className="purchase-container">
@@ -322,26 +374,47 @@ const OldRegistrationPage: React.FC = () => {
           className={activeTab === "report" ? "active" : ""}
           onClick={() => setActiveTab("report")}
         >
-          Report
+          Purchase Report
         </button>
       </div>
 
       {/* ================= ENTRY FORM ================= */}
       {activeTab === "entry" && (
         <>
-          <label>Date</label>
+          <label>Party Name</label>
+          <select
+            value={partyName}
+            onChange={(e) => setPartyName(e.target.value)}
+          >
+            <option value="">-- Select Party --</option>
+            {parties.map((p) => (
+              <option key={p._id} value={p.partyName}>
+                {p.partyName}
+              </option>
+            ))}
+          </select>
+
+          <label>Invoice Number</label>
+          <input
+            value={invoiceNumber}
+            onChange={(e) => setinvoiceNumber(e.target.value)}
+          />
+
+          <label>Invoice Date</label>
           <input
             type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={invoiceDate}
+            onChange={(e) => setInvoiceDate(e.target.value)}
           />
 
           <table>
             <thead>
               <tr>
-                <th>Item Name</th>
+                <th>Item</th>
+                <th>Qty</th>
                 <th>Unit</th>
-                <th>Issued Weight</th>
+                <th>Rate</th>
+                <th>Amount</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -363,21 +436,39 @@ const OldRegistrationPage: React.FC = () => {
                   </td>
 
                   <td>
+                    <input
+                      type="number"
+                      value={i.qty}
+                      onChange={(e) =>
+                        updateItem(
+                          idx,
+                          "qty",
+                          e.target.value === "" ? "" : Number(e.target.value)
+                        )
+                      }
+                    />
+                  </td>
+
+                  <td>
                     <input value={i.unit} disabled />
                   </td>
 
                   <td>
                     <input
                       type="number"
-                      value={i.issuedWeight}
+                      value={i.rate}
                       onChange={(e) =>
                         updateItem(
                           idx,
-                          "issuedWeight",
+                          "rate",
                           e.target.value === "" ? "" : Number(e.target.value)
                         )
                       }
                     />
+                  </td>
+
+                  <td>
+                    ₹{(Number(i.qty || 0) * Number(i.rate || 0)).toFixed(2)}
                   </td>
 
                   <td>
@@ -394,9 +485,30 @@ const OldRegistrationPage: React.FC = () => {
             + Add Item
           </button>
 
+          <div className="summary">
+            <span>Subtotal: ₹{subtotal.toFixed(2)}</span>
+            <span>
+              GST %:
+              <input
+                type="number"
+                value={gstPercent}
+                onChange={(e) =>
+                  setGstPercent(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+              />
+            </span>
+            <span>GST Amount: ₹{gstAmount.toFixed(2)}</span>
+            <strong>Total: ₹{total.toFixed(2)}</strong>
+          </div>
+
           <div className="footer-actions">
-            <button className="save" onClick={saveRegistration}>
-              Save Registration
+            <button className="save" onClick={savePurchase}>
+              Save Purchase
+            </button>
+            <button className="download" onClick={downloadInvoicePDF}>
+              Download Invoice PDF
             </button>
           </div>
         </>
@@ -409,21 +521,9 @@ const OldRegistrationPage: React.FC = () => {
 
           <div className="report-toolbar">
             <div className="report-filters">
-              <input
-                placeholder="Search Item / Date"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-              />
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-              />
+              <input placeholder="Search Party Name" />
+              <input type="date" />
+              <input type="date" />
             </div>
             <div className="report-actions">
               <button className="green" onClick={exportPDF}>
@@ -438,50 +538,44 @@ const OldRegistrationPage: React.FC = () => {
           <table className="report-table">
             <thead>
               <tr>
+                <th>Party Name</th>
+                <th>Invoice No</th>
                 <th>Date</th>
-                <th>Item Name</th>
-                <th>Unit</th>
-                <th>Issued Weight</th>
+                <th>Items</th>
+                <th>Total (₹)</th>
                 <th>Edit</th>
                 <th>Delete</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredData.map((r, i) =>
-                r.items.map((item, itemIdx) => (
-                  <tr key={`${i}-${itemIdx}`}>
-                    {itemIdx === 0 && (
-                      <td rowSpan={r.items.length}>{r.date}</td>
-                    )}
-                    <td>{item.itemName}</td>
-                    <td>{item.unit}</td>
-                    <td className="amount">{item.issuedWeight}</td>
+              {purchases.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.partyName}</td>
+                  <td>{p.invoiceNumber}</td>
+                  <td>{p.invoiceDate}</td>
+                  <td>{p.items.map((x) => x.itemName).join(", ")}</td>
+                  <td className="amount">₹{p.total.toFixed(2)}</td>
 
-                    {itemIdx === 0 && (
-                      <>
-                        <td rowSpan={r.items.length}>
-                          <button
-                            className="edit-btn"
-                            onClick={() => handleEditRegistration(i)}
-                          >
-                            Edit
-                          </button>
-                        </td>
+                  <td>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEditPurchase(i)}
+                    >
+                      Edit
+                    </button>
+                  </td>
 
-                        <td rowSpan={r.items.length}>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteRegistration(i)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
-              )}
+                  <td>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeletePurchase(i)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </>

@@ -248,6 +248,11 @@ export default function DashboardLayout({ children }: Props) {
               path="/dashboard/registration/scaffolding"
               onNavigate={() => setOpenMenu(null)}
             />
+            <SubItem
+              label="Old Registration"
+              path="/dashboard/registration/old-registration"
+              onNavigate={() => setOpenMenu(null)}
+            />
           </SidebarExpandable>
 
           <SidebarExpandable
@@ -303,6 +308,11 @@ export default function DashboardLayout({ children }: Props) {
                 path="/dashboard/material-issue/scaffholding-issue"
                 onNavigate={() => setOpenMenu(null)}
               />
+              <SubItem
+                label="Old Registration"
+                path="/dashboard/material-issue/old-registration"
+                onNavigate={() => setOpenMenu(null)}
+              />
             </SubGroup>
 
             <SubGroup label="Material Return">
@@ -319,6 +329,11 @@ export default function DashboardLayout({ children }: Props) {
               <SubItem
                 label="Scaffolding"
                 path="/dashboard/material-return/scaffholding-return"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Old Registration"
+                path="/dashboard/material-return/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
             </SubGroup>
