@@ -28,6 +28,7 @@ import OldRegistrationIssue from "../src/pages/material_issue/OldRegistrationIss
 import PPEStockReport from "../src/pages/stockReport/PPEStockReport";
 import MechanicalStockReport from "../src/pages/stockReport/MechanicalStockReport";
 import ScaffoldingStockReport from "../src/pages/stockReport/ScaffoldingStockReport";
+import OldRegistrationStockReport from "../src/pages/stockReport/OldRegistrationStockReport";
 import { RegistrationManager } from "../src/pages/RegistrationManager";
 import { MaterialPurchaseManager } from "../src/pages/MaterialPurchaseManager";
 import { MaterialIssueManager } from "../src/pages/MaterialIssueManager";
@@ -283,6 +284,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffoldingStockReport />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/stock-report/old-registration"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <OldRegistrationStockReport />
             </DashboardLayout>
           </ProtectedRoute>
         }
