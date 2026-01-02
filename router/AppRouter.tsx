@@ -21,6 +21,7 @@ import PPEReturnPage from "../src/pages/material_return/PPEreturn";
 import PPEPurchase from "../src/pages/materialPurchase/PPEPurchase";
 import MechanicalPurchase from "../src/pages/materialPurchase/MechanicalPurchase";
 import ScaffoldingPurchase from "../src/pages/materialPurchase/ScaffoldingPurchase";
+import OldRegistration from "../src/pages/materialPurchase/OldRegistration";
 import PPEStockReport from "../src/pages/stockReport/PPEStockReport";
 import MechanicalStockReport from "../src/pages/stockReport/MechanicalStockReport";
 import ScaffoldingStockReport from "../src/pages/stockReport/ScaffoldingStockReport";
@@ -209,6 +210,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffoldingPurchase />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/material-purchase/old-registration"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <OldRegistration />
             </DashboardLayout>
           </ProtectedRoute>
         }

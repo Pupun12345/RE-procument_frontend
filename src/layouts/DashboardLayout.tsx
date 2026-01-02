@@ -272,6 +272,11 @@ export default function DashboardLayout({ children }: Props) {
                 path="/dashboard/material-purchase/scaffolding"
                 onNavigate={() => setOpenMenu(null)}
               />
+              <SubItem
+                label="Old Registration"
+                path="/dashboard/material-purchase/old-registration"
+                onNavigate={() => setOpenMenu(null)}
+              />
             </SubGroup>
 
             <SubGroup label="Material orders">

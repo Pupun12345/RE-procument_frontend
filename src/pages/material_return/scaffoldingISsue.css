@@ -314,6 +314,21 @@ input[type="date"].ppe-input {
   transform: translateY(0);
 }
 
+/* Make Cancel button in modal match Save button size and weight */
+.modal-card .ppe-btn-back {
+  padding: 14px 48px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(3, 2, 19, 0.08);
+  margin-bottom: 10px;
+}
+
+.modal-card .ppe-btn-back:hover {
+  background-color: #3341db;
+  box-shadow: 0 4px 12px rgba(3, 2, 19, 0.15);
+  transform: translateY(-1px);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .ppe-container {
