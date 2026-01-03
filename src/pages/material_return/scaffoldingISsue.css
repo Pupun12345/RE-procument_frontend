@@ -17,7 +17,6 @@
   background: #ffffff;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.2);
 }
 .ppe-materials-header {
   display: flex;
@@ -69,7 +68,6 @@
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 12px 16px;
 }
 
@@ -178,7 +176,6 @@
 .ppe-tab.active {
  background-color: #6b6ef9;
   color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .ppe-tab:not(.active) {
@@ -199,7 +196,6 @@
   padding: 28px;
   max-width: 1050px;
   margin: 24px auto;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
 }
 
 /* Form Grid */
@@ -235,7 +231,6 @@
 .ppe-input:focus {
   background-color: white;
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .ppe-input:hover:not(:focus) {
@@ -277,13 +272,11 @@ input[type="date"].ppe-input {
   cursor: pointer;
   transition: all 0.2s ease;
   width: fit-content;
-  box-shadow: 0 2px 8px rgba(3, 2, 19, 0.08);
   margin-bottom: 10px;
 }
 
 .ppe-btn-save:hover {
   background-color: #3341db;
-  box-shadow: 0 4px 12px rgba(3, 2, 19, 0.15);
   transform: translateY(-1px);
 }
 
@@ -319,13 +312,11 @@ input[type="date"].ppe-input {
   padding: 14px 48px;
   font-size: 15px;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(3, 2, 19, 0.08);
   margin-bottom: 10px;
 }
 
 .modal-card .ppe-btn-back:hover {
   background-color: #3341db;
-  box-shadow: 0 4px 12px rgba(3, 2, 19, 0.15);
   transform: translateY(-1px);
 }
 
@@ -428,7 +419,6 @@ input[type="date"].ppe-input {
 
 .ppe-search-input:focus {
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Date Filter */
@@ -447,7 +437,6 @@ input[type="date"].ppe-input {
 
 .ppe-date-filter:focus {
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Export Buttons */
@@ -469,7 +458,6 @@ input[type="date"].ppe-input {
 .ppe-export-pdf:hover {
   background-color: #B91C1C;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
 }
 
 .ppe-export-csv {
@@ -479,7 +467,6 @@ input[type="date"].ppe-input {
 .ppe-export-csv:hover {
   background-color: #CA8A04;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
 }
 
 /* Table Container */
@@ -488,7 +475,6 @@ input[type="date"].ppe-input {
   border-radius: 12px;
   overflow-x: auto;
   overflow-y: visible;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
   /* Always show horizontal scrollbar if needed */
   scrollbar-color: #2563eb #e5e7eb;

@@ -1020,7 +1020,6 @@ export default function ScaffoldingIssuePage() {
                 padding: 20,
                 borderRadius: 8,
                 background: "#fff",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
               }}
             >
               <h3>Edit Return</h3>
