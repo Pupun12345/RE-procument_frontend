@@ -281,57 +281,59 @@ const DistributionPage: React.FC = () => {
     // FOOTER (Every Page)
     // ------------------------------------------
     const addFooter = (pageNum: number, totalPages: number) => {
-      const footerY = pageHeight - 40;
+      const footerY = pageHeight - 50;
 
       doc.line(10, footerY, 200, footerY);
-      doc.setFontSize(9);
+      doc.setFontSize(8);
 
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 8
+        footerY + 5
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 8
+        footerY + 5
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        150,
-        footerY + 8
+        145,
+        footerY + 5
       );
     };
 
-    // Draw header on first page
-    addHeader();
+    let tempTotalPages = 1;
 
     // ------------------------------------------
-    // AUTO TABLE (NO FOOTER INSIDE)
+    // AUTO TABLE
     // ------------------------------------------
     autoTable(doc, {
       startY: 65,
-      margin: { top: 60, bottom: 50 },
+      margin: { top: 70, bottom: 65 },
 
       head: [["Item", "Qty", "Unit", "Date", "Person", "Location"]],
 
-      body: filteredRecords.map((r) => [
-        r.itemName,
-        r.quantity,
-        r.unit,
-        r.issueDate,
-        r.personName,
-        r.location,
-      ]),
+      body: filteredRecords.flatMap((r) =>
+        r.items.map((item) => [
+          item.itemName,
+          item.quantity,
+          item.unit,
+          new Date(r.returnDate).toLocaleDateString("en-IN"),
+          r.personName,
+          r.location || "",
+        ])
+      ),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
       theme: "grid",
 
-      didDrawPage: () => {
-        addHeader(); // redraw header only (no footer here)
+      didDrawPage: (data) => {
+        addHeader();
+        addFooter(data.pageNumber, tempTotalPages);
       },
     });
 
@@ -342,6 +344,7 @@ const DistributionPage: React.FC = () => {
 
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
+      addHeader();
       addFooter(p, totalPages);
     }
 

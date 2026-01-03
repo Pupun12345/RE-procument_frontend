@@ -91,34 +91,34 @@ const PPEStockReport: React.FC = () => {
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {
-      const footerY = pageHeight - 40;
+      const footerY = pageHeight - 50;
       doc.line(10, footerY, pageWidth - 10, footerY);
-      doc.setFontSize(9);
+      doc.setFontSize(8);
 
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 8
+        footerY + 5
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
-        pageWidth / 2 - 10,
-        footerY + 8
+        75,
+        footerY + 5
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        pageWidth - 80,
-        footerY + 8
+        145,
+        footerY + 5
       );
     };
 
-    addHeader();
+    let tempTotalPages = 1;
 
     autoTable(doc, {
       startY: 65,
-      margin: { top: 60, bottom: 50 },
+      margin: { top: 70, bottom: 65 },
       head: [["Item Name", "Quantity", "Unit", "Status"]],
       body: stocks.map((s) => [
         s.itemName,
@@ -129,14 +129,16 @@ const PPEStockReport: React.FC = () => {
       styles: { fontSize: 9, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [34, 197, 94], textColor: "#fff" },
       theme: "grid",
-      didDrawPage: () => {
+      didDrawPage: (data) => {
         addHeader();
+        addFooter(data.pageNumber, tempTotalPages);
       },
     });
 
     const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
+      addHeader();
       addFooter(p, totalPages);
     }
 
