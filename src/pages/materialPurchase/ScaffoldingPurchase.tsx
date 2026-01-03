@@ -14,12 +14,15 @@ type ItemMaster = {
   _id: string;
   itemName: string;
   unit: string;
+  puw: number;
 };
 
 type Item = {
   name: string;
   qty: number | "";
   unit: string;
+  puw: number;
+  weight: number;
   uom: string;
   workOrderNo: string;
   rate: number | "";
@@ -51,6 +54,8 @@ const emptyItem: Item = {
   name: "",
   qty: "",
   unit: "",
+  puw: 0,
+  weight: 0,
   uom: "",
   workOrderNo: "",
   rate: "",
@@ -167,10 +172,15 @@ const PurchaseEntryPage: React.FC = () => {
     const selected = itemMasters.find((i) => i.itemName === name);
     const updated = [...items];
 
+    const qty = Number(updated[index].qty || 0);
+    const puw = selected?.puw || 0;
+
     updated[index] = {
       ...updated[index],
       name,
       unit: selected?.unit || "",
+      puw,
+      weight: qty * puw, // ✅ auto calc
     };
 
     setItems(updated);
@@ -195,6 +205,8 @@ const PurchaseEntryPage: React.FC = () => {
         name: i.name,
         qty: Number(i.qty),
         unit: i.unit,
+        puw: i.puw, // ✅
+        weight: i.weight,
         uom: i.uom,
         workOrderNo: i.workOrderNo,
         rate: Number(i.rate),
@@ -337,6 +349,12 @@ const PurchaseEntryPage: React.FC = () => {
 
     doc.save("scaffolding_purchase_report.pdf");
   };
+  const totalWeight = (items: any[]) =>
+    items.reduce(
+      (sum, i) =>
+        sum + Number(i.weight ?? Number(i.qty || 0) * Number(i.puw || 0)),
+      0
+    );
 
   /* ================= EXPORT CSV (UNCHANGED) ================= */
   const exportCSV = () => {
@@ -419,6 +437,8 @@ const PurchaseEntryPage: React.FC = () => {
               <tr>
                 <th>Item Name</th>
                 <th>Unit</th>
+                <th>PUW (kg)</th>
+                <th>Total Weight (kg)</th>
                 <th>UOM</th>
                 <th>Qty</th>
                 <th>Work Order No</th>
@@ -448,6 +468,13 @@ const PurchaseEntryPage: React.FC = () => {
                   <td>
                     <input value={i.unit} disabled />
                   </td>
+                  <td>
+                    <input value={i.puw} disabled />
+                  </td>
+
+                  <td>
+                    <input value={i.weight.toFixed(2)} disabled />
+                  </td>
 
                   <td>
                     <input
@@ -461,13 +488,17 @@ const PurchaseEntryPage: React.FC = () => {
                     <input
                       type="number"
                       value={i.qty}
-                      onChange={(e) =>
-                        updateItem(
-                          idx,
-                          "qty",
-                          e.target.value === "" ? "" : Number(e.target.value)
-                        )
-                      }
+                      onChange={(e) => {
+                        const qty =
+                          e.target.value === "" ? "" : Number(e.target.value);
+
+                        const updated = [...items];
+                        updated[idx].qty = qty;
+                        updated[idx].weight =
+                          Number(qty || 0) * Number(updated[idx].puw || 0);
+
+                        setItems(updated);
+                      }}
                     />
                   </td>
 
@@ -580,6 +611,7 @@ const PurchaseEntryPage: React.FC = () => {
                 <th>Date</th>
                 <th>Items</th>
                 <th>Total (₹)</th>
+                <th>Total Weight (kg)</th>
                 <th>Edit</th>
                 <th>Delete</th>
               </tr>
@@ -601,9 +633,16 @@ const PurchaseEntryPage: React.FC = () => {
                     <td>{p.partyName}</td>
                     <td>{p.invoiceNo}</td>
                     <td>{p.invoiceDate}</td>
-                    <td>{p.items.map((i) => i.name).join(", ")}</td>
+                    <td>
+                      {p.items.map((i) => (
+                        <div key={i.name}>
+                          {i.name} – {i.qty} × {i.puw || 0} kg ={" "}
+                          <b>{i.weight || 0} kg</b>
+                        </div>
+                      ))}
+                    </td>
                     <td className="amount">₹{p.total.toFixed(2)}</td>
-
+                    <td>{totalWeight(p.items).toFixed(2)} kg</td>
                     <td>
                       <button
                         className="edit-btn"

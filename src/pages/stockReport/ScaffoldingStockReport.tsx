@@ -8,6 +8,8 @@ interface Stock {
   itemName: string;
   qty: number;
   unit?: string;
+  puw: number;
+  weight: number;
 }
 
 const PAGE_SIZE = 50;
@@ -45,10 +47,19 @@ const ScaffoldingStockReport: React.FC = () => {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const exportCSV = () => {
-    const headers = ["Item Name", "Quantity", "Unit", "Status"];
+    const headers = [
+      "Item Name",
+      "PUW (kg)",
+      "Quantity",
+      "Total Weight (kg)",
+      "Unit",
+      "Status",
+    ];
     const rows = stocks.map((s) => [
       s.itemName,
+      s.puw,
       s.qty,
+      (s.weight ?? s.qty * s.puw).toFixed(2),
       s.unit || "-",
       s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
     ]);
@@ -121,13 +132,15 @@ const ScaffoldingStockReport: React.FC = () => {
     autoTable(doc, {
       startY: 65,
       margin: { top: 60, bottom: 50 },
-      head: [["Item Name", "Quantity", "Unit", "Status"]],
+      head: [["Item Name", "PUW (kg)", "Qty", "Total Weight (kg)", "Unit", "Status"]],
       body: stocks.map((s) => [
         s.itemName,
+        String(s.puw),
         String(s.qty),
-        s.unit || "-",
+        (s.weight ?? s.qty * s.puw).toFixed(2),
         s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
       ]),
+
       styles: { fontSize: 9, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [245, 158, 11], textColor: "#fff" },
       theme: "grid",
@@ -174,7 +187,9 @@ const ScaffoldingStockReport: React.FC = () => {
             <thead>
               <tr>
                 <th>Item Name</th>
+                <th>PUW (kg)</th>
                 <th>Quantity</th>
+                <th>Total Weight (kg)</th>
                 <th>Unit</th>
                 <th>Status</th>
               </tr>
@@ -183,7 +198,9 @@ const ScaffoldingStockReport: React.FC = () => {
               {stocks.map((s, i) => (
                 <tr key={i}>
                   <td className={styles.itemName}>{s.itemName}</td>
+                  <td>{s.puw}</td>
                   <td>{s.qty}</td>
+                  <td>{(s.weight ?? s.qty * s.puw).toFixed(2)} kg</td>
                   <td>{s.unit || "-"}</td>
                   <td
                     className={

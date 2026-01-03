@@ -6,7 +6,7 @@ import "./scaffholding.css";
 
 interface Item {
   itemName: string;
-  puw: string;
+  puw: number;
   unit: string;
   customUnit?: string;
 }
@@ -59,7 +59,7 @@ export default function ScaffoldingRegistration() {
     try {
       const res = await api.post("/items/scaffolding", {
         itemName: formData.itemName,
-        puw: formData.puw,
+        puw: Number(formData.puw), 
         unit: finalUnit,
       });
 
