@@ -255,7 +255,6 @@
 .sr-tab.active {
   background-color: #6b6ef9;
   color: white;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .sr-tab:not(.active) {
@@ -275,7 +274,6 @@
   padding: 28px;
   max-width: 1050px;
   margin: 24px auto;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
 }
 
 .sr-form-grid {
@@ -309,7 +307,6 @@
 .sr-input:focus {
   background-color: white;
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .sr-input:hover:not(:focus) {
@@ -346,14 +343,12 @@ input[type="date"].sr-input {
   cursor: pointer;
   transition: all 0.2s ease;
   width: fit-content;
-  box-shadow: 0 2px 8px rgba(3, 2, 19, 0.08);
   margin-bottom: 10px;
   align-items: center;
 }
 
 .sr-btn-save:hover {
   background-color: #3341db;
-  box-shadow: 0 4px 12px rgba(3, 2, 19, 0.15);
   transform: translateY(-1px);
 }
 
@@ -459,7 +454,6 @@ input[type="date"].sr-input {
 
 .sr-search-input:focus {
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .sr-date-filter {
@@ -477,7 +471,6 @@ input[type="date"].sr-input {
 
 .sr-date-filter:focus {
   border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .sr-export-btn {
@@ -498,7 +491,6 @@ input[type="date"].sr-input {
 .sr-export-pdf:hover {
   background-color: #B91C1C;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
 }
 
 .sr-export-csv {
@@ -508,7 +500,6 @@ input[type="date"].sr-input {
 .sr-export-csv:hover {
   background-color: #CA8A04;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
 }
 
 .sr-table-container {
@@ -516,7 +507,6 @@ input[type="date"].sr-input {
   border-radius: 12px;
   overflow-x: auto;
   overflow-y: visible;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   width: 100%;
   scrollbar-color: #2563eb #e5e7eb;
   scrollbar-width: thin;
@@ -622,6 +612,5 @@ input[type="date"].sr-input {
   padding: 20px;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
