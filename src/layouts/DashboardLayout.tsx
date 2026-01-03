@@ -248,11 +248,6 @@ export default function DashboardLayout({ children }: Props) {
               path="/dashboard/registration/scaffolding"
               onNavigate={() => setOpenMenu(null)}
             />
-            <SubItem
-              label="Old"
-              path="/dashboard/registration/old-registration"
-              onNavigate={() => setOpenMenu(null)}
-            />
           </SidebarExpandable>
 
           <SidebarExpandable
@@ -275,11 +270,6 @@ export default function DashboardLayout({ children }: Props) {
               <SubItem
                 label="Scaffolding"
                 path="/dashboard/material-purchase/scaffolding"
-                onNavigate={() => setOpenMenu(null)}
-              />
-              <SubItem
-                label="Old"
-                path="/dashboard/material-purchase/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
             </SubGroup>
@@ -308,11 +298,6 @@ export default function DashboardLayout({ children }: Props) {
                 path="/dashboard/material-issue/scaffholding-issue"
                 onNavigate={() => setOpenMenu(null)}
               />
-              <SubItem
-                label="Old"
-                path="/dashboard/material-issue/old-registration"
-                onNavigate={() => setOpenMenu(null)}
-              />
             </SubGroup>
 
             <SubGroup label="Material Return">
@@ -331,11 +316,6 @@ export default function DashboardLayout({ children }: Props) {
                 path="/dashboard/material-return/scaffholding-return"
                 onNavigate={() => setOpenMenu(null)}
               />
-              <SubItem
-                label="Old"
-                path="/dashboard/material-return/old-registration"
-                onNavigate={() => setOpenMenu(null)}
-              />
             </SubGroup>
 
             <SubGroup label="Stock Overview">
@@ -352,11 +332,6 @@ export default function DashboardLayout({ children }: Props) {
               <SubItem
                 label="Scaffolding"
                 path="/dashboard/stock-report/scaffolding"
-                onNavigate={() => setOpenMenu(null)}
-              />
-              <SubItem
-                label="Old"
-                path="/dashboard/stock-report/old-registration"
                 onNavigate={() => setOpenMenu(null)}
               />
             </SubGroup>

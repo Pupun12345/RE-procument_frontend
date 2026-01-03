@@ -131,13 +131,8 @@ const ScaffoldingStockReport: React.FC = () => {
 
     autoTable(doc, {
       startY: 65,
-<<<<<<< HEAD
       margin: { top: 70, bottom: 65 },
-      head: [["Item Name", "Quantity", "Unit", "Status"]],
-=======
-      margin: { top: 60, bottom: 50 },
       head: [["Item Name", "PUW (kg)", "Qty", "Total Weight (kg)", "Unit", "Status"]],
->>>>>>> 0eb7eb493b3b3cc8409a4aa09b91ecca7bb65553
       body: stocks.map((s) => [
         s.itemName,
         String(s.puw),

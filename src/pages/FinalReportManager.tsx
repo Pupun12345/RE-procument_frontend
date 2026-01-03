@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck, Wrench, Boxes, Archive } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Wrench, Boxes } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function FinalReportManager() {
@@ -47,13 +47,6 @@ export function FinalReportManager() {
             icon={Boxes}
             color="#ef4444"
             onClick={() => navigate("/dashboard/final-report/scaffolding")}
-          />
-          <FinalReportCard
-            title="Old"
-            desc="View consolidated old materials final report"
-            icon={Archive}
-            color="#64748b" // slate-500
-            onClick={() => navigate("/dashboard/stock-report/old-registration")}
           />
         </div>
       </main>

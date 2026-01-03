@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Wrench,
   Boxes,
-  Archive,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -61,15 +60,6 @@ export function RegistrationManager() {
       bg: "#ef4444", // red-500
       action: "Open Scaffolding",
       onClick: () => navigate("/dashboard/registration/scaffolding"),
-    },
-    {
-      id: 6,
-      title: "Old",
-      description: "Old items registration",
-      icon: Archive,
-      bg: "#64748b", 
-      action: "Open Old",
-      onClick: () => navigate("/dashboard/registration/old-registration"),
     },
   ];
 

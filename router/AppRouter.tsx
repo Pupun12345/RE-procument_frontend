@@ -13,7 +13,6 @@ import MechanicalRegistration from "../src/pages/mechanical";
 import PPEDistribution from "../src/pages/material_issue/PPEDistribution";
 import ScaffoldingRegistration from "../src/pages/scaffholding";
 import PPERegistration from "../src/pages/ppe";
-import OldRegistrationRegistration from "../src/pages/OldRegistrationRegistration";
 import MechanicalIssuePage from "../src/pages/material_issue/MechanicalIssue";
 import ScaffholdingIssuePage from "../src/pages/material_issue/scaffholdingIssue";
 import ReturnPage from "../src/pages/material_return/scaffholdingreturn";
@@ -22,13 +21,9 @@ import PPEReturnPage from "../src/pages/material_return/PPEreturn";
 import PPEPurchase from "../src/pages/materialPurchase/PPEPurchase";
 import MechanicalPurchase from "../src/pages/materialPurchase/MechanicalPurchase";
 import ScaffoldingPurchase from "../src/pages/materialPurchase/ScaffoldingPurchase";
-import OldRegistration from "../src/pages/materialPurchase/OldRegistration";
-import OldRegistrationReturn from "../src/pages/material_return/OldRegistrationReturn";
-import OldRegistrationIssue from "../src/pages/material_issue/OldRegistrationIssue";
 import PPEStockReport from "../src/pages/stockReport/PPEStockReport";
 import MechanicalStockReport from "../src/pages/stockReport/MechanicalStockReport";
 import ScaffoldingStockReport from "../src/pages/stockReport/ScaffoldingStockReport";
-import OldRegistrationStockReport from "../src/pages/stockReport/OldRegistrationStockReport";
 import { RegistrationManager } from "../src/pages/RegistrationManager";
 import { MaterialPurchaseManager } from "../src/pages/MaterialPurchaseManager";
 import { MaterialIssueManager } from "../src/pages/MaterialIssueManager";
@@ -127,16 +122,6 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/dashboard/registration/old-registration"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <OldRegistrationRegistration />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
       ''
       <Route
         path="/dashboard/material-issue/ppe-distribution"
@@ -164,16 +149,6 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffholdingIssuePage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/material-issue/old-registration"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <OldRegistrationIssue />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -239,26 +214,6 @@ export default function AppRouter() {
         }
       />
       <Route
-        path="/dashboard/material-purchase/old-registration"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <OldRegistration />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/material-return/old-registration"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <OldRegistrationReturn />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/dashboard/stock-report/ppe"
         element={
           <ProtectedRoute>
@@ -284,16 +239,6 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <ScaffoldingStockReport />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/stock-report/old-registration"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <OldRegistrationStockReport />
             </DashboardLayout>
           </ProtectedRoute>
         }
