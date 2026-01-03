@@ -138,6 +138,7 @@ const ScaffoldingStockReport: React.FC = () => {
         String(s.puw),
         String(s.qty),
         (s.weight ?? s.qty * s.puw).toFixed(2),
+        s.unit || "-",
         s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
       ]),
 
