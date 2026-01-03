@@ -11,6 +11,7 @@ import "./PPEDistribution.css";
 interface Item {
   itemName: string;
   unit: string;
+  puw: number;
 }
 interface GroupedReportRow {
   _id: string;
@@ -37,6 +38,8 @@ interface IssueRecord {
     itemName: string;
     unit: string;
     qty: number;
+    unitWeight: number; // ✅ ADD
+    issuedWeight: number;
   }[];
 }
 
@@ -74,9 +77,9 @@ interface EditableIssue {
   location?: string;
   woNumber?: string;
   supervisorName?: string;
-    unitWeight?: number | string;
-    issuedQuantity?: number | string;
-    issuedWeight?: number | string;
+  unitWeight?: number | string;
+  issuedQuantity?: number | string;
+  issuedWeight?: number | string;
   tslName?: string;
   items: { itemName: string; unit: string; qty: number }[];
 }
@@ -225,7 +228,8 @@ export default function ScaffoldingIssuePage() {
     const itemsCopy = updated.items.map((it) => ({ ...it }));
     if (key === "qty") {
       itemsCopy[index].qty = Number(value) || 0;
-      if (!itemsCopy[index].issuedQuantity) itemsCopy[index].issuedQuantity = itemsCopy[index].qty;
+      if (!itemsCopy[index].issuedQuantity)
+        itemsCopy[index].issuedQuantity = itemsCopy[index].qty;
     } else if (key === "unitWeight") {
       itemsCopy[index].unitWeight = value;
     } else if (key === "issuedQuantity") {
@@ -233,7 +237,9 @@ export default function ScaffoldingIssuePage() {
     }
 
     const uw = parseFloat(String(itemsCopy[index].unitWeight || "0"));
-    const iq = parseFloat(String(itemsCopy[index].issuedQuantity ?? itemsCopy[index].qty ?? "0"));
+    const iq = parseFloat(
+      String(itemsCopy[index].issuedQuantity ?? itemsCopy[index].qty ?? "0")
+    );
     if (!isNaN(uw) && !isNaN(iq)) {
       itemsCopy[index].issuedWeight = uw * iq;
     }
@@ -339,7 +345,12 @@ export default function ScaffoldingIssuePage() {
     supervisorName: issue.supervisorName,
     tslName: issue.tslName,
 
-    itemsText: issue.items.map((i) => `${i.itemName} (${i.qty})`).join(", "),
+    itemsText: issue.items
+      .map(
+        (i) =>
+          `${i.itemName} – ${i.qty} × ${i.unitWeight} kg = ${i.issuedWeight} kg`
+      )
+      .join("\n"),
 
     totalQty: issue.items.reduce((sum, i) => sum + i.qty, 0),
   }));
@@ -656,6 +667,11 @@ export default function ScaffoldingIssuePage() {
 
                           updateMaterial(index, "itemName", e.target.value);
                           updateMaterial(index, "unit", selected?.unit || "");
+                          updateMaterial(
+                            index,
+                            "unitWeight",
+                            String(selected?.puw || "")
+                          );
                         }}
                       >
                         <option value="">Select Item</option>
@@ -676,13 +692,11 @@ export default function ScaffoldingIssuePage() {
                       <input
                         className="ppe-input"
                         value={row.unitWeight}
-                        onChange={(e) =>
-                          updateMaterial(index, "unitWeight", e.target.value)
-                        }
-                        placeholder="Unit Weight"
-                        type="number"
-                        min="0"
+                        readOnly
+                        placeholder="PUW"
+                        style={{ background: "#f3f4f6", cursor: "not-allowed" }}
                       />
+
                       <input
                         className="ppe-input"
                         value={row.issuedQuantity}
@@ -718,7 +732,7 @@ export default function ScaffoldingIssuePage() {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                         style={{
+                          style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
@@ -730,7 +744,7 @@ export default function ScaffoldingIssuePage() {
                             width: 50,
                             height: 32,
                             padding: 0,
-                            minWidth: 30
+                            minWidth: 30,
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -1004,11 +1018,11 @@ export default function ScaffoldingIssuePage() {
           <div className="ppe-modal-overlay">
             <div
               className="ppe-modal"
-              style={{ maxHeight: '70vh', overflowY: 'auto', padding: 16 }}
+              style={{ maxHeight: "70vh", overflowY: "auto", padding: 16 }}
             >
               <h3>Edit Issue</h3>
 
-              <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
+              <div style={{ display: "grid", gap: 8, marginBottom: 8 }}>
                 <label>Issue Date</label>
                 <input
                   type="date"
@@ -1038,7 +1052,10 @@ export default function ScaffoldingIssuePage() {
                 <input
                   value={editRecord.supervisorName ?? ""}
                   onChange={(e) =>
-                    setEditRecord({ ...editRecord, supervisorName: e.target.value })
+                    setEditRecord({
+                      ...editRecord,
+                      supervisorName: e.target.value,
+                    })
                   }
                 />
 
@@ -1061,23 +1078,34 @@ export default function ScaffoldingIssuePage() {
 
               <div style={{ marginTop: 8 }}>
                 <label style={{ fontWeight: 600 }}>Items</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    marginTop: 8,
+                  }}
+                >
                   {editRecord.items.map((it, idx) => (
                     <div
                       key={idx}
                       style={{
-                        border: '1px solid #e5e7eb',
+                        border: "1px solid #e5e7eb",
                         padding: 8,
                         borderRadius: 6,
-                        display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+                        display: "grid",
+                        gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
                         gap: 8,
-                        alignItems: 'center',
+                        alignItems: "center",
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 600 }}>{it.itemName}</div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>{it.unit}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>
+                          {it.itemName}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#6b7280" }}>
+                          {it.unit}
+                        </div>
                       </div>
 
                       <div>
@@ -1085,7 +1113,9 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={it.qty ?? 0}
-                          onChange={(e) => updateEditItem(idx, 'qty', e.target.value)}
+                          onChange={(e) =>
+                            updateEditItem(idx, "qty", e.target.value)
+                          }
                         />
                       </div>
 
@@ -1093,8 +1123,10 @@ export default function ScaffoldingIssuePage() {
                         <label style={{ fontSize: 12 }}>Unit Weight</label>
                         <input
                           type="number"
-                          value={String(it.unitWeight ?? '')}
-                          onChange={(e) => updateEditItem(idx, 'unitWeight', e.target.value)}
+                          value={String(it.unitWeight ?? "")}
+                          onChange={(e) =>
+                            updateEditItem(idx, "unitWeight", e.target.value)
+                          }
                         />
                       </div>
 
@@ -1103,7 +1135,13 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={String(it.issuedQuantity ?? it.qty ?? 0)}
-                          onChange={(e) => updateEditItem(idx, 'issuedQuantity', e.target.value)}
+                          onChange={(e) =>
+                            updateEditItem(
+                              idx,
+                              "issuedQuantity",
+                              e.target.value
+                            )
+                          }
                         />
                       </div>
 
@@ -1111,7 +1149,7 @@ export default function ScaffoldingIssuePage() {
                         <label style={{ fontSize: 12 }}>Issued Weight</label>
                         <input
                           type="number"
-                          value={String(it.issuedWeight ?? '')}
+                          value={String(it.issuedWeight ?? "")}
                           readOnly
                         />
                       </div>
@@ -1120,9 +1158,16 @@ export default function ScaffoldingIssuePage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button onClick={updateIssue} className="ppe-btn-save">Save</button>
-                <button onClick={() => setEditRecord(null)} className="ppe-btn-back">Cancel</button>
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button onClick={updateIssue} className="ppe-btn-save">
+                  Save
+                </button>
+                <button
+                  onClick={() => setEditRecord(null)}
+                  className="ppe-btn-back"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
