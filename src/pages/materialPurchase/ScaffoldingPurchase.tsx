@@ -62,7 +62,7 @@ const emptyItem: Item = {
 };
 
 const PurchaseEntryPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
+  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">("entry");
 
   /* ================= MASTER DATA ================= */
   const [parties, setParties] = useState<Party[]>([]);
@@ -78,6 +78,12 @@ const PurchaseEntryPage: React.FC = () => {
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  /* ================= OLD STOCK STATE ================= */
+  const [oldItemName, setOldItemName] = useState("");
+  const [oldQty, setOldQty] = useState<number | "">("");
+  const [oldUnit, setOldUnit] = useState("");
+  const [oldPuw, setOldPuw] = useState<number>(0);
 
   /* ================= FETCH BACKEND DATA ================= */
   useEffect(() => {
@@ -189,6 +195,37 @@ const PurchaseEntryPage: React.FC = () => {
   const addItem = () => setItems([...items, emptyItem]);
   const removeItem = (index: number) =>
     setItems(items.filter((_, i) => i !== index));
+
+  /* ================= SAVE OLD STOCK ================= */
+  const saveOldStock = async () => {
+    if (!oldItemName || !oldQty || !oldUnit) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    const payload = {
+      itemName: oldItemName,
+      qty: Number(oldQty),
+      unit: oldUnit,
+      puw: oldPuw,
+      weight: Number(oldQty) * oldPuw,
+    };
+
+    try {
+      await api.post("/stock/scaffolding", payload);
+      
+      // reset form
+      setOldItemName("");
+      setOldQty("");
+      setOldUnit("");
+      setOldPuw(0);
+      
+      alert("Old stock added successfully");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save old stock");
+    }
+  };
 
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
@@ -403,6 +440,12 @@ const PurchaseEntryPage: React.FC = () => {
           onClick={() => setActiveTab("report")}
         >
           Purchase Report
+        </button>
+        <button
+          className={activeTab === "old" ? "active" : ""}
+          onClick={() => setActiveTab("old")}
+        >
+          OLD
         </button>
       </div>
 
@@ -669,6 +712,80 @@ const PurchaseEntryPage: React.FC = () => {
               )}
             </tbody>
           </table>
+        </>
+      )}
+
+      {/* ================= OLD STOCK FORM ================= */}
+      {activeTab === "old" && (
+        <>
+          <h2>Add Old Stock</h2>
+          
+          <label>Item Name</label>
+          <select
+            value={oldItemName}
+            onChange={(e) => {
+              const selectedItem = itemMasters.find(im => im.itemName === e.target.value);
+              setOldItemName(e.target.value);
+              if (selectedItem) {
+                setOldUnit(selectedItem.unit);
+                setOldPuw(selectedItem.puw);
+              }
+            }}
+          >
+            <option value="">-- Select Item --</option>
+            {itemMasters.map((im) => (
+              <option key={im._id} value={im.itemName}>
+                {im.itemName}
+              </option>
+            ))}
+          </select>
+
+          <label>Quantity</label>
+          <input
+            type="number"
+            value={oldQty}
+            onChange={(e) => setOldQty(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+
+          <label>Unit</label>
+          <input
+            value={oldUnit}
+            readOnly
+            placeholder="Auto-filled from item"
+          />
+
+          <label>PUW (kg)</label>
+          <input
+            type="number"
+            value={oldPuw}
+            readOnly
+            placeholder="Auto-filled from item"
+          />
+
+          <label>Total Weight (kg)</label>
+          <input
+            type="number"
+            value={oldQty ? Number(oldQty) * oldPuw : ""}
+            readOnly
+            placeholder="Auto-calculated"
+          />
+
+          <div className="old-stock-buttons">
+            <button className="add-stock" onClick={saveOldStock}>
+              Add to Stock
+            </button>
+            <button 
+              className="clear-stock" 
+              onClick={() => {
+                setOldItemName("");
+                setOldQty("");
+                setOldUnit("");
+                setOldPuw(0);
+              }}
+            >
+              Clear
+            </button>
+          </div>
         </>
       )}
     </div>
