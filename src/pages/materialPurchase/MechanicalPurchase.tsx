@@ -393,7 +393,7 @@ const MechanicalPurchasePage: React.FC = () => {
 
   return (
     <div className="purchase-container">
-      <h1>PURCHASE ENTRY</h1>
+      <h1>MECHANICAL PURCHASE ENTRY</h1>
 
       {/* ================= TABS ================= */}
       <div className="tabs">
@@ -413,7 +413,7 @@ const MechanicalPurchasePage: React.FC = () => {
           className={activeTab === "old" ? "active" : ""}
           onClick={() => setActiveTab("old")}
         >
-          OLD
+          Opening Stock
         </button>
       </div>
 

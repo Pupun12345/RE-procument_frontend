@@ -410,7 +410,7 @@ const PurchaseEntryPage: React.FC = () => {
 
   return (
     <div className="purchase-container">
-      <h1>PURCHASE ENTRY</h1>
+      <h1>PPE PURCHASE ENTRY</h1>
 
       {/* ================= TABS ================= */}
       <div className="tabs">
@@ -430,7 +430,7 @@ const PurchaseEntryPage: React.FC = () => {
           className={activeTab === "old" ? "active" : ""}
           onClick={() => setActiveTab("old")}
         >
-          OLD
+          Opening Stock
         </button>
       </div>
 

@@ -445,7 +445,7 @@ const PurchaseEntryPage: React.FC = () => {
           className={activeTab === "old" ? "active" : ""}
           onClick={() => setActiveTab("old")}
         >
-          OLD
+          Opening Stock
         </button>
       </div>
 
