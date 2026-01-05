@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./scaffoldingISsue.css";
 import "./PPEDistribution.css";
+import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
 interface Item {
@@ -136,6 +137,8 @@ export default function ScaffoldingIssuePage() {
     setMaterials(materials.filter((_, i) => i !== index));
     showToast("success", "Material removed");
   };
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   const updateMaterial = (
     index: number,
@@ -921,8 +924,8 @@ export default function ScaffoldingIssuePage() {
                     <th>TSL</th>
                     <th>Items Issued</th>
                     <th>Total Qty</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    {isAdmin && <th>Edit</th>}
+                    {isAdmin && <th>Delete</th>}
                   </tr>
                 </thead>
 
@@ -937,22 +940,27 @@ export default function ScaffoldingIssuePage() {
                       <td>{r.tslName || "-"}</td>
                       <td>{r.itemsText}</td>
                       <td>{r.totalQty}</td>
-                      <td>
-                        <button
-                          className="report-edit-btn"
-                          onClick={() => openEdit(r)}
-                        >
-                          <MdEdit />
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          className="report-delete-btn"
-                          onClick={() => handleDelete(r._id)}
-                        >
-                          <MdDelete />
-                        </button>
-                      </td>
+                      {isAdmin && (
+                        <td>
+                          <button
+                            className="report-edit-btn"
+                            onClick={() => openEdit(r)}
+                          >
+                            <MdEdit />
+                          </button>
+                        </td>
+                      )}
+
+                      {isAdmin && (
+                        <td>
+                          <button
+                            className="report-delete-btn"
+                            onClick={() => handleDelete(r._id)}
+                          >
+                            <MdDelete />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

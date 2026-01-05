@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import "./scaffolding-order.css";
 import api from "../../api/axios";
+import { useAuthStore } from "../../store/authStore";
 
 /* ================= TYPES ================= */
 
@@ -67,6 +68,9 @@ export default function ScaffoldingOrder() {
     location: "",
   });
 
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
+
   /* ================= API CALLS ================= */
 
   const fetchItems = async () => {
@@ -91,6 +95,7 @@ export default function ScaffoldingOrder() {
       toast.error("Failed to load orders");
     }
   };
+  const [editId, setEditId] = useState<string | null>(null);
 
   /* ================= EFFECTS ================= */
 
@@ -158,25 +163,29 @@ export default function ScaffoldingOrder() {
       return;
     }
 
-    for (const row of materials) {
-      if (!row.material || !row.quantity) {
-        toast.error("Please complete all material rows");
-        return;
-      }
-    }
+    const payload = {
+      ...form,
+      materials: materials.map((m) => ({
+        material: m.material,
+        unit: m.unit,
+        quantity: Number(m.quantity),
+        provider: m.provider,
+      })),
+    };
 
     try {
-      await api.post("/scaffolding/orders", {
-        ...form,
-        materials: materials.map((m) => ({
-          material: m.material,
-          quantity: Number(m.quantity),
-          provider: m.provider,
-        })),
-      });
+      if (editId) {
+        // 🔥 UPDATE
+        await api.put(`/scaffolding/orders/${editId}`, payload);
+        toast.success("Order updated successfully ✅");
+      } else {
+        // 🔥 CREATE
+        await api.post("/scaffolding/orders", payload);
+        toast.success("Order created successfully 🎉");
+      }
 
-      toast.success("Order saved successfully 🎉");
-
+      // 🔄 RESET STATE
+      setEditId(null);
       setForm({
         supervisor: "",
         employeeId: "",
@@ -189,6 +198,7 @@ export default function ScaffoldingOrder() {
       ]);
 
       setActiveTab("report");
+      fetchOrders(); // 🔥 FORCE REFRESH REPORT
     } catch {
       toast.error("Failed to save order");
     }
@@ -490,30 +500,37 @@ export default function ScaffoldingOrder() {
                     👁
                   </button>
 
-                  <button
-                    className="edit-btn"
-                    title="Edit"
-                    onClick={() => {
-                      setForm({
-                        supervisor: o.supervisor,
-                        employeeId: o.employeeId,
-                        issueDate: o.issueDate.split("T")[0],
-                        location: o.location,
-                      });
-                      setMaterials(o.materials);
-                      setActiveTab("entry");
-                    }}
-                  >
-                    ✏️
-                  </button>
+                  {isAdmin && (
+                    <button
+                      className="edit-btn"
+                      title="Edit"
+                      onClick={() => {
+                        setEditId(o._id); // 🔥 THIS IS KEY
 
-                  <button
-                    className="delete-btn"
-                    title="Delete"
-                    onClick={() => handleDelete(o._id)}
-                  >
-                    🗑
-                  </button>
+                        setForm({
+                          supervisor: o.supervisor,
+                          employeeId: o.employeeId,
+                          issueDate: o.issueDate.split("T")[0],
+                          location: o.location,
+                        });
+
+                        setMaterials(o.materials);
+                        setActiveTab("entry");
+                      }}
+                    >
+                      ✏️
+                    </button>
+                  )}
+
+                  {isAdmin && (
+                    <button
+                      className="delete-btn"
+                      title="Delete"
+                      onClick={() => handleDelete(o._id)}
+                    >
+                      🗑
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

@@ -8,12 +8,13 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./PPEDistribution.css";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
 interface Item {
   itemName: string;
   unit: string;
-  qty: number;
+  issuedQty: number;
 }
 
 interface DistributionRecord {
@@ -28,7 +29,7 @@ interface StockItem {
   _id: string;
   itemName: string;
   unit: string;
-  qty: number;
+  issuedQty: number;
 }
 
 interface FormState {
@@ -85,18 +86,20 @@ const DistributionPage: React.FC = () => {
   };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   // Items state is now mutable to allow adding new items
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   // Modal state for adding item
   const fetchRecords = async () => {
-  try {
-    const res = await api.get("/issue/mechanical");
+    try {
+      const res = await api.get("/issue/mechanical");
 
-    setRecords(Array.isArray(res.data) ? res.data : []);
-  } catch {
-    toast.error("Failed to fetch mechanical issues");
-    setRecords([]);
-  }
-};
+      setRecords(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      toast.error("Failed to fetch mechanical issues");
+      setRecords([]);
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -124,11 +127,14 @@ const DistributionPage: React.FC = () => {
 
   // Open edit modal and map backend record shape into editable shape
   const openEdit = (r: DistributionRecord) => {
-    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    const first =
+      r.items && r.items.length > 0
+        ? r.items[0]
+        : { itemName: "", unit: "", issuedQty: 0 };
     setEditRecord({
       _id: r._id,
       itemName: first.itemName,
-      quantity: (first.qty as number) || 0,
+      quantity: (first.issuedQty as number) || 0,
       unit: first.unit || "",
       issueDate: r.issueDate,
       personName: r.issuedTo,
@@ -146,7 +152,14 @@ const DistributionPage: React.FC = () => {
         issuedTo: editRecord.personName,
         issueDate: editRecord.issueDate,
         location: editRecord.location,
-        items: editRecord.items.map((it) => ({ itemName: it.itemName, unit: it.unit, qty: it.qty })),
+        items: editRecord.items.map((it) => ({
+          itemName: it.itemName,
+          unit: it.unit,
+          issuedQty:
+            it.itemName === editRecord.itemName
+              ? editRecord.quantity // ✅ edited value
+              : it.issuedQty,
+        })),
       };
 
       await api.put(`/issue/mechanical/${editRecord._id}`, payload);
@@ -179,13 +192,13 @@ const DistributionPage: React.FC = () => {
         const res = await api.get("/stock/mechanical");
 
         // 🔑 FIX IS HERE
-const data = Array.isArray(res.data)
-  ? res.data
-  : Array.isArray(res.data?.data)
-  ? res.data.data
-  : [];
+        const data = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
 
-setStockItems(data);
+        setStockItems(data);
       } catch (err) {
         toast("Failed to load stock items");
       }
@@ -211,24 +224,22 @@ setStockItems(data);
   // Add item logic
 
   const filteredRecords = records.filter((r) => {
-  const search = filters.search.toLowerCase();
+    const search = filters.search.toLowerCase();
 
-  const itemMatch = r.items.some(i =>
-    i.itemName.toLowerCase().includes(search)
-  );
+    const itemMatch = r.items.some((i) =>
+      i.itemName.toLowerCase().includes(search)
+    );
 
-  const personMatch = r.issuedTo.toLowerCase().includes(search);
+    const personMatch = r.issuedTo.toLowerCase().includes(search);
 
-  const date = new Date(r.issueDate);
-  const from = filters.from ? new Date(filters.from) : null;
-  const to = filters.to ? new Date(filters.to) : null;
+    const date = new Date(r.issueDate);
+    const from = filters.from ? new Date(filters.from) : null;
+    const to = filters.to ? new Date(filters.to) : null;
 
-  const dateMatch =
-    (!from || date >= from) &&
-    (!to || date <= to);
+    const dateMatch = (!from || date >= from) && (!to || date <= to);
 
-  return (itemMatch || personMatch) && dateMatch;
-});
+    return (itemMatch || personMatch) && dateMatch;
+  });
 
   // ====================== EXPORT ======================
   const exportPDF = (): void => {
@@ -302,7 +313,7 @@ setStockItems(data);
       body: filteredRecords.flatMap((r) =>
         r.items.map((item) => [
           item.itemName,
-          item.qty,
+          item.issuedQty,
           item.unit,
           new Date(r.issueDate).toLocaleDateString("en-IN"),
           r.issuedTo,
@@ -501,7 +512,7 @@ setStockItems(data);
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                            style={{
+                          style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
@@ -513,7 +524,7 @@ setStockItems(data);
                             width: 50,
                             height: 32,
                             padding: 0,
-                            minWidth:50
+                            minWidth: 50,
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -561,7 +572,7 @@ setStockItems(data);
                           .map((i) => ({
                             itemName: i.itemName,
                             unit: i.unit,
-                            qty: Number(i.quantity),
+                            issuedQty: Number(i.quantity),
                           })),
                       };
 
@@ -659,8 +670,8 @@ setStockItems(data);
                     <th>Date</th>
                     <th>Issued To</th>
                     <th>Location</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    {isAdmin && <th>Edit</th>}
+                    {isAdmin && <th>Delete</th>}
                   </tr>
                 </thead>
 
@@ -670,28 +681,35 @@ setStockItems(data);
                       <tr key={r._id}>
                         <td>
                           {r.items
-                            .map((i) => `${i.itemName} (${i.qty} ${i.unit})`)
+                            .map(
+                              (i) => `${i.itemName} (${i.issuedQty} ${i.unit})`
+                            )
                             .join(", ")}
                         </td>
                         <td>{r.issueDate}</td>
                         <td>{r.issuedTo}</td>
                         <td>{r.location || "-"}</td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => openEdit(r)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-delete-btn"
-                            onClick={() => handleDelete(r._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-edit-btn"
+                              onClick={() => openEdit(r)}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
+
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-delete-btn"
+                              onClick={() => handleDelete(r._id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))
                   ) : (

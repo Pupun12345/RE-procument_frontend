@@ -217,38 +217,40 @@ export default function DashboardLayout({ children }: Props) {
             }}
           />
 
-          <SidebarExpandable
-            icon={<FaUserPlus />}
-            label="Registration"
-            open={openMenu === "registration"}
-            onClick={() => toggleMenu("registration", "Registration")}
-          >
-            <SubItem
-              label="Vendor"
-              path="/dashboard/registration/vendor"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Employee"
-              path="/dashboard/registration/employee"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="PPE"
-              path="/dashboard/registration/ppe"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Mechanical"
-              path="/dashboard/registration/mechanical"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Scaffolding"
-              path="/dashboard/registration/scaffolding"
-              onNavigate={() => setOpenMenu(null)}
-            />
-          </SidebarExpandable>
+          {role === "admin" && (
+            <SidebarExpandable
+              icon={<FaUserPlus />}
+              label="Registration"
+              open={openMenu === "registration"}
+              onClick={() => toggleMenu("registration", "Registration")}
+            >
+              <SubItem
+                label="Vendor"
+                path="/dashboard/registration/vendor"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Employee"
+                path="/dashboard/registration/employee"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="PPE"
+                path="/dashboard/registration/ppe"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Mechanical"
+                path="/dashboard/registration/mechanical"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Scaffolding"
+                path="/dashboard/registration/scaffolding"
+                onNavigate={() => setOpenMenu(null)}
+              />
+            </SidebarExpandable>
+          )}
 
           <SidebarExpandable
             icon={<FaBoxes />}
@@ -256,23 +258,25 @@ export default function DashboardLayout({ children }: Props) {
             open={openMenu === "store"}
             onClick={() => toggleMenu("store", "Store Management")}
           >
-            <SubGroup label="Material Purchase">
-              <SubItem
-                label="PPE"
-                path="/dashboard/material-purchase/ppe"
-                onNavigate={() => setOpenMenu(null)}
-              />
-              <SubItem
-                label="Mechanical"
-                path="/dashboard/material-purchase/mechanical"
-                onNavigate={() => setOpenMenu(null)}
-              />
-              <SubItem
-                label="Scaffolding"
-                path="/dashboard/material-purchase/scaffolding"
-                onNavigate={() => setOpenMenu(null)}
-              />
-            </SubGroup>
+            {role === "admin" && (
+              <SubGroup label="Material Purchase">
+                <SubItem
+                  label="PPE"
+                  path="/dashboard/material-purchase/ppe"
+                  onNavigate={() => setOpenMenu(null)}
+                />
+                <SubItem
+                  label="Mechanical"
+                  path="/dashboard/material-purchase/mechanical"
+                  onNavigate={() => setOpenMenu(null)}
+                />
+                <SubItem
+                  label="Scaffolding"
+                  path="/dashboard/material-purchase/scaffolding"
+                  onNavigate={() => setOpenMenu(null)}
+                />
+              </SubGroup>
+            )}
 
             <SubGroup label="Material orders">
               <SubItem
@@ -336,15 +340,9 @@ export default function DashboardLayout({ children }: Props) {
               />
             </SubGroup>
             <SubGroup label="Final Report">
-              <SubItem
-                label="PPE"
-              />
-              <SubItem
-                label="Mechanical"
-              />
-              <SubItem
-                label="Scaffolding"
-              />
+              <SubItem label="PPE" />
+              <SubItem label="Mechanical" />
+              <SubItem label="Scaffolding" />
             </SubGroup>
           </SidebarExpandable>
 
@@ -507,20 +505,20 @@ export default function DashboardLayout({ children }: Props) {
 // Icon color mapping helper
 function getIconColor(label: string) {
   const map: Record<string, string> = {
-    Dashboard: '#2563eb',
-    Registration: '#0ea5a4',
-    'Store Management': '#7c3aed',
-    'Material Purchase': '#059669',
-    'Material orders': '#f97316',
-    'Material Issue': '#ef4444',
-    'Material Return': '#0ea5a4',
-    'Stock Overview': '#0f766e',
-    HRMS: '#ef4444',
-    'Vehicle Management': '#f59e0b',
-    Settings: '#6b7280',
-    'Help & Support': '#06b6d4',
+    Dashboard: "#2563eb",
+    Registration: "#0ea5a4",
+    "Store Management": "#7c3aed",
+    "Material Purchase": "#059669",
+    "Material orders": "#f97316",
+    "Material Issue": "#ef4444",
+    "Material Return": "#0ea5a4",
+    "Stock Overview": "#0f766e",
+    HRMS: "#ef4444",
+    "Vehicle Management": "#f59e0b",
+    Settings: "#6b7280",
+    "Help & Support": "#06b6d4",
   };
-  return map[label] || '#111827';
+  return map[label] || "#111827";
 }
 
 /* ================= Components ================= */
@@ -536,8 +534,16 @@ function SidebarButton({
 }) {
   return (
     <div style={sidebarItemStyle} onClick={onClick}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ color: getIconColor(label), display: 'inline-flex', alignItems: 'center' }}>{icon}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span
+          style={{
+            color: getIconColor(label),
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          {icon}
+        </span>
         {label}
       </div>
     </div>
@@ -560,8 +566,16 @@ function SidebarExpandable({
   return (
     <>
       <div style={sidebarItemStyle} onClick={onClick}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: getIconColor(label), display: 'inline-flex', alignItems: 'center' }}>{icon}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span
+            style={{
+              color: getIconColor(label),
+              display: "inline-flex",
+              alignItems: "center",
+            }}
+          >
+            {icon}
+          </span>
           {label}
         </div>
         {open ? <FiChevronDown /> : <FiChevronRight />}

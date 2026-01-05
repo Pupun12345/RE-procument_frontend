@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./PPEreturn.css";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
 interface Item {
@@ -77,6 +78,8 @@ const DistributionPage: React.FC = () => {
   };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   // Items state is now mutable to allow adding new items
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   // Modal state for adding item
   const fetchRecords = async () => {
@@ -518,7 +521,7 @@ const DistributionPage: React.FC = () => {
                         <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
-                            style={{
+                          style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
@@ -530,7 +533,7 @@ const DistributionPage: React.FC = () => {
                             width: 50,
                             height: 32,
                             padding: 0,
-                            minWidth:50
+                            minWidth: 50,
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -542,7 +545,7 @@ const DistributionPage: React.FC = () => {
                           className="ppe-delete-btn"
                           onClick={() => removeItem(index)}
                           disabled={items.length === 1}
-                         style={{
+                          style={{
                             fontSize: 16,
                             display: "flex",
                             alignItems: "center",
@@ -602,7 +605,7 @@ const DistributionPage: React.FC = () => {
                       setActiveTab("report");
                       fetchRecords();
                     } catch {
-                      toast.error("Failed to issue PPE");
+                      toast.error("Failed to return mechanical");
                     }
                   }}
                 >
@@ -676,8 +679,8 @@ const DistributionPage: React.FC = () => {
                     <th>Date</th>
                     <th>Issued To</th>
                     <th>Location</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    {isAdmin && <th>Edit</th>}
+                    {isAdmin && <th>Delete</th>}
                   </tr>
                 </thead>
 
@@ -687,29 +690,36 @@ const DistributionPage: React.FC = () => {
                       <tr key={r._id}>
                         <td>
                           {r.items
-                            .map((i) => `${i.itemName} (${i.quantity} ${i.unit})`)
+                            .map(
+                              (i) => `${i.itemName} (${i.quantity} ${i.unit})`
+                            )
                             .join(", ")}
                         </td>
                         <td>{new Date(r.returnDate).toLocaleDateString()}</td>
                         <td>{r.personName}</td>
 
                         <td>{r.location || "-"}</td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => openEdit(r)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-delete-btn"
-                            onClick={() => handleDelete(r._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-edit-btn"
+                              onClick={() => openEdit(r)}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
+
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-delete-btn"
+                              onClick={() => handleDelete(r._id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))
                   ) : (

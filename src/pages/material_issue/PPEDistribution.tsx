@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./PPEDistribution.css";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
 interface Item {
@@ -84,18 +85,20 @@ const DistributionPage: React.FC = () => {
   };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   // Items state is now mutable to allow adding new items
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   // Modal state for adding item
   const fetchRecords = async () => {
-  try {
-    const res = await api.get("/issue/ppe");
+    try {
+      const res = await api.get("/issue/ppe");
 
-    setRecords(Array.isArray(res.data) ? res.data : []);
-  } catch {
-    toast.error("Failed to fetch PPE issues");
-    setRecords([]);
-  }
-};
+      setRecords(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      toast.error("Failed to fetch PPE issues");
+      setRecords([]);
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -122,7 +125,10 @@ const DistributionPage: React.FC = () => {
   const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
 
   const openEdit = (r: DistributionRecord) => {
-    const first = r.items && r.items.length > 0 ? r.items[0] : { itemName: "", unit: "", qty: 0 };
+    const first =
+      r.items && r.items.length > 0
+        ? r.items[0]
+        : { itemName: "", unit: "", qty: 0 };
     setEditRecord({
       _id: r._id,
       itemName: first.itemName,
@@ -140,7 +146,9 @@ const DistributionPage: React.FC = () => {
     try {
       // ensure items array reflects edited quantity for the first item
       const itemsPayload = editRecord.items.map((it, idx) =>
-        idx === 0 ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity } : { itemName: it.itemName, unit: it.unit, qty: it.qty }
+        idx === 0
+          ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity }
+          : { itemName: it.itemName, unit: it.unit, qty: it.qty }
       );
 
       const payload = {
@@ -207,24 +215,22 @@ const DistributionPage: React.FC = () => {
   // Add item logic
 
   const filteredRecords = records.filter((r) => {
-  const search = filters.search.toLowerCase();
+    const search = filters.search.toLowerCase();
 
-  const itemMatch = r.items.some(i =>
-    i.itemName.toLowerCase().includes(search)
-  );
+    const itemMatch = r.items.some((i) =>
+      i.itemName.toLowerCase().includes(search)
+    );
 
-  const personMatch = r.issuedTo.toLowerCase().includes(search);
+    const personMatch = r.issuedTo.toLowerCase().includes(search);
 
-  const date = new Date(r.issueDate);
-  const from = filters.from ? new Date(filters.from) : null;
-  const to = filters.to ? new Date(filters.to) : null;
+    const date = new Date(r.issueDate);
+    const from = filters.from ? new Date(filters.from) : null;
+    const to = filters.to ? new Date(filters.to) : null;
 
-  const dateMatch =
-    (!from || date >= from) &&
-    (!to || date <= to);
+    const dateMatch = (!from || date >= from) && (!to || date <= to);
 
-  return (itemMatch || personMatch) && dateMatch;
-});
+    return (itemMatch || personMatch) && dateMatch;
+  });
 
   // ====================== EXPORT ======================
   const exportPDF = (): void => {
@@ -509,7 +515,7 @@ const DistributionPage: React.FC = () => {
                             width: 50,
                             height: 32,
                             padding: 0,
-                            minWidth:50
+                            minWidth: 50,
                           }}
                           onClick={() => {
                             /* TODO: Add edit logic here */
@@ -655,8 +661,8 @@ const DistributionPage: React.FC = () => {
                     <th>Date</th>
                     <th>Issued To</th>
                     <th>Location</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    {isAdmin && <th>Edit</th>}
+                    {isAdmin && <th>Delete</th>}
                   </tr>
                 </thead>
 
@@ -672,22 +678,27 @@ const DistributionPage: React.FC = () => {
                         <td>{r.issueDate}</td>
                         <td>{r.issuedTo}</td>
                         <td>{r.location || "-"}</td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-edit-btn"
-                            onClick={() => openEdit(r)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                        <td>
-                          <button
-                            className="ppe-action-btn ppe-delete-btn"
-                            onClick={() => handleDelete(r._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-edit-btn"
+                              onClick={() => openEdit(r)}
+                            >
+                              Edit
+                            </button>
+                          </td>
+                        )}
+
+                        {isAdmin && (
+                          <td>
+                            <button
+                              className="ppe-action-btn ppe-delete-btn"
+                              onClick={() => handleDelete(r._id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))
                   ) : (

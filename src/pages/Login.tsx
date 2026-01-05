@@ -89,7 +89,9 @@ export default function Login() {
       navigate("/dashboard", { replace: true });
     } catch (error) {
       const err = error as AxiosError<LoginErrorResponse>;
-      toast.error(err.response?.data?.message || "Login failed", { id: toastId });
+      toast.error(err.response?.data?.message || "Login failed", {
+        id: toastId,
+      });
     } finally {
       setLoading(false);
     }
@@ -149,7 +151,11 @@ export default function Login() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={captchaBoxStyle}>{generatedCaptcha}</div>
-          <button type="button" onClick={refreshCaptcha} style={refreshBtnStyle}>
+          <button
+            type="button"
+            onClick={refreshCaptcha}
+            style={refreshBtnStyle}
+          >
             <FaSyncAlt />
           </button>
           <input
@@ -171,9 +177,17 @@ export default function Login() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 12,
+        }}
+      >
         <a style={footerLinkStyle}>Forgot User ID?</a>
-        <a style={footerLinkStyle}>Forgot Password?</a>
+        <a style={footerLinkStyle} onClick={() => navigate("/forgot-password")}>
+          Forgot Password?
+        </a>
       </div>
     </div>
   );

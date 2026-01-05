@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../src/pages/Home";
 import Login from "../src/pages/Login";
+import ForgotPassword from "../src/pages/ForgotPassword";
 import Dashboard from "../src/pages/Dashboard";
 import ProtectedRoute from "../src/components/ProtectedRoute";
 import EmployeeRegistration from "../src/pages/EmployeeRegistration";
@@ -36,6 +37,7 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route
         path="/dashboard"
         element={

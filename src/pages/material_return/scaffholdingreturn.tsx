@@ -5,6 +5,7 @@ import autoTable from "jspdf-autotable";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import "./scaffoldingISsue.css";
+import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
 interface Item {
@@ -88,6 +89,32 @@ export default function ScaffoldingIssuePage() {
       year: "numeric",
     });
   };
+  const [issues, setIssues] = useState<any[]>([]);
+  const [selectedIssueId, setSelectedIssueId] = useState("");
+
+  useEffect(() => {
+    api.get("/issue/scaffolding").then((res) => {
+      setIssues(res.data);
+    });
+  }, []);
+
+  // 🔥 ADD THIS useEffect HERE
+  useEffect(() => {
+    if (!selectedIssueId) return;
+
+    const issue = issues.find((i) => i._id === selectedIssueId);
+    if (!issue) return;
+
+    setMaterials(
+      issue.items.map((it: any) => ({
+        itemName: it.itemName,
+        unit: it.unit,
+        unitWeight: String(it.unitWeight),
+        returnQuantity: "",
+        returnWeight: "",
+      }))
+    );
+  }, [selectedIssueId, issues]); // include issues as dependency
 
   const [materials, setMaterials] = useState<MaterialRow[]>([
     {
@@ -106,6 +133,8 @@ export default function ScaffoldingIssuePage() {
       if (type === "error") alert(msg);
     }
   };
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   const addMaterial = () => {
     setMaterials([
@@ -205,9 +234,24 @@ export default function ScaffoldingIssuePage() {
     null
   );
   const handleDelete = async (_id: string) => {
-    await api.delete(`/returns/scaffolding/${_id}`);
-    setRecords((prev) => prev.filter((r) => r._id !== _id));
-    showToast("success", "Issue deleted");
+    const confirmed = window.confirm(
+      "Are you sure?\nThis will rollback stock and return data."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/returns/scaffolding/${_id}`);
+
+      // refresh records
+      const res = await api.get("/returns/scaffolding");
+      setRecords(res.data);
+
+      showToast("success", "Return deleted successfully");
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Failed to delete return");
+    }
   };
 
   const handleChange = (field: keyof FormState, value: string): void => {
@@ -417,11 +461,12 @@ export default function ScaffoldingIssuePage() {
     };
 
     let tempTotalPages = 1;
-
     // Get matching records based on filters
     const pdfRecords = records.filter((rec) => {
       const searchText = (filters.search || "").toLowerCase();
-      const personMatch = (rec.personName || "").toLowerCase().includes(searchText);
+      const personMatch = (rec.personName || "")
+        .toLowerCase()
+        .includes(searchText);
       const itemMatch = rec.items.some((i) =>
         i.itemName.toLowerCase().includes(searchText)
       );
@@ -620,6 +665,21 @@ export default function ScaffoldingIssuePage() {
                     onChange={(e) => handleChange("location", e.target.value)}
                   />
                 </div>
+                <div className="ppe-form-group">
+                  <select
+                    className="ppe-input"
+                    value={selectedIssueId}
+                    onChange={(e) => setSelectedIssueId(e.target.value)}
+                  >
+                    <option value="">Select Issue *</option>
+                    {issues.map((issue) => (
+                      <option key={issue._id} value={issue._id}>
+                        {issue.issuedTo} —{" "}
+                        {new Date(issue.issueDate).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div style={{ marginBottom: 24 }}>
                 <div className="ppe-materials-header">
@@ -785,13 +845,14 @@ export default function ScaffoldingIssuePage() {
                   className="ppe-btn-save"
                   onClick={async () => {
                     // 1️⃣ Basic validation
-                    if (!form.personName || materials.length === 0) {
-                      showToast("error", "Missing required fields");
+                    if (!selectedIssueId) {
+                      showToast("error", "Please select an issue");
                       return;
                     }
 
                     // 2️⃣ Build payload ONCE
                     const payload = {
+                      issueId: selectedIssueId,
                       woNumber: form.woNumber,
                       location: form.location,
                       personName: form.personName,
@@ -799,20 +860,26 @@ export default function ScaffoldingIssuePage() {
                       tslName: form.tslName, // ✅
                       returnDate: form.issueDate,
 
-                      items: materials.map((m) => ({
-                        itemName: m.itemName,
-                        unit: m.unit,
-                        quantity: Number(m.returnQuantity),
-                      })),
+                      items: materials
+                        .filter((m) => Number(m.returnQuantity) > 0)
+                        .map((m) => ({
+                          itemName: m.itemName,
+                          unit: m.unit,
+                          quantity: Number(m.returnQuantity),
+                        })),
                     };
 
                     if (payload.items.length === 0) {
-                      showToast("error", "No valid items to issue");
+                      showToast(
+                        "error",
+                        "Enter return quantity for at least one item"
+                      );
                       return;
                     }
 
                     try {
                       // 3️⃣ POST ONCE
+                      console.log("RETURN PAYLOAD", payload);
                       await api.post("/returns/scaffolding", payload);
 
                       // 4️⃣ FETCH AFTER SAVE
@@ -922,8 +989,8 @@ export default function ScaffoldingIssuePage() {
                     <th>TSL</th>
                     <th>Items Issued</th>
                     <th>Total Qty</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    {isAdmin && <th>Edit</th>}
+                    {isAdmin && <th>Delete</th>}
                   </tr>
                 </thead>
 
@@ -938,27 +1005,32 @@ export default function ScaffoldingIssuePage() {
                       <td>{r.tslName || "-"}</td>
                       <td>{r.itemsText}</td>
                       <td>{r.totalQty}</td>
-                      <td>
-                        <button
-                          className="report-edit-btn"
-                          onClick={() => {
-                            const orig = records.find(
-                              (rec) => rec._id === r._id
-                            );
-                            if (orig) openEdit(orig);
-                          }}
-                        >
-                          <MdEdit />
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          className="report-delete-btn"
-                          onClick={() => handleDelete(r._id)}
-                        >
-                          <MdDelete />
-                        </button>
-                      </td>
+                      {isAdmin && (
+                        <td>
+                          <button
+                            className="report-edit-btn"
+                            onClick={() => {
+                              const orig = records.find(
+                                (rec) => rec._id === r._id
+                              );
+                              if (orig) openEdit(orig);
+                            }}
+                          >
+                            <MdEdit />
+                          </button>
+                        </td>
+                      )}
+
+                      {isAdmin && (
+                        <td>
+                          <button
+                            className="report-delete-btn"
+                            onClick={() => handleDelete(r._id)}
+                          >
+                            <MdDelete />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
