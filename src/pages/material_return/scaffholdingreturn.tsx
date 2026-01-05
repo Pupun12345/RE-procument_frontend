@@ -230,9 +230,51 @@ export default function ScaffoldingIssuePage() {
     }[];
   }
 
+  // Material edit modal state
+  interface MaterialEditState {
+    index: number;
+    itemName: string;
+    unit: string;
+    unitWeight: string;
+    returnQuantity: string;
+    returnWeight: string;
+  }
+
   const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(
     null
   );
+  const [editMaterialState, setEditMaterialState] = useState<MaterialEditState | null>(null);
+
+  // Open material edit modal from the add materials table
+  const openMaterialEdit = (index: number) => {
+    const material = materials[index];
+    setEditMaterialState({
+      index,
+      itemName: material.itemName,
+      unit: material.unit,
+      unitWeight: material.unitWeight,
+      returnQuantity: material.returnQuantity,
+      returnWeight: material.returnWeight,
+    });
+  };
+
+  // Save edited material
+  const saveMaterialEdit = () => {
+    if (!editMaterialState) return;
+    
+    const updatedMaterials = [...materials];
+    updatedMaterials[editMaterialState.index] = {
+      itemName: editMaterialState.itemName,
+      unit: editMaterialState.unit,
+      unitWeight: editMaterialState.unitWeight,
+      returnQuantity: editMaterialState.returnQuantity,
+      returnWeight: editMaterialState.returnWeight,
+      qty: 0,
+    };
+    setMaterials(updatedMaterials);
+    setEditMaterialState(null);
+    showToast("success", "Material updated successfully");
+  };
   const handleDelete = async (_id: string) => {
     const confirmed = window.confirm(
       "Are you sure?\nThis will rollback stock and return data."
@@ -805,15 +847,14 @@ export default function ScaffoldingIssuePage() {
                             background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
-                            color: "#444",
+                            color: "#fff",
                             width: 50,
                             height: 32,
                             padding: 0,
                             minWidth: 50,
+                            cursor: "pointer",
                           }}
-                          onClick={() => {
-                            /* TODO: Add edit logic here */
-                          }}
+                          onClick={() => openMaterialEdit(index)}
                         >
                           <MdEdit />
                         </button>
@@ -1263,6 +1304,142 @@ export default function ScaffoldingIssuePage() {
                 <button
                   onClick={() => setEditRecord(null)}
                   className="ppe-btn-back"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MATERIAL EDIT MODAL - For editing materials in the add table */}
+        {editMaterialState && (
+          <div className="ppe-modal-overlay" style={{ 
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}>
+            <div className="ppe-modal" style={{
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "600px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            }}>
+              <h3 style={{ marginBottom: "20px", color: "#333" }}>EDIT MATERIAL</h3>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Item Name</label>
+                <input
+                  className="ppe-input"
+                  type="text"
+                  value={editMaterialState.itemName}
+                  onChange={(e) =>
+                    setEditMaterialState({
+                      ...editMaterialState,
+                      itemName: e.target.value,
+                    })
+                  }
+                  placeholder="Item Name"
+                  style={{ width: "100%" }}
+                  readOnly
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit</label>
+                <input
+                  className="ppe-input"
+                  type="text"
+                  value={editMaterialState.unit}
+                  onChange={(e) =>
+                    setEditMaterialState({
+                      ...editMaterialState,
+                      unit: e.target.value,
+                    })
+                  }
+                  placeholder="Unit"
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit Weight</label>
+                <input
+                  className="ppe-input"
+                  type="number"
+                  min="0"
+                  value={editMaterialState.unitWeight}
+                  onChange={(e) =>
+                    setEditMaterialState({
+                      ...editMaterialState,
+                      unitWeight: e.target.value,
+                    })
+                  }
+                  placeholder="Unit Weight"
+                  style={{ width: "100%" }}
+                  readOnly
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Return Quantity</label>
+                <input
+                  className="ppe-input"
+                  type="number"
+                  min="0"
+                  value={editMaterialState.returnQuantity}
+                  onChange={(e) => {
+                    const unitWeightNum = parseFloat(editMaterialState.unitWeight || "0");
+                    const returnQuantityNum = parseFloat(e.target.value || "0");
+                    const returnWeight = (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) 
+                      ? (unitWeightNum * returnQuantityNum).toString() 
+                      : "";
+                    setEditMaterialState({
+                      ...editMaterialState,
+                      returnQuantity: e.target.value,
+                      returnWeight,
+                    });
+                  }}
+                  placeholder="Return Quantity"
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Return Weight</label>
+                <input
+                  className="ppe-input"
+                  type="number"
+                  value={editMaterialState.returnWeight}
+                  placeholder="Return Weight (calculated)"
+                  style={{ width: "100%" }}
+                  readOnly
+                />
+              </div>
+
+              <div className="ppe-buttons" style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+                <button 
+                  onClick={saveMaterialEdit} 
+                  className="ppe-btn-save"
+                  style={{ flex: 1 }}
+                >
+                  💾 Save
+                </button>
+                <button
+                  onClick={() => setEditMaterialState(null)}
+                  className="ppe-btn-back"
+                  style={{ flex: 1 }}
                 >
                   Cancel
                 </button>
