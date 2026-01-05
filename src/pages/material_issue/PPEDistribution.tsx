@@ -58,6 +58,14 @@ interface EditableRecord {
   items: Item[];
 }
 
+// Item edit modal state
+interface ItemEditState {
+  index: number;
+  itemName: string;
+  quantity: string;
+  unit: string;
+}
+
 // ====================== MAIN COMPONENT ======================
 
 const DistributionPage: React.FC = () => {
@@ -123,6 +131,33 @@ const DistributionPage: React.FC = () => {
   });
 
   const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
+  const [editItemState, setEditItemState] = useState<ItemEditState | null>(null);
+
+  // Open item edit modal from the add items table
+  const openItemEdit = (index: number) => {
+    const item = items[index];
+    setEditItemState({
+      index,
+      itemName: item.itemName,
+      quantity: item.quantity,
+      unit: item.unit,
+    });
+  };
+
+  // Save edited item
+  const saveItemEdit = () => {
+    if (!editItemState) return;
+    
+    const updatedItems = [...items];
+    updatedItems[editItemState.index] = {
+      itemName: editItemState.itemName,
+      quantity: editItemState.quantity,
+      unit: editItemState.unit,
+    };
+    setItems(updatedItems);
+    setEditItemState(null);
+    toast.success("Item updated successfully");
+  };
 
   const openEdit = (r: DistributionRecord) => {
     const first =
@@ -511,15 +546,14 @@ const DistributionPage: React.FC = () => {
                             background: "#1a9f27ff",
                             border: "1px solid #888",
                             borderRadius: 4,
-                            color: "#444",
+                            color: "#fff",
                             width: 50,
                             height: 32,
                             padding: 0,
                             minWidth: 50,
+                            cursor: "pointer",
                           }}
-                          onClick={() => {
-                            /* TODO: Add edit logic here */
-                          }}
+                          onClick={() => openItemEdit(index)}
                         >
                           <MdEdit />
                         </button>
@@ -786,6 +820,113 @@ const DistributionPage: React.FC = () => {
                 <button
                   onClick={() => setEditRecord(null)}
                   className="ppe-btn-back"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ITEM EDIT MODAL - For editing items in the add table */}
+        {editItemState && (
+          <div className="ppe-modal-overlay" style={{ 
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}>
+            <div className="ppe-modal" style={{
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "90%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            }}>
+              <h3 style={{ marginBottom: "20px", color: "#333" }}>EDIT ITEM</h3>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Item Name</label>
+                <select
+                  className="ppe-input"
+                  value={editItemState.itemName}
+                  onChange={(e) => {
+                    const selected = stockItems.find(
+                      (s) => s.itemName === e.target.value
+                    );
+                    setEditItemState({
+                      ...editItemState,
+                      itemName: e.target.value,
+                      unit: selected ? selected.unit : editItemState.unit,
+                    });
+                  }}
+                  style={{ width: "100%" }}
+                >
+                  <option value="">Select Item</option>
+                  {stockItems.map((s) => (
+                    <option key={s._id} value={s.itemName}>
+                      {s.itemName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Quantity</label>
+                <input
+                  className="ppe-input"
+                  type="number"
+                  min="1"
+                  value={editItemState.quantity}
+                  onChange={(e) =>
+                    setEditItemState({
+                      ...editItemState,
+                      quantity: e.target.value,
+                    })
+                  }
+                  placeholder="Enter quantity"
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit</label>
+                <input
+                  className="ppe-input"
+                  type="text"
+                  value={editItemState.unit}
+                  onChange={(e) =>
+                    setEditItemState({
+                      ...editItemState,
+                      unit: e.target.value,
+                    })
+                  }
+                  placeholder="Unit"
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div className="ppe-buttons" style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
+                <button 
+                  onClick={saveItemEdit} 
+                  className="ppe-btn-save"
+                  style={{ flex: 1 }}
+                >
+                  💾 Save
+                </button>
+                <button
+                  onClick={() => setEditItemState(null)}
+                  className="ppe-btn-back"
+                  style={{ flex: 1 }}
                 >
                   Cancel
                 </button>
