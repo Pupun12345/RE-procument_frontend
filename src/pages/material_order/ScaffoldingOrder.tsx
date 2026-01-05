@@ -537,32 +537,93 @@ export default function ScaffoldingOrder() {
           </div>
         </div>
       )}
-      {/* ================= VIEW ORDER MODAL ================= */}
-      {activeTab === "report" && viewOrder && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h3>Order Details</h3>
-              <button onClick={() => setViewOrder(null)}>✕</button>
+      {/* ================= VIEW ORDER MODAL (OVERLAY) ================= */}
+      {viewOrder && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setViewOrder(null)}
+        >
+          <div
+            className="modal-card"
+            style={{
+              backgroundColor: "white",
+              borderRadius: "8px",
+              padding: "24px",
+              maxWidth: "800px",
+              maxHeight: "90vh",
+              overflow: "auto",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="modal-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+                borderBottom: "2px solid #e5e7eb",
+                paddingBottom: "12px",
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "600" }}>
+                Order Details
+              </h3>
+              <button
+                onClick={() => setViewOrder(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#6b7280",
+                  padding: "0 8px",
+                }}
+              >
+                ✕
+              </button>
             </div>
 
-            <div className="modal-body">
-              <p>
+            <div className="modal-body" style={{ fontSize: "14px" }}>
+              <p style={{ marginBottom: "12px" }}>
                 <strong>Order No:</strong> {viewOrder.orderNo}
               </p>
-              <p>
+              <p style={{ marginBottom: "12px" }}>
                 <strong>Supervisor:</strong> {viewOrder.supervisor}
               </p>
-              <p>
+              <p style={{ marginBottom: "12px" }}>
                 <strong>Employee ID:</strong> {viewOrder.employeeId}
               </p>
-              <p>
+              <p style={{ marginBottom: "12px" }}>
                 <strong>Date:</strong> {formatDate(viewOrder.issueDate)}
               </p>
-              <p>
+              <p style={{ marginBottom: "20px" }}>
                 <strong>Location:</strong> {viewOrder.location}
               </p>
 
+              <h4
+                style={{
+                  marginBottom: "12px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                }}
+              >
+                Materials:
+              </h4>
               <div className="material-table">
                 <div className="table-head">
                   <span>#</span>
