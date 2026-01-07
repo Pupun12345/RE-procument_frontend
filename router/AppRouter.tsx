@@ -32,6 +32,7 @@ import { MaterialReturnManager } from "../src/pages/MaterialReturnManager";
 import { StockOverviewManager } from "../src/pages/StockOverviewManager";
 import { FinalReportManager } from "../src/pages/FinalReportManager";
 import { HRMSManager } from "../src/pages/HRMS/HRMSManager";
+import { HRMSDashboard } from "../src/pages/HRMS/Dashboard/HRMSDashboard";
 
 export default function AppRouter() {
   return (
@@ -312,6 +313,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <HRMSManager />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <HRMSDashboard />
             </DashboardLayout>
           </ProtectedRoute>
         }
