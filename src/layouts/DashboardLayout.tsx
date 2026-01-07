@@ -11,6 +11,16 @@ import {
   FaCogs,
   FaChartBar,
   FaQuestionCircle,
+  FaUsers,
+  FaClock,
+  FaCalendar,
+  FaCheckSquare,
+  FaDollarSign,
+  FaCreditCard,
+  FaFileAlt,
+  FaUserCog,
+  FaChartLine,
+  FaLock,
 } from "react-icons/fa";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import toast from "react-hot-toast";
@@ -346,7 +356,69 @@ export default function DashboardLayout({ children }: Props) {
             </SubGroup>
           </SidebarExpandable>
 
-          <SidebarButton icon={<FaCogs />} label="HRMS" />
+          <SidebarExpandable
+            icon={<FaCogs />}
+            label="HRMS"
+            open={openMenu === "hrms"}
+            onClick={() => toggleMenu("hrms", "HRMS")}
+          >
+            <SubItem
+              label="Dashboard"
+              path="/dashboard/hrms/dashboard"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Employees"
+              path="/dashboard/hrms/employees"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Manage Shifts"
+              path="/dashboard/hrms/shifts"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Leaves & Holidays"
+              path="/dashboard/hrms/leaves"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Approval Requests"
+              path="/dashboard/hrms/approvals"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Payroll"
+              path="/dashboard/hrms/payroll"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Loans & Advances"
+              path="/dashboard/hrms/loans"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Reports"
+              path="/dashboard/hrms/reports"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="User Management"
+              path="/dashboard/hrms/user-management"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Activity Logs"
+              path="/dashboard/hrms/activity-logs"
+              onNavigate={() => setOpenMenu(null)}
+            />
+            <SubItem
+              label="Configuration"
+              path="/dashboard/hrms/configuration"
+              onNavigate={() => setOpenMenu(null)}
+            />
+          </SidebarExpandable>
+
           <SidebarButton icon={<FaTruck />} label="Vehicle Management" />
           <SidebarButton icon={<FaChartBar />} label="Settings" />
           <SidebarButton icon={<FaQuestionCircle />} label="Help & Support" />

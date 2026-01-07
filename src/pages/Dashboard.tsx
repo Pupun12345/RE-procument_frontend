@@ -47,6 +47,7 @@ export default function Dashboard() {
           color="#22c55e"
           title="HRMS"
           desc="Human resource management and employee records"
+          onClick={()=> navigate("/dashboard/hrms")}
         />
 
         <ModuleCard
