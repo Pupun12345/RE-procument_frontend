@@ -129,7 +129,7 @@ export function HRMSDashboard() {
           <table className="attendance-table">
             <thead>
               <tr>
-                <th style={{color:"white",marginLeft:"30px"}}>Code</th>
+                <th style={{color:"white"}}>Code</th>
                 <th style={{color:"white"}}>Name</th>
                 <th style={{color:"white"}}>Present</th>
                 <th style={{color:"white"}}>Absent</th>

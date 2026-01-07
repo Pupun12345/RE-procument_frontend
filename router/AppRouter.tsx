@@ -33,7 +33,7 @@ import { StockOverviewManager } from "../src/pages/StockOverviewManager";
 import { FinalReportManager } from "../src/pages/FinalReportManager";
 import { HRMSManager } from "../src/pages/HRMS/HRMSManager";
 import { HRMSDashboard } from "../src/pages/HRMS/Dashboard/HRMSDashboard";
-
+import { HRMSEmployees } from "../src/pages/HRMS/Employees/HRMSEmployees";
 export default function AppRouter() {
   return (
     <Routes>
@@ -323,6 +323,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <HRMSDashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/employees"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <HRMSEmployees />
             </DashboardLayout>
           </ProtectedRoute>
         }
