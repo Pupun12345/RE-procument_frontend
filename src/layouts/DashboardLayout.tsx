@@ -373,7 +373,7 @@ export default function DashboardLayout({ children }: Props) {
               onNavigate={() => setOpenMenu(null)}
             />
             <SubItem
-              label="Manage Shifts"
+              label="Manage Attendance"
               path="/dashboard/hrms/shifts"
               onNavigate={() => setOpenMenu(null)}
             />

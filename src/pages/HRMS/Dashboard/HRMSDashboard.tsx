@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import "./hrmsdashboard.css";
+import { getEmployees } from "../../../services/employeeService";
 
 interface AttendanceRecord {
   code: string;
@@ -20,7 +21,28 @@ export function HRMSDashboard() {
     onBreak: 0,
     pendingApprovals: 3,
   });
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch employee count on component mount
+  useEffect(() => {
+    fetchEmployeeStats();
+  }, []);
+
+  const fetchEmployeeStats = async () => {
+    try {
+      setLoading(true);
+      const employees = await getEmployees();
+      setStats((prev) => ({
+        ...prev,
+        totalEmployees: employees.length,
+      }));
+    } catch (error) {
+      console.error("Error fetching employee stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUploadExcel = () => {
     fileInputRef.current?.click();
@@ -51,20 +73,20 @@ export function HRMSDashboard() {
 
         setAttendanceRecords(records);
 
-        // Calculate stats
-        const totalEmployees = records.length;
+        // Calculate stats - merge with existing employee count from backend
+        const totalEmployees = stats.totalEmployees || records.length;
         const presentToday = records.reduce(
           (sum, record) => sum + (parseInt(record.present) || 0),
           0
         );
         const onBreak = 0; // This would need to come from the data
 
-        setStats({
+        setStats((prev) => ({
+          ...prev,
           totalEmployees,
           presentToday,
           onBreak,
-          pendingApprovals: 3, // Keep this static for now
-        });
+        }));
       } catch (error) {
         console.error("Error parsing Excel file:", error);
         alert("Error parsing Excel file. Please check the file format.");
@@ -87,7 +109,9 @@ export function HRMSDashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <h3 className="stat-label">Total Employees</h3>
-          <p className="stat-value stat-blue">{stats.totalEmployees}</p>
+          <p className="stat-value stat-blue">
+            {loading ? "..." : stats.totalEmployees}
+          </p>
         </div>
 
         <div className="stat-card">
