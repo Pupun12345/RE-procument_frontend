@@ -6,7 +6,9 @@ import api from "../api/axios";
 interface EmployeeFormData {
   employeeName: string;
   employeeCode: string;
+  spNumber: string;
   designation: string;
+  customDesignation: string;
   emailId: string;
   mobileNumber: string;
   panCardNumber: string;
@@ -20,6 +22,8 @@ interface EmployeeFormData {
   bankName: string;
   bankAccountNumber: string;
   bankIfscCode: string;
+  epfoNumber: string;
+  esiNumber: string;
   address: string;
   employeePhoto: File | null;
 }
@@ -28,7 +32,9 @@ export default function EmployeeRegistration() {
   const [formData, setFormData] = useState<EmployeeFormData>({
     employeeName: "",
     employeeCode: "",
+    spNumber: "",
     designation: "",
+    customDesignation: "",
     emailId: "",
     mobileNumber: "",
     panCardNumber: "",
@@ -42,6 +48,8 @@ export default function EmployeeRegistration() {
     bankName: "",
     bankAccountNumber: "",
     bankIfscCode: "",
+    epfoNumber: "",
+    esiNumber: "",
     address: "",
     employeePhoto: null,
   });
@@ -50,7 +58,13 @@ export default function EmployeeRegistration() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleInputChange = (field: keyof EmployeeFormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === "designation" && value !== "Others (Custom)"
+        ? { customDesignation: "" }
+        : {}),
+    }));
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +83,7 @@ export default function EmployeeRegistration() {
     const {
       employeeName,
       employeeCode,
+      spNumber,
       emailId,
       mobileNumber,
       dateOfJoining,
@@ -77,6 +92,7 @@ export default function EmployeeRegistration() {
     if (
       !employeeName ||
       !employeeCode ||
+      !spNumber ||
       !emailId ||
       !mobileNumber ||
       !dateOfJoining ||
@@ -85,34 +101,58 @@ export default function EmployeeRegistration() {
       toast.error("⚠️ Please fill all required fields.");
       return;
     }
+    if (
+      formData.designation === "Others (Custom)" &&
+      !formData.customDesignation
+    ) {
+      toast.error("⚠️ Please enter custom designation.");
+      return;
+    }
     setShowConfirm(true);
   };
+  const finalDesignation =
+    formData.designation === "Others (Custom)"
+      ? formData.customDesignation
+      : formData.designation;
 
   const handleConfirmSave = async () => {
-  try {
-    const fd = new FormData();
+    try {
+      const fd = new FormData();
 
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value === null || value === "") return;
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "customDesignation") return; // ❌ do not send separately
+        if (value === null || value === "") return;
 
-      if (value instanceof File) {
-        fd.append(key, value);
-      } else {
-        fd.append(key, String(value));
+        if (value instanceof File) {
+          fd.append(key, value);
+        } else {
+          fd.append(key, String(value));
+        }
+      });
+
+      // ✅ force correct designation value
+      if (finalDesignation) {
+        fd.set("designation", finalDesignation);
       }
-    });
 
-    await api.post("/employees", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      await api.post("/employees", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    toast.success("Employee registered successfully!");
-    setShowConfirm(false);
-  } catch{
-    toast.error("Failed to register employee");
-  }
-};
-
+      toast.success("Employee registered successfully!");
+      setShowConfirm(false);
+    } catch {
+      toast.error("Failed to register employee");
+    }
+  };
+  const DESIGNATIONS = [
+    "Manager",
+    "Engineer",
+    "Supervisor",
+    "Technician",
+    "Operator",
+    "Others (Custom)",
+  ];
 
   const handleCancelConfirm = () => {
     setShowConfirm(false);
@@ -121,7 +161,6 @@ export default function EmployeeRegistration() {
   const handleBack = () => {
     console.log("Going back");
   };
-
   return (
     <div className="employee-reg-container">
       <div className="employee-reg-content">
@@ -163,9 +202,28 @@ export default function EmployeeRegistration() {
                 }
               />
             </div>
+            <div className="employee-reg-field">
+              <label>
+                SP Number{" "}
+                <span className="required" style={{ color: "red" }}>
+                  *
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter SP number"
+                value={formData.spNumber}
+                onChange={(e) => handleInputChange("spNumber", e.target.value)}
+              />
+            </div>
 
             <div className="employee-reg-field">
-              <label>Designation</label>
+              <label>
+                Designation{" "}
+                <span className="required" style={{ color: "red" }}>
+                  *
+                </span>
+              </label>
               <select
                 value={formData.designation}
                 onChange={(e) =>
@@ -173,13 +231,32 @@ export default function EmployeeRegistration() {
                 }
               >
                 <option value="">Select designation</option>
-                <option value="Manager">Manager</option>
-                <option value="Engineer">Engineer</option>
-                <option value="Supervisor">Supervisor</option>
-                <option value="Technician">Technician</option>
-                <option value="Operator">Operator</option>
+
+                {DESIGNATIONS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
               </select>
             </div>
+            {formData.designation === "Others (Custom)" && (
+              <div className="employee-reg-field">
+                <label>
+                  Custom Designation{" "}
+                  <span className="required" style={{ color: "red" }}>
+                    *
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter custom designation"
+                  value={formData.customDesignation}
+                  onChange={(e) =>
+                    handleInputChange("customDesignation", e.target.value)
+                  }
+                />
+              </div>
+            )}
 
             <div className="employee-reg-field">
               <label>
@@ -236,6 +313,17 @@ export default function EmployeeRegistration() {
                 }
               />
             </div>
+            <div className="employee-reg-field">
+              <label>Father's Name</label>
+              <input
+                type="text"
+                placeholder="Enter father's name"
+                value={formData.fatherName}
+                onChange={(e) =>
+                  handleInputChange("fatherName", e.target.value)
+                }
+              />
+            </div>
 
             <div className="employee-reg-field">
               <label>Father's Contact Number</label>
@@ -247,18 +335,6 @@ export default function EmployeeRegistration() {
                   handleInputChange("fatherContactNumber", e.target.value)
                 }
                 maxLength={10}
-              />
-            </div>
-
-            <div className="employee-reg-field">
-              <label>Bank A/C Number</label>
-              <input
-                type="text"
-                placeholder="Enter bank account number"
-                value={formData.bankAccountNumber}
-                onChange={(e) =>
-                  handleInputChange("bankAccountNumber", e.target.value)
-                }
               />
             </div>
 
@@ -384,19 +460,6 @@ export default function EmployeeRegistration() {
                 }
               />
             </div>
-
-            <div className="employee-reg-field">
-              <label>Father's Name</label>
-              <input
-                type="text"
-                placeholder="Enter father's name"
-                value={formData.fatherName}
-                onChange={(e) =>
-                  handleInputChange("fatherName", e.target.value)
-                }
-              />
-            </div>
-
             <div className="employee-reg-field">
               <label>Bank Name</label>
               <input
@@ -404,6 +467,18 @@ export default function EmployeeRegistration() {
                 placeholder="Enter bank name"
                 value={formData.bankName}
                 onChange={(e) => handleInputChange("bankName", e.target.value)}
+              />
+            </div>
+
+            <div className="employee-reg-field">
+              <label>Bank A/C Number</label>
+              <input
+                type="text"
+                placeholder="Enter bank account number"
+                value={formData.bankAccountNumber}
+                onChange={(e) =>
+                  handleInputChange("bankAccountNumber", e.target.value)
+                }
               />
             </div>
 
@@ -417,6 +492,26 @@ export default function EmployeeRegistration() {
                   handleInputChange("bankIfscCode", e.target.value)
                 }
                 maxLength={11}
+              />
+            </div>
+            <div className="employee-reg-field">
+              <label>EPFO Number</label>
+              <input
+                type="text"
+                placeholder="Enter EPFO number (optional)"
+                value={formData.epfoNumber}
+                onChange={(e) =>
+                  handleInputChange("epfoNumber", e.target.value)
+                }
+              />
+            </div>
+            <div className="employee-reg-field">
+              <label>ESI Number</label>
+              <input
+                type="text"
+                placeholder="Enter ESI number (optional)"
+                value={formData.esiNumber}
+                onChange={(e) => handleInputChange("esiNumber", e.target.value)}
               />
             </div>
           </div>
