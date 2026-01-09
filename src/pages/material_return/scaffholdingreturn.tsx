@@ -13,19 +13,6 @@ interface Item {
   unit: string;
   puw: number;
 }
-interface GroupedReportRow {
-  _id: string;
-  returnedBy: string;
-  issueDate: string;
-  location?: string;
-  woNumber?: string;
-  supervisorName?: string;
-  tslName?: string;
-
-  itemsText: string;
-  totalQty: number;
-}
-
 interface ReturnRecord {
   _id: string;
   personName: string;
@@ -41,11 +28,6 @@ interface ReturnRecord {
     unitWeight?: number;
     returnWeight?: number;
   }[];
-}
-
-interface Stock {
-  itemName: string;
-  qty: number;
 }
 
 interface FormState {
@@ -74,7 +56,6 @@ export default function ScaffoldingIssuePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 20;
   interface MaterialRow {
-    qty: number;
     itemName: string;
     unit: string;
     unitWeight: string;
@@ -126,13 +107,21 @@ export default function ScaffoldingIssuePage() {
     },
   ]);
 
+  type ToastFn = {
+    success: (msg: string) => void;
+    error: (msg: string) => void;
+  };
+
   const showToast = (type: "success" | "error", msg: string) => {
-    if (window && window["toast"]) {
-      window["toast"][type](msg);
-    } else {
-      if (type === "error") alert(msg);
+    const w = window as unknown as { toast?: ToastFn };
+
+    if (w.toast) {
+      w.toast[type](msg);
+    } else if (type === "error") {
+      alert(msg);
     }
   };
+
   const { role } = useAuthStore();
   const isAdmin = role === "admin";
 
@@ -159,22 +148,21 @@ export default function ScaffoldingIssuePage() {
     showToast("success", "Material removed");
   };
 
-  const updateMaterial = (
+  const updateMaterial = <K extends keyof MaterialRow>(
     index: number,
-    key: keyof MaterialRow,
-    value: string
+    key: K,
+    value: MaterialRow[K]
   ) => {
     const updated = [...materials];
-    updated[index][key] = value;
-    // If unitWeight or returnQuantity changes, recalculate returnWeight
-    if (key === "returnQuantity") {
-      const unitWeightNum = parseFloat(updated[index].unitWeight || "0");
-      const returnQuantityNum = parseFloat(value || "0");
+    updated[index] = {
+      ...updated[index],
+      [key]: value,
+    };
 
-      updated[index].returnWeight =
-        !isNaN(unitWeightNum) && !isNaN(returnQuantityNum)
-          ? String(unitWeightNum * returnQuantityNum)
-          : "";
+    if (key === "returnQuantity") {
+      const uw = Number(updated[index].unitWeight || 0);
+      const rq = Number(value || 0);
+      updated[index].returnWeight = String(uw * rq);
     }
 
     setMaterials(updated);
@@ -185,12 +173,8 @@ export default function ScaffoldingIssuePage() {
   };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   const [items, setItems] = useState<Item[]>([]);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [newItem, setNewItem] = useState<Item>({ itemName: "", unit: "" });
   const [records, setRecords] = useState<ReturnRecord[]>([]);
-  const [stock, setStock] = useState<Stock[]>([]);
   const navigate = useNavigate();
-
   const [form, setForm] = useState<FormState>({
     itemName: "",
     quantity: "",
@@ -243,7 +227,8 @@ export default function ScaffoldingIssuePage() {
   const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(
     null
   );
-  const [editMaterialState, setEditMaterialState] = useState<MaterialEditState | null>(null);
+  const [editMaterialState, setEditMaterialState] =
+    useState<MaterialEditState | null>(null);
 
   // Open material edit modal from the add materials table
   const openMaterialEdit = (index: number) => {
@@ -261,7 +246,7 @@ export default function ScaffoldingIssuePage() {
   // Save edited material
   const saveMaterialEdit = () => {
     if (!editMaterialState) return;
-    
+
     const updatedMaterials = [...materials];
     updatedMaterials[editMaterialState.index] = {
       itemName: editMaterialState.itemName,
@@ -269,7 +254,6 @@ export default function ScaffoldingIssuePage() {
       unitWeight: editMaterialState.unitWeight,
       returnQuantity: editMaterialState.returnQuantity,
       returnWeight: editMaterialState.returnWeight,
-      qty: 0,
     };
     setMaterials(updatedMaterials);
     setEditMaterialState(null);
@@ -405,32 +389,11 @@ export default function ScaffoldingIssuePage() {
       setEditRecord(null);
       const res = await api.get("/returns/scaffolding");
       setRecords(res.data);
-    } catch (err) {
+    } catch {
       showToast("error", "Failed to update record");
     }
   };
 
-  const handleAddItem = () => {
-    if (!newItem.itemName.trim() || !newItem.unit.trim()) {
-      alert("Please enter both item name and unit.");
-      return;
-    }
-    if (
-      items.some(
-        (i) =>
-          i.itemName.toLowerCase() === newItem.itemName.trim().toLowerCase()
-      )
-    ) {
-      alert("Item already exists.");
-      return;
-    }
-    setItems((prev) => [
-      ...prev,
-      { itemName: newItem.itemName.trim(), unit: newItem.unit.trim() },
-    ]);
-    setShowAddItem(false);
-    setNewItem({ itemName: "", unit: "" });
-  };
   const reportRows = records.map((r) => ({
     _id: r._id,
     issueDate: r.returnDate,
@@ -502,7 +465,7 @@ export default function ScaffoldingIssuePage() {
       );
     };
 
-    let tempTotalPages = 1;
+    const tempTotalPages = 1;
     // Get matching records based on filters
     const pdfRecords = records.filter((rec) => {
       const searchText = (filters.search || "").toLowerCase();
@@ -575,19 +538,22 @@ export default function ScaffoldingIssuePage() {
       "Issued Weight",
       "Issued Quantity",
     ];
-    const rows = filteredRecords.map((r) => [
-      r.itemName,
-      r.unit,
-      r.issueDate,
-      r.returnedBy,
-      r.location,
-      r.woNumber || "",
-      r.supervisorName || "",
-      r.tslName || "",
-      r.unitWeight || "",
-      r.returnWeight || "",
-      r.qty || "",
-    ]);
+    const rows = records.flatMap((r) =>
+      r.items.map((i) => [
+        i.itemName,
+        i.unit,
+        r.returnDate,
+        r.personName,
+        r.location || "",
+        r.woNumber || "",
+        r.supervisorName || "",
+        r.tslName || "",
+        i.unitWeight || "",
+        i.returnWeight || "",
+        i.quantity,
+      ])
+    );
+
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -1314,32 +1280,48 @@ export default function ScaffoldingIssuePage() {
 
         {/* MATERIAL EDIT MODAL - For editing materials in the add table */}
         {editMaterialState && (
-          <div className="ppe-modal-overlay" style={{ 
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}>
-            <div className="ppe-modal" style={{
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              padding: "24px",
-              maxWidth: "600px",
-              width: "90%",
-              maxHeight: "90vh",
-              overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            }}>
-              <h3 style={{ marginBottom: "20px", color: "#333" }}>EDIT MATERIAL</h3>
+          <div
+            className="ppe-modal-overlay"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              className="ppe-modal"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                padding: "24px",
+                maxWidth: "600px",
+                width: "90%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <h3 style={{ marginBottom: "20px", color: "#333" }}>
+                EDIT MATERIAL
+              </h3>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Item Name</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Item Name
+                </label>
                 <input
                   className="ppe-input"
                   type="text"
@@ -1357,7 +1339,15 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Unit
+                </label>
                 <input
                   className="ppe-input"
                   type="text"
@@ -1374,7 +1364,15 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit Weight</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Unit Weight
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
@@ -1393,18 +1391,29 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Return Quantity</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Return Quantity
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
                   min="0"
                   value={editMaterialState.returnQuantity}
                   onChange={(e) => {
-                    const unitWeightNum = parseFloat(editMaterialState.unitWeight || "0");
+                    const unitWeightNum = parseFloat(
+                      editMaterialState.unitWeight || "0"
+                    );
                     const returnQuantityNum = parseFloat(e.target.value || "0");
-                    const returnWeight = (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) 
-                      ? (unitWeightNum * returnQuantityNum).toString() 
-                      : "";
+                    const returnWeight =
+                      !isNaN(unitWeightNum) && !isNaN(returnQuantityNum)
+                        ? (unitWeightNum * returnQuantityNum).toString()
+                        : "";
                     setEditMaterialState({
                       ...editMaterialState,
                       returnQuantity: e.target.value,
@@ -1417,7 +1426,15 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Return Weight</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Return Weight
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
@@ -1428,9 +1445,12 @@ export default function ScaffoldingIssuePage() {
                 />
               </div>
 
-              <div className="ppe-buttons" style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
-                <button 
-                  onClick={saveMaterialEdit} 
+              <div
+                className="ppe-buttons"
+                style={{ marginTop: "24px", display: "flex", gap: "12px" }}
+              >
+                <button
+                  onClick={saveMaterialEdit}
                   className="ppe-btn-save"
                   style={{ flex: 1 }}
                 >

@@ -53,7 +53,9 @@ const emptyItem: Item = {
 };
 
 const PurchaseEntryPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">("entry");
+  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">(
+    "entry"
+  );
 
   /* ================= MASTER DATA ================= */
   const [parties, setParties] = useState<Party[]>([]);
@@ -214,12 +216,12 @@ const PurchaseEntryPage: React.FC = () => {
 
     try {
       await api.post("/stock", payload);
-      
+
       // reset form
       setOldItemName("");
       setOldQty("");
       setOldUnit("");
-      
+
       alert("Old stock added successfully");
     } catch (err) {
       console.error("Save failed", err);
@@ -229,52 +231,51 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
-  if (!partyName || !invoiceNumber || !invoiceDate) {
-    alert("Please fill all required fields");
-    return;
-  }
-
-  const payload = {
-    partyName,
-    invoiceNumber,
-    invoiceDate,
-    items: items.map((i) => ({
-      itemName: i.itemName,
-      qty: Number(i.qty),
-      unit: i.unit,
-      rate: Number(i.rate),
-      amount: Number(i.qty || 0) * Number(i.rate || 0),
-    })),
-    subtotal,
-    gstPercent: Number(gstPercent || 0),
-    gstAmount,
-    total,
-  };
-
-  try {
-    if (editingId) {
-      // ✅ UPDATE existing record
-      await api.put(`/purchases/ppe/${editingId}`, payload);
-    } else {
-      // ✅ CREATE new record
-      await api.post("/purchases/ppe", payload);
+    if (!partyName || !invoiceNumber || !invoiceDate) {
+      alert("Please fill all required fields");
+      return;
     }
 
-    // reset form
-    setEditingId(null);
-    setPartyName("");
-    setinvoiceNumber("");
-    setInvoiceDate("");
-    setItems([emptyItem]);
-    setGstPercent("");
+    const payload = {
+      partyName,
+      invoiceNumber,
+      invoiceDate,
+      items: items.map((i) => ({
+        itemName: i.itemName,
+        qty: Number(i.qty),
+        unit: i.unit,
+        rate: Number(i.rate),
+        amount: Number(i.qty || 0) * Number(i.rate || 0),
+      })),
+      subtotal,
+      gstPercent: Number(gstPercent || 0),
+      gstAmount,
+      total,
+    };
 
-    setActiveTab("report");
-  } catch (err) {
-    console.error("Save failed", err);
-    alert("Failed to save purchase");
-  }
-};
+    try {
+      if (editingId) {
+        // ✅ UPDATE existing record
+        await api.put(`/purchases/ppe/${editingId}`, payload);
+      } else {
+        // ✅ CREATE new record
+        await api.post("/purchases/ppe", payload);
+      }
 
+      // reset form
+      setEditingId(null);
+      setPartyName("");
+      setinvoiceNumber("");
+      setInvoiceDate("");
+      setItems([emptyItem]);
+      setGstPercent("");
+
+      setActiveTab("report");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save purchase");
+    }
+  };
 
   /* ================= ENTRY INVOICE PDF ================= */
   const downloadInvoicePDF = () => {
@@ -309,7 +310,7 @@ const PurchaseEntryPage: React.FC = () => {
     const addHeader = () => {
       try {
         doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-      } catch (e) {
+      } catch {
         // ignore missing image
       }
 
@@ -352,7 +353,6 @@ const PurchaseEntryPage: React.FC = () => {
       );
     };
 
-    let currentPage = 1;
     const tempTotalPages = 1; // Placeholder, will update later
 
     autoTable(doc, {
@@ -641,12 +641,14 @@ const PurchaseEntryPage: React.FC = () => {
       {activeTab === "old" && (
         <>
           <h2>Add Old Stock</h2>
-          
+
           <label>Item Name</label>
           <select
             value={oldItemName}
             onChange={(e) => {
-              const selectedItem = itemMasters.find(im => im.itemName === e.target.value);
+              const selectedItem = itemMasters.find(
+                (im) => im.itemName === e.target.value
+              );
               setOldItemName(e.target.value);
               if (selectedItem) {
                 setOldUnit(selectedItem.unit);
@@ -665,22 +667,20 @@ const PurchaseEntryPage: React.FC = () => {
           <input
             type="number"
             value={oldQty}
-            onChange={(e) => setOldQty(e.target.value === "" ? "" : Number(e.target.value))}
+            onChange={(e) =>
+              setOldQty(e.target.value === "" ? "" : Number(e.target.value))
+            }
           />
 
           <label>Unit</label>
-          <input
-            value={oldUnit}
-            readOnly
-            placeholder="Auto-filled from item"
-          />
+          <input value={oldUnit} readOnly placeholder="Auto-filled from item" />
 
           <div className="old-stock-buttons">
             <button className="add-stock" onClick={saveOldStock}>
               Add to Stock
             </button>
-            <button 
-              className="clear-stock" 
+            <button
+              className="clear-stock"
               onClick={() => {
                 setOldItemName("");
                 setOldQty("");

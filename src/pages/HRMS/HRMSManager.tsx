@@ -177,14 +177,12 @@ export function HRMSManager() {
                 <div
                   className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
                     module.color ?? ""
-                  }`}
-                  style={module.bg ? { backgroundColor: module.bg } : undefined}
-                >
+                  }`}                >
                   <Icon size={26} strokeWidth={2.2} className="text-white" />
                 </div>
 
                 <h3 className="text-gray-900 mb-2">{module.title}</h3>
-                <p className="text-sm text-gray-600 mb-6 min-h-[40px]">
+                <p className="text-sm text-gray-600 mb-6 min-h-\[40px\]">
                   {module.description}
                 </p>
 

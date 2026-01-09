@@ -1,5 +1,6 @@
-import { ArrowLeft, ShieldCheck, Wrench, Boxes } from "lucide-react";
+import { ArrowLeft, Wrench, Boxes } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import type { ComponentType } from "react";
 
 export function MaterialReturnManager() {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ function ReturnCard({
 }: {
   title: string;
   desc: string;
-  icon: any;
+  icon: ComponentType<{ size?: number; className?: string }>;
   color: string;
   onClick: () => void;
 }) {

@@ -11,16 +11,6 @@ import {
   FaCogs,
   FaChartBar,
   FaQuestionCircle,
-  FaUsers,
-  FaClock,
-  FaCalendar,
-  FaCheckSquare,
-  FaDollarSign,
-  FaCreditCard,
-  FaFileAlt,
-  FaUserCog,
-  FaChartLine,
-  FaLock,
 } from "react-icons/fa";
 import { FiChevronDown, FiChevronRight } from "react-icons/fi";
 import toast from "react-hot-toast";

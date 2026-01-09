@@ -8,8 +8,6 @@ import {
   FileBarChart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-import toast from "react-hot-toast";
 import "./storemanager.css";
 
 export function StoreManager() {
@@ -124,7 +122,7 @@ export function StoreManager() {
                 </div>
 
                 <h3 className="text-gray-900 mb-2">{module.title}</h3>
-                <p className="text-sm text-gray-600 mb-6 min-h-[40px]">
+                <p className="text-sm text-gray-600 mb-6 min-h-\[40px\]">
                   {module.description}
                 </p>
 

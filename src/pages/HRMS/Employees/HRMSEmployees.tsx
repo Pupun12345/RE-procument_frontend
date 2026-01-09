@@ -25,8 +25,12 @@ export function HRMSEmployees() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeType | null>(null);
-  const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeType | null>(
+    null
+  );
+  const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(
+    null
+  );
   const [formData, setFormData] = useState({
     name: "",
     employeeCode: "",
@@ -96,8 +100,12 @@ export function HRMSEmployees() {
           aadharCardNumber: employee.aadharCardNumber || "",
           safetyPassNumber: employee.safetyPassNumber || "",
           emergencyContactNumber: employee.emergencyContactNumber || "",
-          dateOfJoining: employee.dateOfJoining ? new Date(employee.dateOfJoining).toISOString().split('T')[0] : "",
-          dateOfBirth: employee.dateOfBirth ? new Date(employee.dateOfBirth).toISOString().split('T')[0] : "",
+          dateOfJoining: employee.dateOfJoining
+            ? new Date(employee.dateOfJoining).toISOString().split("T")[0]
+            : "",
+          dateOfBirth: employee.dateOfBirth
+            ? new Date(employee.dateOfBirth).toISOString().split("T")[0]
+            : "",
           fatherName: employee.fatherName || "",
           fatherContactNumber: employee.fatherContactNumber || "",
           bankName: employee.bankName || "",
@@ -112,6 +120,7 @@ export function HRMSEmployees() {
       alert("Failed to load employee details");
     }
   };
+  const [editPhoto, setEditPhoto] = useState<File | null>(null);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -147,12 +156,9 @@ export function HRMSEmployees() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!formData.name.trim()) {
       alert("Employee name is required");
-      return;
-    }
-    if (!editingEmployeeId && !formData.employeeCode.trim()) {
-      alert("Employee code is required");
       return;
     }
 
@@ -160,50 +166,42 @@ export function HRMSEmployees() {
       setSubmitting(true);
       setError(null);
 
-      if (editingEmployeeId) {
-        // Update existing employee with all fields
-        const employeeData = {
-          employeeName: formData.name.trim(),
-          employeeCode: formData.employeeCode.trim(),
-          designation: formData.designation.trim(),
-          emailId: formData.emailId.trim(),
-          mobileNumber: formData.mobileNumber.trim(),
-          panCardNumber: formData.panCardNumber.trim(),
-          aadharCardNumber: formData.aadharCardNumber.trim(),
-          safetyPassNumber: formData.safetyPassNumber.trim(),
-          emergencyContactNumber: formData.emergencyContactNumber.trim(),
-          dateOfJoining: formData.dateOfJoining,
-          dateOfBirth: formData.dateOfBirth,
-          fatherName: formData.fatherName.trim(),
-          fatherContactNumber: formData.fatherContactNumber.trim(),
-          bankName: formData.bankName.trim(),
-          bankAccountNumber: formData.bankAccountNumber.trim(),
-          bankIfscCode: formData.bankIfscCode.trim(),
-          address: formData.address.trim(),
-        };
-        await updateEmployee(editingEmployeeId, employeeData);
-      } else {
-        // Add new employee - generate unique code and provide required fields
-        const employeeCode = `EMP${Date.now()}`;
-        const employeeData = {
-          employeeName: formData.name.trim(),
-          employeeCode: employeeCode,
-          designation: formData.designation.trim(),
-          emailId: `${formData.name.toLowerCase().replace(/\s+/g, ".")}@company.com`,
-          mobileNumber: "0000000000",
-          dateOfJoining: new Date().toISOString().split('T')[0],
-          address: "N/A",
-        };
-        await addEmployee(employeeData);
+      const fd = new FormData();
+
+      fd.append("employeeName", formData.name);
+      fd.append("employeeCode", formData.employeeCode);
+      fd.append("designation", formData.designation);
+      fd.append("emailId", formData.emailId);
+      fd.append("mobileNumber", formData.mobileNumber);
+      fd.append("panCardNumber", formData.panCardNumber);
+      fd.append("aadharCardNumber", formData.aadharCardNumber);
+      fd.append("safetyPassNumber", formData.safetyPassNumber);
+      fd.append("emergencyContactNumber", formData.emergencyContactNumber);
+      fd.append("dateOfJoining", formData.dateOfJoining);
+      fd.append("dateOfBirth", formData.dateOfBirth);
+      fd.append("fatherName", formData.fatherName);
+      fd.append("fatherContactNumber", formData.fatherContactNumber);
+      fd.append("bankName", formData.bankName);
+      fd.append("bankAccountNumber", formData.bankAccountNumber);
+      fd.append("bankIfscCode", formData.bankIfscCode);
+      fd.append("address", formData.address);
+      if (editPhoto) {
+        fd.append("employeePhoto", editPhoto);
       }
 
-      // Refresh the employee list
+      // 👇 PHOTO (only if selected)
+
+      if (editingEmployeeId) {
+        await updateEmployee(editingEmployeeId, fd);
+      } else {
+        await addEmployee(fd);
+      }
+
       await fetchEmployees();
       handleCloseModal();
     } catch (err: any) {
-      console.error("Error saving employee:", err);
-      setError(err.message || "Failed to save employee");
-      alert(err.message || "Failed to save employee. Please try again.");
+      console.error(err);
+      alert(err.message || "Failed to save employee");
     } finally {
       setSubmitting(false);
     }
@@ -222,7 +220,9 @@ export function HRMSEmployees() {
       }
     } catch (err: any) {
       console.error("Error fetching employee details:", err);
-      alert("Failed to load employee details: " + (err.message || "Unknown error"));
+      alert(
+        "Failed to load employee details: " + (err.message || "Unknown error")
+      );
     }
   };
 
@@ -233,9 +233,9 @@ export function HRMSEmployees() {
 
   const handleDeleteEmployee = async (id: string, name: string) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete employee "${name}"? This action cannot be undone.`
+      `Are you sure you want to delete employee "${name}"?`
     );
-    
+
     if (!confirmDelete) return;
 
     try {
@@ -276,10 +276,10 @@ export function HRMSEmployees() {
           <table className="employees-table">
             <thead>
               <tr>
-                <th style={{color:"white"}}>Employee Code</th>
-                <th style={{color:"white"}}>Name</th>
-                <th style={{color:"white"}}>Designation</th>
-                <th style={{color:"white"}}>Action</th>
+                <th style={{ color: "white" }}>Employee Code</th>
+                <th style={{ color: "white" }}>Name</th>
+                <th style={{ color: "white" }}>Designation</th>
+                <th style={{ color: "white" }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -298,18 +298,25 @@ export function HRMSEmployees() {
                         <div className="table-profile-container">
                           {employee.employeePhoto ? (
                             <>
-                              <img 
-                                src={`http://localhost:4000${employee.employeePhoto}`}
+                              <img
+                                src={employee.employeePhoto}
                                 alt={employee.name}
                                 className="table-profile-picture"
                                 onError={(e) => {
                                   const target = e.currentTarget;
-                                  target.style.display = 'none';
+                                  target.style.display = "none";
                                   const parent = target.parentElement;
                                   if (parent) {
-                                    const placeholder = document.createElement('div');
-                                    placeholder.className = 'table-profile-placeholder';
-                                    const initials = employee.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                                    const placeholder =
+                                      document.createElement("div");
+                                    placeholder.className =
+                                      "table-profile-placeholder";
+                                    const initials = employee.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()
+                                      .slice(0, 2);
                                     placeholder.innerHTML = `<span class="table-initials">${initials}</span>`;
                                     parent.appendChild(placeholder);
                                   }
@@ -319,12 +326,19 @@ export function HRMSEmployees() {
                           ) : (
                             <div className="table-profile-placeholder">
                               <span className="table-initials">
-                                {employee.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                {employee.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .slice(0, 2)}
                               </span>
                             </div>
                           )}
                         </div>
-                        <span className="employee-name-text">{employee.name}</span>
+                        <span className="employee-name-text">
+                          {employee.name}
+                        </span>
                       </div>
                     </td>
                     <td>{employee.designation}</td>
@@ -344,7 +358,9 @@ export function HRMSEmployees() {
                         </button>
                         <button
                           className="delete-btn"
-                          onClick={() => handleDeleteEmployee(employee._id, employee.name)}
+                          onClick={() =>
+                            handleDeleteEmployee(employee._id, employee.name)
+                          }
                         >
                           Delete
                         </button>
@@ -363,7 +379,9 @@ export function HRMSEmployees() {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingEmployeeId ? "Edit Employee" : "Add New Employee"}</h2>
+              <h2>
+                {editingEmployeeId ? "Edit Employee" : "Add New Employee"}
+              </h2>
               <button className="close-btn" onClick={handleCloseModal}>
                 &times;
               </button>
@@ -371,6 +389,19 @@ export function HRMSEmployees() {
             <form onSubmit={handleSubmit} className="employee-form">
               <div className="form-group">
                 <label htmlFor="name">Employee Name *</label>
+                <div className="form-group">
+                  <label>Employee Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        setEditPhoto(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </div>
+
                 <input
                   type="text"
                   id="name"
@@ -382,7 +413,7 @@ export function HRMSEmployees() {
                   placeholder="Enter employee name"
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="employeeCode">Employee Code *</label>
                 <input
@@ -503,7 +534,9 @@ export function HRMSEmployees() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="emergencyContactNumber">Emergency Contact</label>
+                <label htmlFor="emergencyContactNumber">
+                  Emergency Contact
+                </label>
                 <input
                   type="tel"
                   id="emergencyContactNumber"
@@ -593,16 +626,29 @@ export function HRMSEmployees() {
                   disabled={submitting}
                   placeholder="Enter complete address"
                   rows={3}
-                  style={{ resize: 'vertical' }}
+                  style={{ resize: "vertical" }}
                 />
               </div>
 
               <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={handleCloseModal} disabled={submitting}>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={handleCloseModal}
+                  disabled={submitting}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn" disabled={submitting}>
-                  {submitting ? "Saving..." : (editingEmployeeId ? "Update Employee" : "Add Employee")}
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={submitting}
+                >
+                  {submitting
+                    ? "Saving..."
+                    : editingEmployeeId
+                    ? "Update Employee"
+                    : "Add Employee"}
                 </button>
               </div>
             </form>
@@ -613,68 +659,91 @@ export function HRMSEmployees() {
       {/* View Employee Details Modal */}
       {isViewModalOpen && selectedEmployee && (
         <div className="modal-overlay" onClick={handleCloseViewModal}>
-          <div className="view-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="view-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>Employee Details</h2>
               <button className="close-btn" onClick={handleCloseViewModal}>
                 &times;
               </button>
             </div>
-            
+
             {/* Profile Picture Section */}
             <div className="employee-profile-section">
               <div className="profile-picture-container">
                 {selectedEmployee.employeePhoto ? (
-                  <img 
-                    src={`http://localhost:4000${selectedEmployee.employeePhoto}`} 
+                  <img
+                    src={selectedEmployee.employeePhoto}
                     alt={selectedEmployee.employeeName}
                     className="profile-picture"
                     onError={(e) => {
-                      e.currentTarget.src = 'https://via.placeholder.com/150/cccccc/666666?text=No+Photo';
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/150/cccccc/666666?text=No+Photo";
                     }}
                   />
                 ) : (
                   <div className="profile-picture-placeholder">
                     <span className="profile-initials">
-                      {selectedEmployee.employeeName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      {selectedEmployee.employeeName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
                     </span>
                   </div>
                 )}
               </div>
               <h3 className="profile-name">{selectedEmployee.employeeName}</h3>
-              <p className="profile-designation">{selectedEmployee.designation || "N/A"}</p>
-              <p className="profile-code">Employee Code: {selectedEmployee.employeeCode}</p>
+              <p className="profile-designation">
+                {selectedEmployee.designation || "N/A"}
+              </p>
+              <p className="profile-code">
+                Employee Code: {selectedEmployee.employeeCode}
+              </p>
             </div>
-            
+
             <div className="employee-details">
               <div className="details-grid">
                 <div className="detail-section">
                   <h3>Personal Information</h3>
                   <div className="detail-item">
                     <span className="detail-label">Employee Name:</span>
-                    <span className="detail-value">{selectedEmployee.employeeName}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.employeeName}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Employee Code:</span>
-                    <span className="detail-value">{selectedEmployee.employeeCode}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.employeeCode}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Designation:</span>
-                    <span className="detail-value">{selectedEmployee.designation || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.designation || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Date of Birth:</span>
                     <span className="detail-value">
-                      {selectedEmployee.dateOfBirth 
-                        ? new Date(selectedEmployee.dateOfBirth).toLocaleDateString()
+                      {selectedEmployee.dateOfBirth
+                        ? new Date(
+                            selectedEmployee.dateOfBirth
+                          ).toLocaleDateString()
                         : "N/A"}
                     </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Date of Joining:</span>
                     <span className="detail-value">
-                      {selectedEmployee.dateOfJoining 
-                        ? new Date(selectedEmployee.dateOfJoining).toLocaleDateString()
+                      {selectedEmployee.dateOfJoining
+                        ? new Date(
+                            selectedEmployee.dateOfJoining
+                          ).toLocaleDateString()
                         : "N/A"}
                     </span>
                   </div>
@@ -684,19 +753,27 @@ export function HRMSEmployees() {
                   <h3>Contact Information</h3>
                   <div className="detail-item">
                     <span className="detail-label">Email:</span>
-                    <span className="detail-value">{selectedEmployee.emailId || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.emailId || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Mobile Number:</span>
-                    <span className="detail-value">{selectedEmployee.mobileNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.mobileNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Emergency Contact:</span>
-                    <span className="detail-value">{selectedEmployee.emergencyContactNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.emergencyContactNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Address:</span>
-                    <span className="detail-value">{selectedEmployee.address || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.address || "N/A"}
+                    </span>
                   </div>
                 </div>
 
@@ -704,11 +781,15 @@ export function HRMSEmployees() {
                   <h3>Family Information</h3>
                   <div className="detail-item">
                     <span className="detail-label">Father's Name:</span>
-                    <span className="detail-value">{selectedEmployee.fatherName || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.fatherName || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Father's Contact:</span>
-                    <span className="detail-value">{selectedEmployee.fatherContactNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.fatherContactNumber || "N/A"}
+                    </span>
                   </div>
                 </div>
 
@@ -716,15 +797,21 @@ export function HRMSEmployees() {
                   <h3>Government IDs</h3>
                   <div className="detail-item">
                     <span className="detail-label">PAN Card Number:</span>
-                    <span className="detail-value">{selectedEmployee.panCardNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.panCardNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Aadhar Card Number:</span>
-                    <span className="detail-value">{selectedEmployee.aadharCardNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.aadharCardNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Safety Pass Number:</span>
-                    <span className="detail-value">{selectedEmployee.safetyPassNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.safetyPassNumber || "N/A"}
+                    </span>
                   </div>
                 </div>
 
@@ -732,15 +819,21 @@ export function HRMSEmployees() {
                   <h3>Bank Details</h3>
                   <div className="detail-item">
                     <span className="detail-label">Bank Name:</span>
-                    <span className="detail-value">{selectedEmployee.bankName || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.bankName || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Account Number:</span>
-                    <span className="detail-value">{selectedEmployee.bankAccountNumber || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.bankAccountNumber || "N/A"}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">IFSC Code:</span>
-                    <span className="detail-value">{selectedEmployee.bankIfscCode || "N/A"}</span>
+                    <span className="detail-value">
+                      {selectedEmployee.bankIfscCode || "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -53,7 +53,9 @@ const emptyItem: Item = {
 };
 
 const MechanicalPurchasePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">("entry");
+  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">(
+    "entry"
+  );
 
   /* ================= MASTER DATA ================= */
   const [parties, setParties] = useState<Party[]>([]);
@@ -147,19 +149,18 @@ const MechanicalPurchasePage: React.FC = () => {
     setItems(updated);
   };
   const handleEditPurchase = (index: number) => {
-  const selected = purchases[index];
+    const selected = purchases[index];
 
-  setEditingId(selected._id || null); // 🔑 STORE ID
+    setEditingId(selected._id || null); // 🔑 STORE ID
 
-  setPartyName(selected.partyName);
-  setinvoiceNumber(selected.invoiceNumber);
-  setInvoiceDate(selected.invoiceDate);
-  setItems(selected.items);
-  setGstPercent(selected.gstPercent);
+    setPartyName(selected.partyName);
+    setinvoiceNumber(selected.invoiceNumber);
+    setInvoiceDate(selected.invoiceDate);
+    setItems(selected.items);
+    setGstPercent(selected.gstPercent);
 
-  setActiveTab("entry");
-};
-
+    setActiveTab("entry");
+  };
 
   const handleDeletePurchase = async (index: number) => {
     const purchase = purchases[index];
@@ -197,12 +198,12 @@ const MechanicalPurchasePage: React.FC = () => {
 
     try {
       await api.post("/stock/mechanical", payload);
-      
+
       // reset form
       setOldItemName("");
       setOldQty("");
       setOldUnit("");
-      
+
       alert("Old stock added successfully");
     } catch (err) {
       console.error("Save failed", err);
@@ -212,52 +213,51 @@ const MechanicalPurchasePage: React.FC = () => {
 
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
-  if (!partyName || !invoiceNumber || !invoiceDate) {
-    alert("Please fill all required fields");
-    return;
-  }
-
-  const payload = {
-    partyName,
-    invoiceNumber,
-    invoiceDate,
-    items: items.map((i) => ({
-      itemName: i.itemName,
-      qty: Number(i.qty),
-      unit: i.unit,
-      rate: Number(i.rate),
-      amount: Number(i.qty || 0) * Number(i.rate || 0),
-    })),
-    subtotal,
-    gstPercent: Number(gstPercent || 0),
-    gstAmount,
-    total,
-  };
-
-  try {
-    if (editingId) {
-      // ✅ UPDATE
-      await api.put(`/purchases/mechanical/${editingId}`, payload);
-    } else {
-      // ✅ CREATE
-      await api.post("/purchases/mechanical", payload);
+    if (!partyName || !invoiceNumber || !invoiceDate) {
+      alert("Please fill all required fields");
+      return;
     }
 
-    // reset form
-    setEditingId(null);
-    setPartyName("");
-    setinvoiceNumber("");
-    setInvoiceDate("");
-    setItems([emptyItem]);
-    setGstPercent("");
+    const payload = {
+      partyName,
+      invoiceNumber,
+      invoiceDate,
+      items: items.map((i) => ({
+        itemName: i.itemName,
+        qty: Number(i.qty),
+        unit: i.unit,
+        rate: Number(i.rate),
+        amount: Number(i.qty || 0) * Number(i.rate || 0),
+      })),
+      subtotal,
+      gstPercent: Number(gstPercent || 0),
+      gstAmount,
+      total,
+    };
 
-    setActiveTab("report");
-  } catch (err) {
-    console.error("Save failed", err);
-    alert("Failed to save purchase");
-  }
-};
+    try {
+      if (editingId) {
+        // ✅ UPDATE
+        await api.put(`/purchases/mechanical/${editingId}`, payload);
+      } else {
+        // ✅ CREATE
+        await api.post("/purchases/mechanical", payload);
+      }
 
+      // reset form
+      setEditingId(null);
+      setPartyName("");
+      setinvoiceNumber("");
+      setInvoiceDate("");
+      setItems([emptyItem]);
+      setGstPercent("");
+
+      setActiveTab("report");
+    } catch (err) {
+      console.error("Save failed", err);
+      alert("Failed to save purchase");
+    }
+  };
 
   /* ================= ENTRY INVOICE PDF ================= */
   const downloadInvoicePDF = () => {
@@ -292,7 +292,7 @@ const MechanicalPurchasePage: React.FC = () => {
     const addHeader = () => {
       try {
         doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-      } catch (e) {
+      } catch {
         // ignore missing image
       }
 
@@ -308,7 +308,9 @@ const MechanicalPurchasePage: React.FC = () => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFontSize(16);
-      doc.text("MECHANICAL PURCHASE REPORT", pageWidth / 2, 55, { align: "center" });
+      doc.text("MECHANICAL PURCHASE REPORT", pageWidth / 2, 55, {
+        align: "center",
+      });
     };
 
     const addFooter = (pageNum: number, totalPages: number) => {
@@ -335,7 +337,6 @@ const MechanicalPurchasePage: React.FC = () => {
       );
     };
 
-    let currentPage = 1;
     const tempTotalPages = 1; // Placeholder, will update later
 
     autoTable(doc, {
@@ -624,12 +625,14 @@ const MechanicalPurchasePage: React.FC = () => {
       {activeTab === "old" && (
         <>
           <h2>Add Old Stock</h2>
-          
+
           <label>Item Name</label>
           <select
             value={oldItemName}
             onChange={(e) => {
-              const selectedItem = itemMasters.find(im => im.itemName === e.target.value);
+              const selectedItem = itemMasters.find(
+                (im) => im.itemName === e.target.value
+              );
               setOldItemName(e.target.value);
               if (selectedItem) {
                 setOldUnit(selectedItem.unit);
@@ -648,22 +651,20 @@ const MechanicalPurchasePage: React.FC = () => {
           <input
             type="number"
             value={oldQty}
-            onChange={(e) => setOldQty(e.target.value === "" ? "" : Number(e.target.value))}
+            onChange={(e) =>
+              setOldQty(e.target.value === "" ? "" : Number(e.target.value))
+            }
           />
 
           <label>Unit</label>
-          <input
-            value={oldUnit}
-            readOnly
-            placeholder="Auto-filled from item"
-          />
+          <input value={oldUnit} readOnly placeholder="Auto-filled from item" />
 
           <div className="old-stock-buttons">
             <button className="add-stock" onClick={saveOldStock}>
               Add to Stock
             </button>
-            <button 
-              className="clear-stock" 
+            <button
+              className="clear-stock"
               onClick={() => {
                 setOldItemName("");
                 setOldQty("");

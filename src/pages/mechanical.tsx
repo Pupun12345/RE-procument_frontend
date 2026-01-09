@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import api from "../api/axios";
 import toast from "react-hot-toast";
@@ -10,22 +10,6 @@ export default function MechanicalRegistration() {
     unit: "",
     customUnit: "",
   });
-
-  const [items, setItems] = useState<{ itemName: string; unit: string }[]>([]);
-
-  // Load existing mechanical items
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const res = await api.get("/items/mechanical");
-        setItems(res.data);
-      } catch (err) {
-        console.error("Error loading mechanical items:", err);
-      }
-    };
-    loadItems();
-  }, []);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -37,9 +21,7 @@ export default function MechanicalRegistration() {
     e.preventDefault();
 
     const finalUnit =
-      formData.unit === "Others (Custom)"
-        ? formData.customUnit
-        : formData.unit;
+      formData.unit === "Others (Custom)" ? formData.customUnit : formData.unit;
 
     if (!formData.itemName || !finalUnit) {
       toast.error("Please enter item name and select a unit.");
@@ -51,14 +33,17 @@ export default function MechanicalRegistration() {
         itemName: formData.itemName,
         unit: finalUnit,
       });
-
       if (res.data.success) {
-        setItems((prev) => [...prev, res.data.item]);
         setFormData({ itemName: "", unit: "", customUnit: "" });
         toast.success(`"${res.data.item.itemName}" added successfully!`);
       }
-    } catch (err: any) {
-      if (err.response?.status === 409) {
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        (err as { response?: { status?: number } }).response?.status === 409
+      ) {
         toast.error("Item already exists");
       } else {
         console.error("API failed:", err);

@@ -11,11 +11,6 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
 
 // ====================== TYPES ======================
-interface Item {
-  itemName: string;
-  unit: string;
-  qty: number;
-}
 
 interface ReturnRecord {
   _id: string;
@@ -50,8 +45,6 @@ interface FilterState {
   from: string;
   to: string;
 }
-
-
 
 // ====================== MAIN COMPONENT ======================
 
@@ -96,7 +89,17 @@ const DistributionPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchRecords();
+    const load = async () => {
+      try {
+        const res = await api.get("/returns/mechanical");
+        setRecords(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        toast.error("Failed to fetch mechanical returns");
+        setRecords([]);
+      }
+    };
+
+    load();
   }, []);
 
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
@@ -140,7 +143,9 @@ const DistributionPage: React.FC = () => {
   const [editRecord, setEditRecord] = useState<EditableReturnRecord | null>(
     null
   );
-  const [editItemState, setEditItemState] = useState<ItemEditState | null>(null);
+  const [editItemState, setEditItemState] = useState<ItemEditState | null>(
+    null
+  );
 
   // Open item edit modal from the add items table
   const openItemEdit = (index: number) => {
@@ -156,7 +161,7 @@ const DistributionPage: React.FC = () => {
   // Save edited item
   const saveItemEdit = () => {
     if (!editItemState) return;
-    
+
     const updatedItems = [...items];
     updatedItems[editItemState.index] = {
       itemName: editItemState.itemName,
@@ -231,7 +236,7 @@ const DistributionPage: React.FC = () => {
       toast.success("Updated successfully");
       setEditRecord(null);
       fetchRecords();
-    } catch (err) {
+    } catch {
       toast.error("Failed to update record");
     }
   };
@@ -245,7 +250,7 @@ const DistributionPage: React.FC = () => {
 
         // 🔑 FIX IS HERE
         setStockItems(Array.isArray(res.data?.data) ? res.data.data : []);
-      } catch (err) {
+      } catch {
         toast("Failed to load stock items");
       }
     };
@@ -345,7 +350,7 @@ const DistributionPage: React.FC = () => {
       );
     };
 
-    let tempTotalPages = 1;
+    const tempTotalPages = 1;
 
     // ------------------------------------------
     // AUTO TABLE
@@ -396,22 +401,28 @@ const DistributionPage: React.FC = () => {
 
   const exportCSV = (): void => {
     const headers = ["Item", "Quantity", "Unit", "Date", "Person", "Location"];
-    const rows = filteredRecords.map((r) => [
-      r.itemName,
-      r.quantity,
-      r.unit,
-      r.issueDate,
-      r.personName,
-      r.location,
-    ]);
+
+    const rows = filteredRecords.flatMap((r) =>
+      r.items.map((item) => [
+        item.itemName,
+        item.quantity,
+        item.unit,
+        new Date(r.returnDate).toLocaleDateString("en-IN"),
+        r.personName,
+        r.location || "",
+      ])
+    );
+
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
-    link.download = "PPE_Distribution_Report.csv";
+    link.download = "Mechanical_Return_Report.csv";
     link.click();
   };
+
   const addItem = () => {
     setItems([...items, { itemName: "", quantity: "", unit: "" }]);
   };
@@ -875,32 +886,46 @@ const DistributionPage: React.FC = () => {
 
         {/* ITEM EDIT MODAL - For editing items in the add table */}
         {editItemState && (
-          <div className="ppe-modal-overlay" style={{ 
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}>
-            <div className="ppe-modal" style={{
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              padding: "24px",
-              maxWidth: "500px",
-              width: "90%",
-              maxHeight: "90vh",
-              overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            }}>
+          <div
+            className="ppe-modal-overlay"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              className="ppe-modal"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                padding: "24px",
+                maxWidth: "500px",
+                width: "90%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              }}
+            >
               <h3 style={{ marginBottom: "20px", color: "#333" }}>EDIT ITEM</h3>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Item Name</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Item Name
+                </label>
                 <select
                   className="ppe-input"
                   value={editItemState.itemName}
@@ -926,7 +951,15 @@ const DistributionPage: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Quantity</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Quantity
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
@@ -944,7 +977,15 @@ const DistributionPage: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Unit
+                </label>
                 <input
                   className="ppe-input"
                   type="text"
@@ -960,9 +1001,12 @@ const DistributionPage: React.FC = () => {
                 />
               </div>
 
-              <div className="ppe-buttons" style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
-                <button 
-                  onClick={saveItemEdit} 
+              <div
+                className="ppe-buttons"
+                style={{ marginTop: "24px", display: "flex", gap: "12px" }}
+              >
+                <button
+                  onClick={saveItemEdit}
                   className="ppe-btn-save"
                   style={{ flex: 1 }}
                 >

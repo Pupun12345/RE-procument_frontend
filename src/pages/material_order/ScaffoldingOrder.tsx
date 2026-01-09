@@ -46,7 +46,7 @@ export default function ScaffoldingOrder() {
   const [items, setItems] = useState<Item[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
-  const [designation, setDesignation] = useState("Supervisor");
+  const designation = "Supervisor";
 
   const [form, setForm] = useState({
     supervisor: "",
@@ -73,20 +73,6 @@ export default function ScaffoldingOrder() {
 
   /* ================= API CALLS ================= */
 
-  const fetchItems = async () => {
-    const res = await api.get("/items/scaffolding");
-    setItems(res.data);
-  };
-
-  const fetchEmployeesByDesignation = async (desg: string) => {
-    try {
-      const res = await api.get(`/employees?designation=${desg}`);
-      setEmployees(res.data);
-    } catch {
-      toast.error("Failed to load employees");
-    }
-  };
-
   const fetchOrders = async () => {
     try {
       const res = await api.get("/scaffolding/orders");
@@ -100,17 +86,44 @@ export default function ScaffoldingOrder() {
   /* ================= EFFECTS ================= */
 
   useEffect(() => {
-    fetchItems();
+    const loadItems = async () => {
+      try {
+        const res = await api.get("/items/scaffolding");
+        setItems(res.data);
+      } catch {
+        toast.error("Failed to load items");
+      }
+    };
+
+    loadItems();
   }, []);
 
   useEffect(() => {
-    fetchEmployeesByDesignation(designation);
+    const loadEmployees = async () => {
+      try {
+        const res = await api.get(`/employees?designation=${designation}`);
+        setEmployees(res.data);
+      } catch {
+        toast.error("Failed to load employees");
+      }
+    };
+
+    loadEmployees();
   }, [designation]);
 
   useEffect(() => {
-    if (activeTab === "report") {
-      fetchOrders();
-    }
+    if (activeTab !== "report") return;
+
+    const loadOrders = async () => {
+      try {
+        const res = await api.get("/scaffolding/orders");
+        setOrders(res.data);
+      } catch {
+        toast.error("Failed to load orders");
+      }
+    };
+
+    loadOrders();
   }, [activeTab]);
 
   /* ================= HANDLERS ================= */

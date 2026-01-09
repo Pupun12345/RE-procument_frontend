@@ -62,7 +62,9 @@ const emptyItem: Item = {
 };
 
 const PurchaseEntryPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">("entry");
+  const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">(
+    "entry"
+  );
 
   /* ================= MASTER DATA ================= */
   const [parties, setParties] = useState<Party[]>([]);
@@ -213,13 +215,13 @@ const PurchaseEntryPage: React.FC = () => {
 
     try {
       await api.post("/stock/scaffolding", payload);
-      
+
       // reset form
       setOldItemName("");
       setOldQty("");
       setOldUnit("");
       setOldPuw(0);
-      
+
       alert("Old stock added successfully");
     } catch (err) {
       console.error("Save failed", err);
@@ -312,7 +314,7 @@ const PurchaseEntryPage: React.FC = () => {
     const addHeader = () => {
       try {
         doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-      } catch (e) {
+      } catch {
         // ignore missing image
       }
 
@@ -356,8 +358,6 @@ const PurchaseEntryPage: React.FC = () => {
         footerY + 5
       );
     };
-
-    let currentPage = 1;
     const tempTotalPages = 1; // Placeholder, will update later
 
     autoTable(doc, {
@@ -390,7 +390,7 @@ const PurchaseEntryPage: React.FC = () => {
 
     doc.save("scaffolding_purchase_report.pdf");
   };
-  const totalWeight = (items: any[]) =>
+  const totalWeight = (items: Item[]) =>
     items.reduce(
       (sum, i) =>
         sum + Number(i.weight ?? Number(i.qty || 0) * Number(i.puw || 0)),
@@ -719,12 +719,14 @@ const PurchaseEntryPage: React.FC = () => {
       {activeTab === "old" && (
         <>
           <h2>Add Old Stock</h2>
-          
+
           <label>Item Name</label>
           <select
             value={oldItemName}
             onChange={(e) => {
-              const selectedItem = itemMasters.find(im => im.itemName === e.target.value);
+              const selectedItem = itemMasters.find(
+                (im) => im.itemName === e.target.value
+              );
               setOldItemName(e.target.value);
               if (selectedItem) {
                 setOldUnit(selectedItem.unit);
@@ -744,15 +746,13 @@ const PurchaseEntryPage: React.FC = () => {
           <input
             type="number"
             value={oldQty}
-            onChange={(e) => setOldQty(e.target.value === "" ? "" : Number(e.target.value))}
+            onChange={(e) =>
+              setOldQty(e.target.value === "" ? "" : Number(e.target.value))
+            }
           />
 
           <label>Unit</label>
-          <input
-            value={oldUnit}
-            readOnly
-            placeholder="Auto-filled from item"
-          />
+          <input value={oldUnit} readOnly placeholder="Auto-filled from item" />
 
           <label>PUW (kg)</label>
           <input
@@ -774,8 +774,8 @@ const PurchaseEntryPage: React.FC = () => {
             <button className="add-stock" onClick={saveOldStock}>
               Add to Stock
             </button>
-            <button 
-              className="clear-stock" 
+            <button
+              className="clear-stock"
               onClick={() => {
                 setOldItemName("");
                 setOldQty("");

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Edit, Trash2, X } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import './gateway.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Filter, Download, Edit, Trash2, X } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./gateway.css";
 
 interface Party {
   id: string;
@@ -11,6 +11,14 @@ interface Party {
   address: string;
   gst: string;
   contact: string;
+  publishedDate?: string;
+}
+interface VendorApi {
+  _id: string;
+  partyName: string;
+  address: string;
+  gstNumber: string;
+  contactNumber: string;
   publishedDate?: string;
 }
 
@@ -39,7 +47,7 @@ export function VendorGateway() {
   useEffect(() => {
     const fetchVendors = async () => {
       const token = localStorage.getItem("token");
-      
+
       try {
         const res = await fetch(`${url}/api/vendors`, {
           headers: {
@@ -47,7 +55,7 @@ export function VendorGateway() {
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        
+
         if (!res.ok) {
           console.error("Failed to fetch vendors");
           return;
@@ -57,7 +65,7 @@ export function VendorGateway() {
         const vendorList = Array.isArray(data) ? data : data.vendors || [];
 
         setParties(
-          vendorList.map((v) => ({
+          vendorList.map((v: VendorApi) => ({
             id: v._id,
             name: v.partyName,
             address: v.address,
@@ -86,12 +94,12 @@ export function VendorGateway() {
         method: "DELETE",
         headers: { ...(token && { Authorization: `Bearer ${token}` }) },
       });
-      
+
       if (!res.ok) {
         alert("Delete failed");
         return;
       }
-      
+
       alert("Vendor deleted successfully!");
       setParties((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
@@ -106,7 +114,7 @@ export function VendorGateway() {
   const handleSaveEdit = async () => {
     if (!editingParty) return;
     const token = localStorage.getItem("token");
-    
+
     try {
       const res = await fetch(`${url}/api/vendors/${editingParty.id}`, {
         method: "PUT",
@@ -121,12 +129,12 @@ export function VendorGateway() {
           contactNumber: editingParty.contact,
         }),
       });
-      
+
       if (!res.ok) {
         alert("Update failed");
         return;
       }
-      
+
       alert("Vendor updated successfully!");
       setParties((prev) =>
         prev.map((p) => (p.id === editingParty.id ? { ...editingParty } : p))
@@ -140,7 +148,13 @@ export function VendorGateway() {
 
   // CSV Download
   const handleDownloadCSV = () => {
-    const headers = ["Party Name", "Address", "GST", "Contact", "Published Date"];
+    const headers = [
+      "Party Name",
+      "Address",
+      "GST",
+      "Contact",
+      "Published Date",
+    ];
     const rows = filteredParties.map((p) => [
       p.name,
       p.address,
@@ -211,7 +225,7 @@ export function VendorGateway() {
   });
 
   const handleVendorRegistration = () => {
-    navigate('/dashboard/registration/vendor');
+    navigate("/dashboard/registration/vendor");
   };
 
   const handleFilter = () => {
@@ -220,7 +234,7 @@ export function VendorGateway() {
 
   return (
     <div className="gateway-container">
-      <div className="gateway-content" style={{ position: 'relative' }}>
+      <div className="gateway-content" style={{ position: "relative" }}>
         {/* Header */}
         <div className="gateway-header">
           <h1 className="gateway-title">VENDOR GATEWAY</h1>
@@ -229,7 +243,9 @@ export function VendorGateway() {
         {/* Search and Actions Bar */}
         <div className="gateway-actions-bar">
           <div className="gateway-search-wrapper">
-            <span className="gateway-search-icon"><Search /></span>
+            <span className="gateway-search-icon">
+              <Search />
+            </span>
             <input
               type="text"
               placeholder="Search by party name..."
@@ -244,18 +260,16 @@ export function VendorGateway() {
           >
             Vendor Registration
           </button>
-          <button
-            onClick={handleDownloadCSV}
-            className="gateway-action-btn"
-          >
-            <span className="gateway-action-icon"><Download /></span>
+          <button onClick={handleDownloadCSV} className="gateway-action-btn">
+            <span className="gateway-action-icon">
+              <Download />
+            </span>
             Download CSV
           </button>
-          <button
-            onClick={handleFilter}
-            className="gateway-action-btn"
-          >
-            <span className="gateway-action-icon"><Filter /></span>
+          <button onClick={handleFilter} className="gateway-action-btn">
+            <span className="gateway-action-icon">
+              <Filter />
+            </span>
             Filter
           </button>
         </div>
@@ -317,13 +331,26 @@ export function VendorGateway() {
           <div
             className="gateway-modal-overlay"
             onClick={() => setEditingParty(null)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="gateway-modal-content gateway-edit-modal-content"
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 18,
+                }}
+              >
                 <span className="gateway-modal-title">Edit Vendor Details</span>
                 <button onClick={() => setEditingParty(null)}>
                   <X />
@@ -334,7 +361,9 @@ export function VendorGateway() {
                 <input
                   type="text"
                   value={editingParty.name}
-                  onChange={(e) => setEditingParty({ ...editingParty, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditingParty({ ...editingParty, name: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -342,7 +371,12 @@ export function VendorGateway() {
                 <input
                   type="text"
                   value={editingParty.address}
-                  onChange={(e) => setEditingParty({ ...editingParty, address: e.target.value })}
+                  onChange={(e) =>
+                    setEditingParty({
+                      ...editingParty,
+                      address: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -350,7 +384,9 @@ export function VendorGateway() {
                 <input
                   type="text"
                   value={editingParty.gst}
-                  onChange={(e) => setEditingParty({ ...editingParty, gst: e.target.value })}
+                  onChange={(e) =>
+                    setEditingParty({ ...editingParty, gst: e.target.value })
+                  }
                 />
               </div>
               <div>
@@ -358,12 +394,27 @@ export function VendorGateway() {
                 <input
                   type="text"
                   value={editingParty.contact}
-                  onChange={(e) => setEditingParty({ ...editingParty, contact: e.target.value })}
+                  onChange={(e) =>
+                    setEditingParty({
+                      ...editingParty,
+                      contact: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="gateway-modal-actions">
-                <button className="gateway-modal-btn save" onClick={handleSaveEdit}>Save</button>
-                <button className="gateway-modal-btn cancel" onClick={() => setEditingParty(null)}>Cancel</button>
+                <button
+                  className="gateway-modal-btn save"
+                  onClick={handleSaveEdit}
+                >
+                  Save
+                </button>
+                <button
+                  className="gateway-modal-btn cancel"
+                  onClick={() => setEditingParty(null)}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -374,14 +425,27 @@ export function VendorGateway() {
           <div
             className="gateway-modal-overlay"
             onClick={() => setShowFilter(false)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="gateway-modal-content"
-              style={{ maxHeight: '90vh', overflowY: 'auto' }}
+              style={{ maxHeight: "90vh", overflowY: "auto" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 18,
+                }}
+              >
                 <span className="gateway-modal-title">Advanced Filters</span>
                 <button onClick={() => setShowFilter(false)}>
                   <X />
@@ -407,12 +471,33 @@ export function VendorGateway() {
               </div>
               <div>
                 <label>Filter by Published Date</label>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                  <button type="button" onClick={() => handlePreset(0)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>Today</button>
-                  <button type="button" onClick={() => handlePreset(7)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>Last 7 Days</button>
-                  <button type="button" onClick={() => handlePreset(30)} className="gateway-modal-btn cancel" style={{ padding: '4px 12px', fontSize: 13 }}>This Month</button>
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => handlePreset(0)}
+                    className="gateway-modal-btn cancel"
+                    style={{ padding: "4px 12px", fontSize: 13 }}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePreset(7)}
+                    className="gateway-modal-btn cancel"
+                    style={{ padding: "4px 12px", fontSize: 13 }}
+                  >
+                    Last 7 Days
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePreset(30)}
+                    className="gateway-modal-btn cancel"
+                    style={{ padding: "4px 12px", fontSize: 13 }}
+                  >
+                    This Month
+                  </button>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: "flex", gap: 8 }}>
                   <div style={{ flex: 1 }}>
                     <DatePicker
                       selected={startDate}
@@ -439,8 +524,18 @@ export function VendorGateway() {
                 </div>
               </div>
               <div className="gateway-modal-actions">
-                <button className="gateway-modal-btn save" onClick={handleSubmitFilter}>Apply Filter</button>
-                <button className="gateway-modal-btn cancel" onClick={handleClearFilters}>Clear</button>
+                <button
+                  className="gateway-modal-btn save"
+                  onClick={handleSubmitFilter}
+                >
+                  Apply Filter
+                </button>
+                <button
+                  className="gateway-modal-btn cancel"
+                  onClick={handleClearFilters}
+                >
+                  Clear
+                </button>
               </div>
             </div>
           </div>

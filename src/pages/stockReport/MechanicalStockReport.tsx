@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -79,7 +79,7 @@ const MechanicalStockReport: React.FC = () => {
     const addHeader = () => {
       try {
         doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-      } catch (e) {
+      } catch {
         // ignore missing image
       }
 
@@ -124,7 +124,7 @@ const MechanicalStockReport: React.FC = () => {
       );
     };
 
-    let tempTotalPages = 1;
+    const tempTotalPages = 1;
 
     autoTable(doc, {
       startY: 65,

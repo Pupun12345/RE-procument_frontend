@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import api from "../api/axios";
 import toast from "react-hot-toast";
 import "./scaffholding.css";
+import axios from "axios";
 
 interface Item {
   itemName: string;
-  puw: number;
+  puw: string;
   unit: string;
   customUnit?: string;
 }
@@ -18,25 +19,8 @@ export default function ScaffoldingRegistration() {
     unit: "",
     customUnit: "",
   });
-  const [items, setItems] = useState<Item[]>([]);
 
   // Load scaffolding items
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const res = await api.get("/items/scaffolding");
-        if (res.data.success) {
-          setItems(res.data.items);
-        } else {
-          toast.error("Failed to load scaffolding items!");
-        }
-      } catch (err) {
-        console.error("Error loading scaffolding items:", err);
-        toast.error("Failed to load scaffolding items!");
-      }
-    };
-    loadItems();
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -49,7 +33,9 @@ export default function ScaffoldingRegistration() {
     e.preventDefault();
 
     const finalUnit =
-      formData.unit === "Others (Custom)" ? formData.customUnit?.trim() : formData.unit;
+      formData.unit === "Others (Custom)"
+        ? formData.customUnit?.trim()
+        : formData.unit;
 
     if (!formData.itemName || !formData.puw || !finalUnit) {
       toast.error("Please fill all fields before submitting.");
@@ -59,12 +45,11 @@ export default function ScaffoldingRegistration() {
     try {
       const res = await api.post("/items/scaffolding", {
         itemName: formData.itemName,
-        puw: Number(formData.puw), 
+        puw: Number(formData.puw),
         unit: finalUnit,
       });
 
       if (res.data.success) {
-        setItems((prev) => [...prev, res.data.item]);
         setFormData({
           itemName: "",
           puw: "",
@@ -75,8 +60,12 @@ export default function ScaffoldingRegistration() {
       } else {
         toast.error("Failed to save item. " + (res.data.message || ""));
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error saving item");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Error saving item");
+      } else {
+        toast.error("Unexpected error occurred");
+      }
     }
   };
 
@@ -141,8 +130,16 @@ export default function ScaffoldingRegistration() {
               </div>
             )}
             <div className="scaffholding-form-actions">
-              <button type="submit" className="scaffholding-btn">Submit</button>
-              <button type="button" className="scaffholding-btn" onClick={() => window.history.back()}>Back</button>
+              <button type="submit" className="scaffholding-btn">
+                Submit
+              </button>
+              <button
+                type="button"
+                className="scaffholding-btn"
+                onClick={() => window.history.back()}
+              >
+                Back
+              </button>
             </div>
           </form>
         </div>

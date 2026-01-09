@@ -14,18 +14,6 @@ interface Item {
   unit: string;
   puw: number;
 }
-interface GroupedReportRow {
-  _id: string;
-  issuedTo: string;
-  issueDate: string;
-  location?: string;
-  woNumber?: string;
-  supervisorName?: string;
-  tslName?: string;
-
-  itemsText: string;
-  totalQty: number;
-}
 
 interface IssueRecord {
   _id: string;
@@ -39,14 +27,10 @@ interface IssueRecord {
     itemName: string;
     unit: string;
     qty: number;
-    unitWeight: number; // ✅ ADD
+    unitWeight: number;
+    issuedQuantity?: number; // ✅ ADD
     issuedWeight: number;
   }[];
-}
-
-interface Stock {
-  itemName: string;
-  qty: number;
 }
 
 interface FormState {
@@ -67,7 +51,7 @@ interface FormState {
 interface FilterState {
   search: string;
   from: string;
-  qty?: number;
+  to: string;
 }
 
 interface EditableIssue {
@@ -82,7 +66,14 @@ interface EditableIssue {
   issuedQuantity?: number | string;
   issuedWeight?: number | string;
   tslName?: string;
-  items: { itemName: string; unit: string; qty: number }[];
+  items: {
+    itemName: string;
+    unit: string;
+    qty: number;
+    unitWeight?: number | string;
+    issuedQuantity?: number | string;
+    issuedWeight?: number | string;
+  }[];
 }
 
 // Material edit modal state
@@ -109,6 +100,7 @@ export default function ScaffoldingIssuePage() {
   }
   const [materials, setMaterials] = useState<MaterialRow[]>([
     {
+      qty: 0,
       itemName: "",
       unit: "",
       unitWeight: "",
@@ -116,19 +108,26 @@ export default function ScaffoldingIssuePage() {
       issuedWeight: "",
     },
   ]);
+  type ToastType = {
+    success: (msg: string) => void;
+    error: (msg: string) => void;
+  };
 
   const showToast = (type: "success" | "error", msg: string) => {
-    if (window && window["toast"]) {
-      window["toast"][type](msg);
-    } else {
-      if (type === "error") alert(msg);
+    const toast = (window as unknown as { toast?: ToastType }).toast;
+
+    if (toast) {
+      toast[type](msg);
+    } else if (type === "error") {
+      alert(msg);
     }
   };
 
   const addMaterial = () => {
-    setMaterials([
-      ...materials,
+    setMaterials((prev) => [
+      ...prev,
       {
+        qty: 0,
         itemName: "",
         unit: "",
         unitWeight: "",
@@ -136,7 +135,6 @@ export default function ScaffoldingIssuePage() {
         issuedWeight: "",
       },
     ]);
-    showToast("success", "Material row added");
   };
 
   const removeMaterial = (index: number) => {
@@ -150,28 +148,23 @@ export default function ScaffoldingIssuePage() {
   const { role } = useAuthStore();
   const isAdmin = role === "admin";
 
-  const updateMaterial = (
+  const updateMaterial = <K extends keyof MaterialRow>(
     index: number,
-    key: keyof MaterialRow,
-    value: string
+    key: K,
+    value: MaterialRow[K]
   ) => {
-    const updated = [...materials];
-    updated[index][key] = value;
-    // If unitWeight or issuedQuantity changes, recalculate issuedWeight
-    if (key === "unitWeight" || key === "issuedQuantity") {
-      const unitWeightNum = parseFloat(
-        key === "unitWeight" ? value : updated[index].unitWeight || "0"
-      );
-      const issuedQuantityNum = parseFloat(
-        key === "issuedQuantity" ? value : updated[index].issuedQuantity || "0"
-      );
-      let issuedWeight = "";
-      if (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) {
-        issuedWeight = (unitWeightNum * issuedQuantityNum).toString();
+    setMaterials((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [key]: value };
+
+      if (key === "unitWeight" || key === "issuedQuantity") {
+        const uw = Number(updated[index].unitWeight || 0);
+        const iq = Number(updated[index].issuedQuantity || 0);
+        updated[index].issuedWeight = !isNaN(uw * iq) ? String(uw * iq) : "";
       }
-      updated[index].issuedWeight = issuedWeight;
-    }
-    setMaterials(updated);
+
+      return updated;
+    });
   };
 
   const handleBack = () => {
@@ -179,10 +172,7 @@ export default function ScaffoldingIssuePage() {
   };
   const [activeTab, setActiveTab] = useState<"entry" | "report">("entry");
   const [items, setItems] = useState<Item[]>([]);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [newItem, setNewItem] = useState<Item>({ itemName: "", unit: "" });
   const [records, setRecords] = useState<IssueRecord[]>([]);
-  const [stock, setStock] = useState<Stock[]>([]);
   const navigate = useNavigate();
 
   const [form, setForm] = useState<FormState>({
@@ -207,7 +197,8 @@ export default function ScaffoldingIssuePage() {
   });
 
   const [editRecord, setEditRecord] = useState<EditableIssue | null>(null);
-  const [editMaterialState, setEditMaterialState] = useState<MaterialEditState | null>(null);
+  const [editMaterialState, setEditMaterialState] =
+    useState<MaterialEditState | null>(null);
 
   // Open material edit modal from the add materials table
   const openMaterialEdit = (index: number) => {
@@ -225,7 +216,7 @@ export default function ScaffoldingIssuePage() {
   // Save edited material
   const saveMaterialEdit = () => {
     if (!editMaterialState) return;
-    
+
     const updatedMaterials = [...materials];
     updatedMaterials[editMaterialState.index] = {
       itemName: editMaterialState.itemName,
@@ -240,25 +231,28 @@ export default function ScaffoldingIssuePage() {
     showToast("success", "Material updated successfully");
   };
 
-  const openEdit = (r: IssueRecord) => {
-    const mapped = (r.items || []).map((it) => ({
+  const openEdit = (id: string) => {
+    const record = records.find((r) => r._id === id);
+    if (!record) return;
+
+    const mapped = record.items.map((it) => ({
       itemName: it.itemName,
       unit: it.unit,
-      qty: it.qty || 0,
-      unitWeight: (it as any).unitWeight ?? "",
-      issuedQuantity: (it as any).issuedQuantity ?? it.qty ?? 0,
-      issuedWeight: (it as any).issuedWeight ?? "",
+      qty: it.qty,
+      unitWeight: it.unitWeight ?? "",
+      issuedQuantity: it.issuedQuantity ?? it.qty,
+      issuedWeight: it.issuedWeight ?? "",
     }));
 
     setEditRecord({
-      _id: r._id,
-      qty: mapped.length > 0 ? mapped[0].qty : 0,
-      issuedTo: r.issuedTo,
-      issueDate: r.issueDate,
-      location: r.location,
-      woNumber: r.woNumber,
-      supervisorName: r.supervisorName,
-      tslName: r.tslName,
+      _id: record._id,
+      qty: mapped[0]?.qty ?? 0,
+      issuedTo: record.issuedTo,
+      issueDate: record.issueDate,
+      location: record.location,
+      woNumber: record.woNumber,
+      supervisorName: record.supervisorName,
+      tslName: record.tslName,
       items: mapped,
     });
   };
@@ -358,28 +352,6 @@ export default function ScaffoldingIssuePage() {
     } else {
       setForm({ ...form, [field]: value });
     }
-  };
-
-  const handleAddItem = () => {
-    if (!newItem.itemName.trim() || !newItem.unit.trim()) {
-      alert("Please enter both item name and unit.");
-      return;
-    }
-    if (
-      items.some(
-        (i) =>
-          i.itemName.toLowerCase() === newItem.itemName.trim().toLowerCase()
-      )
-    ) {
-      alert("Item already exists.");
-      return;
-    }
-    setItems((prev) => [
-      ...prev,
-      { itemName: newItem.itemName.trim(), unit: newItem.unit.trim() },
-    ]);
-    setShowAddItem(false);
-    setNewItem({ itemName: "", unit: "" });
   };
   const reportRows = records.map((issue) => ({
     _id: issue._id,
@@ -516,34 +488,31 @@ export default function ScaffoldingIssuePage() {
 
   const exportCSV = (): void => {
     const headers = [
-      "Item",
-      "Unit",
       "Date",
-      "Person",
+      "Issued To",
       "Location",
       "W/O Number",
-      "Supervisor Name",
-      "TSL Name",
-      "Unit Weight",
-      "Issued Weight",
-      "Issued Quantity",
+      "Supervisor",
+      "TSL",
+      "Items",
+      "Total Qty",
     ];
+
     const rows = filteredRecords.map((r) => [
-      r.itemName,
-      r.unit,
       r.issueDate,
       r.issuedTo,
-      r.location,
+      r.location || "",
       r.woNumber || "",
       r.supervisorName || "",
       r.tslName || "",
-      r.unitWeight || "",
-      r.issuedWeight || "",
-      r.qty || "",
+      r.itemsText.replace(/\n/g, " | "),
+      r.totalQty,
     ]);
+
     const csvContent =
       "data:text/csv;charset=utf-8," +
       [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
     link.download = "Scaffolding_Issue_Report.csv";
@@ -865,6 +834,7 @@ export default function ScaffoldingIssuePage() {
                       // 5️⃣ RESET FORM
                       setMaterials([
                         {
+                          qty: 0,
                           itemName: "",
                           unit: "",
                           unitWeight: "",
@@ -985,7 +955,7 @@ export default function ScaffoldingIssuePage() {
                         <td>
                           <button
                             className="report-edit-btn"
-                            onClick={() => openEdit(r)}
+                            onClick={() => openEdit(r._id)}
                           >
                             <MdEdit />
                           </button>
@@ -1224,39 +1194,52 @@ export default function ScaffoldingIssuePage() {
 
         {/* MATERIAL EDIT MODAL - For editing materials in the add table */}
         {editMaterialState && (
-          <div className="ppe-modal-overlay" style={{ 
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}>
-            <div className="ppe-modal" style={{
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              padding: "24px",
-              maxWidth: "600px",
-              width: "90%",
-              maxHeight: "90vh",
-              overflow: "auto",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            }}>
-              <h3 style={{ marginBottom: "20px", color: "#333" }}>EDIT MATERIAL</h3>
+          <div
+            className="ppe-modal-overlay"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              className="ppe-modal"
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                padding: "24px",
+                maxWidth: "600px",
+                width: "90%",
+                maxHeight: "90vh",
+                overflow: "auto",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <h3 style={{ marginBottom: "20px", color: "#333" }}>
+                EDIT MATERIAL
+              </h3>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Item Name</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Item Name
+                </label>
                 <select
                   className="ppe-input"
                   value={editMaterialState.itemName}
                   onChange={(e) => {
-                    const selected = stock.find(
-                      (s) => s.itemName === e.target.value
-                    );
                     setEditMaterialState({
                       ...editMaterialState,
                       itemName: e.target.value,
@@ -1265,16 +1248,24 @@ export default function ScaffoldingIssuePage() {
                   style={{ width: "100%" }}
                 >
                   <option value="">Select Item</option>
-                  {stock.map((s, idx) => (
-                    <option key={idx} value={s.itemName}>
-                      {s.itemName}
+                  {items.map((item) => (
+                    <option key={item.itemName} value={item.itemName}>
+                      {item.itemName}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Unit
+                </label>
                 <input
                   className="ppe-input"
                   type="text"
@@ -1291,7 +1282,15 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Unit Weight</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Unit Weight
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
@@ -1299,10 +1298,13 @@ export default function ScaffoldingIssuePage() {
                   value={editMaterialState.unitWeight}
                   onChange={(e) => {
                     const unitWeightNum = parseFloat(e.target.value || "0");
-                    const issuedQuantityNum = parseFloat(editMaterialState.issuedQuantity || "0");
-                    const issuedWeight = (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) 
-                      ? (unitWeightNum * issuedQuantityNum).toString() 
-                      : "";
+                    const issuedQuantityNum = parseFloat(
+                      editMaterialState.issuedQuantity || "0"
+                    );
+                    const issuedWeight =
+                      !isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)
+                        ? (unitWeightNum * issuedQuantityNum).toString()
+                        : "";
                     setEditMaterialState({
                       ...editMaterialState,
                       unitWeight: e.target.value,
@@ -1315,18 +1317,29 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Issued Quantity</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Issued Quantity
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
                   min="0"
                   value={editMaterialState.issuedQuantity}
                   onChange={(e) => {
-                    const unitWeightNum = parseFloat(editMaterialState.unitWeight || "0");
+                    const unitWeightNum = parseFloat(
+                      editMaterialState.unitWeight || "0"
+                    );
                     const issuedQuantityNum = parseFloat(e.target.value || "0");
-                    const issuedWeight = (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) 
-                      ? (unitWeightNum * issuedQuantityNum).toString() 
-                      : "";
+                    const issuedWeight =
+                      !isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)
+                        ? (unitWeightNum * issuedQuantityNum).toString()
+                        : "";
                     setEditMaterialState({
                       ...editMaterialState,
                       issuedQuantity: e.target.value,
@@ -1339,7 +1352,15 @@ export default function ScaffoldingIssuePage() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>Issued Weight</label>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Issued Weight
+                </label>
                 <input
                   className="ppe-input"
                   type="number"
@@ -1350,9 +1371,12 @@ export default function ScaffoldingIssuePage() {
                 />
               </div>
 
-              <div className="ppe-buttons" style={{ marginTop: "24px", display: "flex", gap: "12px" }}>
-                <button 
-                  onClick={saveMaterialEdit} 
+              <div
+                className="ppe-buttons"
+                style={{ marginTop: "24px", display: "flex", gap: "12px" }}
+              >
+                <button
+                  onClick={saveMaterialEdit}
                   className="ppe-btn-save"
                   style={{ flex: 1 }}
                 >

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ProtectedRoute from "../components/ProtectedRoute";
 import api from "../api/axios";
 import toast from "react-hot-toast";
 import "./ppe.css";
+import { AxiosError } from "axios";
 
 export default function PPERegistration() {
   const [formData, setFormData] = useState({
@@ -10,22 +11,6 @@ export default function PPERegistration() {
     unit: "",
     customUnit: "",
   });
-  const [items, setItems] = useState<{ itemName: string; unit: string }[]>([]);
-  const [selectedItem, setSelectedItem] = useState("");
-
-  // Load existing items (optional - can be removed if not needed)
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const res = await api.get("/items/ppe");
-        setItems(res.data);
-      } catch (err) {
-        // Silently fail for now
-        console.error("Error loading items:", err);
-      }
-    };
-    loadItems();
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -52,17 +37,20 @@ export default function PPERegistration() {
       });
 
       if (res.data.success) {
-        setItems((prev) => [...prev, res.data.item]);
         setFormData({ itemName: "", unit: "", customUnit: "" });
-        setSelectedItem("");
         toast.success(`"${res.data.item.itemName}" added successfully!`);
       }
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        toast.error("Item already exists");
-      } else {
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        if (err.response?.status === 409) {
+          toast.error("Item already exists");
+        } else {
+          toast.error("Failed to add PPE item");
+        }
         console.error("API failed:", err);
-        toast.error("Failed to add PPE item");
+      } else {
+        console.error("Unknown error:", err);
+        toast.error("Something went wrong");
       }
     }
   };
