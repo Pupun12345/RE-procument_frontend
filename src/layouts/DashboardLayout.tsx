@@ -346,68 +346,14 @@ export default function DashboardLayout({ children }: Props) {
             </SubGroup>
           </SidebarExpandable>
 
-          <SidebarExpandable
+          <SidebarButton 
             icon={<FaCogs />}
             label="HRMS"
-            open={openMenu === "hrms"}
-            onClick={() => toggleMenu("hrms", "HRMS")}
-          >
-            <SubItem
-              label="Dashboard"
-              path="/dashboard/hrms/dashboard"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Employees"
-              path="/dashboard/hrms/employees"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Manage Attendance"
-              path="/dashboard/hrms/shifts"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Leaves & Holidays"
-              path="/dashboard/hrms/leaves"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Approval Requests"
-              path="/dashboard/hrms/approvals"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Payroll"
-              path="/dashboard/hrms/payroll"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Loans & Advances"
-              path="/dashboard/hrms/loans"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Reports"
-              path="/dashboard/hrms/reports"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="User Management"
-              path="/dashboard/hrms/user-management"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Activity Logs"
-              path="/dashboard/hrms/activity-logs"
-              onNavigate={() => setOpenMenu(null)}
-            />
-            <SubItem
-              label="Configuration"
-              path="/dashboard/hrms/configuration"
-              onNavigate={() => setOpenMenu(null)}
-            />
-          </SidebarExpandable>
+            onClick={() => {
+              setOpenMenu(null);
+              navigate("/dashboard/hrms/dashboard");
+            }}
+          />
 
           <SidebarButton icon={<FaTruck />} label="Vehicle Management" />
           <SidebarButton icon={<FaChartBar />} label="Settings" />

@@ -6,6 +6,7 @@ import Dashboard from "../src/pages/Dashboard";
 import ProtectedRoute from "../src/components/ProtectedRoute";
 import EmployeeRegistration from "../src/pages/EmployeeRegistration";
 import DashboardLayout from "../src/layouts/DashboardLayout";
+import HRMSDashboardLayout from "../src/layouts/HRMSDashboardLayout";
 import ScaffoldingOrder from "../src/pages/material_order/ScaffoldingOrder";
 import { StoreManager } from "../src/pages/storemanager";
 import VendorForm from "../src/pages/vendorRegistration/page";
@@ -321,9 +322,9 @@ export default function AppRouter() {
         path="/dashboard/hrms/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
+            <HRMSDashboardLayout>
               <HRMSDashboard />
-            </DashboardLayout>
+            </HRMSDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -331,9 +332,49 @@ export default function AppRouter() {
         path="/dashboard/hrms/employees"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
+            <HRMSDashboardLayout>
               <HRMSEmployees />
-            </DashboardLayout>
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/payroll"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <HRMSDashboard />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/attendance"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <HRMSDashboard />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/reports"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <HRMSDashboard />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/configuration"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <HRMSDashboard />
+            </HRMSDashboardLayout>
           </ProtectedRoute>
         }
       />
