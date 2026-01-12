@@ -8,6 +8,7 @@ import {
   deleteEmployee,
   type Employee as EmployeeType,
 } from "../../../services/employeeService";
+import { Users, CheckCircle, Coffee, UserPlus, Search, Filter, Download, Printer, LayoutGrid, Eye, Edit2, Trash2 } from "lucide-react";
 
 interface Employee {
   _id: string;
@@ -253,11 +254,94 @@ export function HRMSEmployees() {
 
   return (
     <div className="hrms-employees">
+      {/* Stats Cards Section */}
+      <div className="stats-cards-container">
+        <div className="stat-card">
+          <div className="stat-card-header">
+            <span className="stat-label">Total Employees</span>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: '#e3f2fd' }}>
+              <Users size={20} style={{ color: '#2196f3' }} />
+            </div>
+          </div>
+          <div className="stat-value">{employees.length.toLocaleString()}</div>
+          <div className="stat-change positive">
+            <span>↑1.2%</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-header">
+            <span className="stat-label">Active Status</span>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: '#e8f5e9' }}>
+              <CheckCircle size={20} style={{ color: '#4caf50' }} />
+            </div>
+          </div>
+          <div className="stat-value">
+            {employees.length > 0 ? Math.floor(employees.length * 0.95).toLocaleString() : "0"}
+          </div>
+          <div className="stat-subtitle">95% of total</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-header">
+            <span className="stat-label">On Leave</span>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: '#fff3e0' }}>
+              <Coffee size={20} style={{ color: '#ff9800' }} />
+            </div>
+          </div>
+          <div className="stat-value">
+            {employees.length > 0 ? Math.floor(employees.length * 0.036) : "0"}
+          </div>
+          <div className="stat-change warning">
+            <span>+2 today</span>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-header">
+            <span className="stat-label">New Joinces</span>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: '#f3e5f5' }}>
+              <UserPlus size={20} style={{ color: '#9c27b0' }} />
+            </div>
+          </div>
+          <div className="stat-value">12</div>
+          <div className="stat-subtitle">This month</div>
+        </div>
+      </div>
+
+      {/* Search and Filter Section */}
+      <div className="search-filter-section">
+        <div className="search-box-wrapper">
+          <Search size={18} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, ID, or department..."
+            className="search-input-field"
+          />
+          <kbd className="search-shortcut">⌘K</kbd>
+        </div>
+        <div className="action-buttons">
+          <button className="action-btn">
+            <Filter size={18} />
+            <span>Filter</span>
+          </button>
+          <button className="action-btn">
+            <Download size={18} />
+          </button>
+          <button className="action-btn">
+            <Printer size={18} />
+          </button>
+          <button className="action-btn">
+            <LayoutGrid size={18} />
+          </button>
+        </div>
+      </div>
+
       {/* Header Section */}
       <div className="employees-header">
-        <h1 className="employees-title">Employees</h1>
+        <h1 className="employees-title">Employee Directory</h1>
         <button className="add-employee-btn" onClick={handleAddEmployee}>
-          Add Employee
+          + Add Employee
         </button>
       </div>
 
@@ -343,26 +427,29 @@ export function HRMSEmployees() {
                     </td>
                     <td>{employee.designation}</td>
                     <td>
-                      <div className="action-buttons">
+                      <div className="action-buttons-icons">
                         <button
-                          className="edit-btn"
-                          onClick={() => handleEditEmployee(employee._id)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="view-btn"
+                          className="icon-btn view-btn"
                           onClick={() => handleViewEmployee(employee._id)}
+                          title="View"
                         >
-                          View
+                          <Eye size={18} />
                         </button>
                         <button
-                          className="delete-btn"
+                          className="icon-btn edit-btn"
+                          onClick={() => handleEditEmployee(employee._id)}
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          className="icon-btn delete-btn"
                           onClick={() =>
                             handleDeleteEmployee(employee._id, employee.name)
                           }
+                          title="Delete"
                         >
-                          Delete
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
