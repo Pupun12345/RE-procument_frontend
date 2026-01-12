@@ -411,7 +411,7 @@ export function HRMSEmployees() {
                 <th style={{ color: "white" }}>Name</th>
                 <th style={{ color: "white" }}>Designation</th>
                 <th style={{ color: "white" }}>Joining Date</th>
-                <th style={{ color: "white" }}>Action</th>
+                <th style={{ color: "white" , paddingLeft: "150px"}}>Action</th>
               </tr>
             </thead>
             <tbody>
