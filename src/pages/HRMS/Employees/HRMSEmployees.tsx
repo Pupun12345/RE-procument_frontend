@@ -15,6 +15,7 @@ interface Employee {
   employeeCode: string;
   name: string;
   designation: string;
+  dateOfJoining?: string;
   employeePhoto?: string;
 }
 
@@ -26,6 +27,7 @@ export function HRMSEmployees() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeType | null>(
     null
   );
@@ -69,6 +71,7 @@ export function HRMSEmployees() {
         employeeCode: emp.employeeCode,
         name: emp.employeeName,
         designation: emp.designation || "N/A",
+        dateOfJoining: emp.dateOfJoining,
         employeePhoto: emp.employeePhoto,
       }));
       setEmployees(transformedData);
@@ -318,13 +321,57 @@ export function HRMSEmployees() {
             placeholder="Search by name, ID, or department..."
             className="search-input-field"
           />
-          <kbd className="search-shortcut">⌘K</kbd>
+          {/* <kbd className="search-shortcut">⌘K</kbd> */}
         </div>
         <div className="action-buttons">
-          <button className="action-btn">
-            <Filter size={18} />
-            <span>Filter</span>
-          </button>
+          <div className="filter-wrapper">
+            <button className="action-btn" onClick={() => setIsFilterOpen(!isFilterOpen)}>
+              <Filter size={18} />
+              <span>Filter</span>
+            </button>
+            {isFilterOpen && (
+              <div className="filter-popup">
+                <div className="filter-popup-header">
+                  <h3>Filter Employees</h3>
+                  <button className="filter-close-btn" onClick={() => setIsFilterOpen(false)}>×</button>
+                </div>
+                <div className="filter-popup-content">
+                  <div className="filter-group">
+                    <label>Department</label>
+                    <select className="filter-select">
+                      <option value="">All Departments</option>
+                      <option value="engineering">Engineering</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="hr">Human Resources</option>
+                      <option value="finance">Finance</option>
+                    </select>
+                  </div>
+                  <div className="filter-group">
+                    <label>Designation</label>
+                    <select className="filter-select">
+                      <option value="">All Designations</option>
+                      <option value="manager">Manager</option>
+                      <option value="developer">Developer</option>
+                      <option value="designer">Designer</option>
+                    </select>
+                  </div>
+                  <div className="filter-group">
+                    <label>Status</label>
+                    <select className="filter-select">
+                      <option value="">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="onleave">On Leave</option>
+                    </select>
+                  </div>
+                  <div className="filter-actions">
+                    <button className="filter-reset-btn" onClick={() => setIsFilterOpen(false)}>Reset</button>
+                    <button className="filter-apply-btn" onClick={() => setIsFilterOpen(false)}>Apply Filters</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <button className="action-btn">
             <Download size={18} />
           </button>
@@ -363,13 +410,14 @@ export function HRMSEmployees() {
                 <th style={{ color: "white" }}>Employee Code</th>
                 <th style={{ color: "white" }}>Name</th>
                 <th style={{ color: "white" }}>Designation</th>
+                <th style={{ color: "white" }}>Joining Date</th>
                 <th style={{ color: "white" }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="no-employees">
+                  <td colSpan={5} className="no-employees">
                     No employees found.
                   </td>
                 </tr>
@@ -426,6 +474,15 @@ export function HRMSEmployees() {
                       </div>
                     </td>
                     <td>{employee.designation}</td>
+                    <td>
+                      {employee.dateOfJoining
+                        ? new Date(employee.dateOfJoining).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        : "N/A"}
+                    </td>
                     <td>
                       <div className="action-buttons-icons">
                         <button

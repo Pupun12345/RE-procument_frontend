@@ -284,8 +284,18 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  width: fit-content;
 }
 
+ .icon-btn.view-btn{
+  width: 100px;
+ }
+ .icon-btn.edit-btn{
+  width: fit-content;
+ }
+ .icon-btn.delete-btn{
+  width: fit-content;
+ }
 .icon-btn {
   background: transparent;
   border: 1px solid #e5e7eb;
@@ -296,6 +306,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  width: 36px;
+  height: 36px;
 }
 
 .icon-btn.view-btn {
@@ -326,6 +338,148 @@
 .icon-btn.delete-btn:hover {
   background: #fee2e2;
   border-color: #dc2626;
+}
+
+/* Filter Popup Styles */
+.filter-wrapper {
+  position: relative;
+}
+
+.filter-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  width: 320px;
+  z-index: 1000;
+  animation: filterSlideDown 0.2s ease;
+}
+
+@keyframes filterSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filter-popup-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.filter-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.filter-close-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.filter-popup-content {
+  padding: 20px;
+}
+
+.filter-group {
+  margin-bottom: 16px;
+}
+
+.filter-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111827;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.filter-reset-btn,
+.filter-apply-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.filter-reset-btn {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.filter-reset-btn:hover {
+  background: #f9fafb;
+}
+
+.filter-apply-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.filter-apply-btn:hover {
+  background: #1d4ed8;
 }
 
 /* No Employees Message */
