@@ -15,6 +15,12 @@ import {
   Menu,
   X,
   ChevronLeft,
+  Clock,
+  CheckSquare,
+  DollarSign,
+  CreditCard,
+  UserCog,
+  Activity,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import "./HRMSDashboardLayout.css";
@@ -60,23 +66,48 @@ export default function HRMSDashboardLayout({ children }: Props) {
     },
     {
       icon: <Users size={20} />,
-      label: "Employee Management",
+      label: "Employees",
       path: "/dashboard/hrms/employees",
     },
     {
-      icon: <FileText size={20} />,
-      label: "Payroll Processing",
-      path: "/dashboard/hrms/payroll",
+      icon: <Clock size={20} />,
+      label: "Manage Shifts",
+      path: "/dashboard/hrms/shifts",
     },
     {
       icon: <Calendar size={20} />,
-      label: "Attendance",
-      path: "/dashboard/hrms/attendance",
+      label: "Leaves & Holidays",
+      path: "/dashboard/hrms/leaves",
     },
     {
-      icon: <BarChart3 size={20} />,
+      icon: <CheckSquare size={20} />,
+      label: "Approval Requests",
+      path: "/dashboard/hrms/approvals",
+    },
+    {
+      icon: <DollarSign size={20} />,
+      label: "Payroll",
+      path: "/dashboard/hrms/payroll",
+    },
+    {
+      icon: <CreditCard size={20} />,
+      label: "Loans & Advances",
+      path: "/dashboard/hrms/loans",
+    },
+    {
+      icon: <FileText size={20} />,
       label: "Reports",
       path: "/dashboard/hrms/reports",
+    },
+    {
+      icon: <UserCog size={20} />,
+      label: "User Management",
+      path: "/dashboard/hrms/user-management",
+    },
+    {
+      icon: <Activity size={20} />,
+      label: "Activity Logs",
+      path: "/dashboard/hrms/activity-logs",
     },
   ];
 
