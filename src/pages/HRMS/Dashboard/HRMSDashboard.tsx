@@ -79,7 +79,7 @@ export function HRMSDashboard() {
       {/* Header Section */}
       <div className="dashboard-header">
         <div className="header-left">
-          <h1 className="dashboard-title">Payroll Dashboard</h1>
+          <h1 className="dashboard-title"> Dashboard</h1>
           <p className="dashboard-subtitle">Manage monthly salary sheets and finalize processing</p>
         </div>
         <div className="header-right">

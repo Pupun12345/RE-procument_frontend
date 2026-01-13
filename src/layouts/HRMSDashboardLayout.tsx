@@ -21,6 +21,8 @@ import {
   CreditCard,
   UserCog,
   Activity,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import "./HRMSDashboardLayout.css";
@@ -35,6 +37,8 @@ export default function HRMSDashboardLayout({ children }: Props) {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [employeeMenuOpen, setEmployeeMenuOpen] = useState(false);
+  const [payrollMenuOpen, setPayrollMenuOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -65,11 +69,6 @@ export default function HRMSDashboardLayout({ children }: Props) {
       path: "/dashboard/hrms/dashboard",
     },
     {
-      icon: <Users size={20} />,
-      label: "Employees",
-      path: "/dashboard/hrms/employees",
-    },
-    {
       icon: <Clock size={20} />,
       label: "Manage Shifts",
       path: "/dashboard/hrms/shifts",
@@ -85,19 +84,9 @@ export default function HRMSDashboardLayout({ children }: Props) {
       path: "/dashboard/hrms/approvals",
     },
     {
-      icon: <DollarSign size={20} />,
-      label: "Payroll",
-      path: "/dashboard/hrms/payroll",
-    },
-    {
       icon: <CreditCard size={20} />,
       label: "Loans & Advances",
       path: "/dashboard/hrms/loans",
-    },
-    {
-      icon: <FileText size={20} />,
-      label: "Reports",
-      path: "/dashboard/hrms/reports",
     },
     {
       icon: <UserCog size={20} />,
@@ -108,6 +97,43 @@ export default function HRMSDashboardLayout({ children }: Props) {
       icon: <Activity size={20} />,
       label: "Activity Logs",
       path: "/dashboard/hrms/activity-logs",
+    },
+  ];
+
+  const employeeSubItems = [
+    {
+      label: "Employees Details",
+      path: "/dashboard/hrms/employees",
+    },
+    {
+      label: "Employee Managements",
+    },
+    {
+      label: "Salary Sheet",
+      path: "/dashboard/hrms/salary-sheet",
+    },
+    {
+      label: "Attendance",
+      path: "/dashboard/hrms/attendance",
+    },
+  ];
+
+  const payrollSubItems = [
+    {
+      label: "Employee Management",
+      path: "/dashboard/hrms/payroll/employee-management",
+    },
+    {
+      label: "Payroll Processing",
+      path: "/dashboard/hrms/payroll/processing",
+    },
+    {
+      label: "Attendance",
+      path: "/dashboard/hrms/payroll/attendance",
+    },
+    {
+      label: "Reports",
+      path: "/dashboard/hrms/payroll/reports",
     },
   ];
 
@@ -161,6 +187,80 @@ export default function HRMSDashboardLayout({ children }: Props) {
               <span className="hrms-nav-label">{item.label}</span>
             </button>
           ))}
+
+          {/* Expandable Employee Section */}
+          <div>
+            <button
+              className={`hrms-nav-item ${
+                employeeSubItems.some(sub => isActive(sub.path)) ? "active" : ""
+              }`}
+              onClick={() => setEmployeeMenuOpen(!employeeMenuOpen)}
+            >
+              <span className="hrms-nav-icon">
+                <Users size={20} />
+              </span>
+              <span className="hrms-nav-label">Employees</span>
+              <span className="hrms-nav-chevron">
+                {employeeMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+            </button>
+            
+            {employeeMenuOpen && (
+              <div className="hrms-nav-submenu">
+                {employeeSubItems.map((subItem, index) => (
+                  <button
+                    key={index}
+                    className={`hrms-nav-subitem ${
+                      isActive(subItem.path) ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      navigate(subItem.path);
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Expandable Payroll Section */}
+          <div>
+            <button
+              className={`hrms-nav-item ${
+                payrollSubItems.some(sub => isActive(sub.path)) ? "active" : ""
+              }`}
+              onClick={() => setPayrollMenuOpen(!payrollMenuOpen)}
+            >
+              <span className="hrms-nav-icon">
+                <DollarSign size={20} />
+              </span>
+              <span className="hrms-nav-label">Payroll</span>
+              <span className="hrms-nav-chevron">
+                {payrollMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+            </button>
+            
+            {payrollMenuOpen && (
+              <div className="hrms-nav-submenu">
+                {payrollSubItems.map((subItem, index) => (
+                  <button
+                    key={index}
+                    className={`hrms-nav-subitem ${
+                      isActive(subItem.path) ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      navigate(subItem.path);
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Settings Section */}

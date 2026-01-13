@@ -257,6 +257,69 @@
   color: #2563eb;
 }
 
+.hrms-nav-chevron {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.hrms-nav-item:hover .hrms-nav-chevron {
+  color: #1e293b;
+}
+
+.hrms-nav-item.active .hrms-nav-chevron {
+  color: #2563eb;
+}
+
+.hrms-sidebar.collapsed .hrms-nav-chevron {
+  display: none;
+}
+
+/* Submenu Styles */
+.hrms-nav-submenu {
+  display: flex;
+  flex-direction: column;
+  margin-left: 48px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 8px;
+}
+
+.hrms-sidebar.collapsed .hrms-nav-submenu {
+  display: none;
+}
+
+.hrms-nav-subitem {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  margin-bottom: 2px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.hrms-nav-subitem:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.hrms-nav-subitem.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
 /* Settings Section */
 .hrms-settings-section {
   padding: 0 16px 24px 16px;
