@@ -1,0 +1,253 @@
+.loans-wrapper {
+  padding: 20px 24px 32px;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.breadcrumb span {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* ================= HEADER ================= */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  margin-right: 300px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  max-width: 520px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-outline {
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  padding: 10px 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ================= SUMMARY ================= */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.summary-title {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.summary-card h3 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.trend {
+  font-size: 12px;
+  margin-top: 6px;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.trend.up {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.trend.down {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.trend.neutral {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ================= TABLE ================= */
+
+.table-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 20px 12px;
+  border: 1px solid #e5e7eb;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: left;
+  padding-bottom: 14px;
+}
+
+tbody td {
+  padding: 18px 0;
+  vertical-align: middle;
+  border-top: 1px solid #eef2f7;
+}
+
+.employee-cell,
+.type-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.employee-name,
+.loan-type {
+  font-weight: 600;
+}
+
+.employee-id,
+.loan-ref {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.amount,
+.outstanding {
+  font-weight: 600;
+}
+
+/* ================= REPAYMENT ================= */
+
+.repayment-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.repayment-text {
+  font-size: 13px;
+  color: #475569;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar div {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 999px;
+}
+
+.repayment-percent {
+  font-size: 12px;
+  color: #475569;
+}
+
+.status-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pill.active {
+  background: #e0e7ff;
+  color: #2563eb;
+}
+
+.status-pill.paid {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ================= FOOTER ================= */
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #64748b;
+  padding-top: 14px;
+}
+
+.pagination {
+  cursor: pointer;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 900px;
+  }
+}
+
+

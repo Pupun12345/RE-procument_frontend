@@ -86,7 +86,7 @@ export default function HRMSDashboardLayout({ children }: Props) {
     {
       icon: <CreditCard size={20} />,
       label: "Loans & Advances",
-      path: "/dashboard/hrms/loans",
+      path: "/dashboard/hrms/loans-advances",
     },
     {
       icon: <UserCog size={20} />,
