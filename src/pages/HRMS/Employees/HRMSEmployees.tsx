@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./hrmsemployees.css";
 import {
@@ -31,6 +31,13 @@ export function HRMSEmployees() {
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeType | null>(
     null
   );
+  
+  // Filter states
+  const [filterDesignation, setFilterDesignation] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [editingEmployeeId, setEditingEmployeeId] = useState<string | null>(
     null
   );
@@ -60,6 +67,68 @@ export function HRMSEmployees() {
     fetchEmployees();
   }, []);
 
+  // Apply filters whenever filter criteria or employees change
+  const applyFilters = useCallback(() => {
+    let filtered = [...employees];
+
+    // Filter by search query (name, employee code, designation)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (emp) =>
+          emp.name.toLowerCase().includes(query) ||
+          emp.employeeCode.toLowerCase().includes(query) ||
+          (emp.designation && emp.designation.toLowerCase().includes(query))
+      );
+    }
+
+    // Filter by designation
+    if (filterDesignation) {
+      filtered = filtered.filter(
+        (emp) => emp.designation && emp.designation.toLowerCase() === filterDesignation.toLowerCase()
+      );
+    }
+
+    // Filter by date range (joining date)
+    if (filterDateFrom) {
+      filtered = filtered.filter(
+        (emp) =>
+          emp.dateOfJoining &&
+          new Date(emp.dateOfJoining) >= new Date(filterDateFrom)
+      );
+    }
+
+    if (filterDateTo) {
+      filtered = filtered.filter(
+        (emp) =>
+          emp.dateOfJoining &&
+          new Date(emp.dateOfJoining) <= new Date(filterDateTo)
+      );
+    }
+
+    setFilteredEmployees(filtered);
+  }, [employees, filterDesignation, filterDateFrom, filterDateTo, searchQuery]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const handleResetFilters = () => {
+    setFilterDesignation("");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+    setSearchQuery("");
+  };
+
+  // Get unique designations from employees for filter dropdown
+  const uniqueDesignations = Array.from(
+    new Set(
+      employees
+        .map((emp) => emp.designation)
+        .filter((des) => des && des !== "N/A")
+    )
+  ).sort();
+
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -75,6 +144,7 @@ export function HRMSEmployees() {
         employeePhoto: emp.employeePhoto,
       }));
       setEmployees(transformedData);
+      setFilteredEmployees(transformedData);
     } catch (err: any) {
       console.error("Error fetching employees:", err);
       setError(err.message || "Failed to load employees");
@@ -318,8 +388,10 @@ export function HRMSEmployees() {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search by name, ID, or department..."
+            placeholder="Search by name, ID, or designation..."
             className="search-input-field"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           {/* <kbd className="search-shortcut">⌘K</kbd> */}
         </div>
@@ -337,36 +409,56 @@ export function HRMSEmployees() {
                 </div>
                 <div className="filter-popup-content">
                   <div className="filter-group">
-                    <label>Department</label>
-                    <select className="filter-select">
-                      <option value="">All Departments</option>
-                      <option value="engineering">Engineering</option>
-                      <option value="marketing">Marketing</option>
-                      <option value="hr">Human Resources</option>
-                      <option value="finance">Finance</option>
-                    </select>
-                  </div>
-                  <div className="filter-group">
                     <label>Designation</label>
-                    <select className="filter-select">
+                    <select 
+                      className="filter-select"
+                      value={filterDesignation}
+                      onChange={(e) => setFilterDesignation(e.target.value)}
+                    >
                       <option value="">All Designations</option>
-                      <option value="manager">Manager</option>
-                      <option value="developer">Developer</option>
-                      <option value="designer">Designer</option>
+                      {uniqueDesignations.map((designation) => (
+                        <option key={designation} value={designation}>
+                          {designation}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="filter-group">
-                    <label>Status</label>
-                    <select className="filter-select">
-                      <option value="">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="onleave">On Leave</option>
-                    </select>
+                    <label>Joining Date From</label>
+                    <input
+                      type="date"
+                      className="filter-select"
+                      value={filterDateFrom}
+                      onChange={(e) => setFilterDateFrom(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-group">
+                    <label>Joining Date To</label>
+                    <input
+                      type="date"
+                      className="filter-select"
+                      value={filterDateTo}
+                      onChange={(e) => setFilterDateTo(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-summary">
+                    <span>Showing {filteredEmployees.length} of {employees.length} employees</span>
                   </div>
                   <div className="filter-actions">
-                    <button className="filter-reset-btn" onClick={() => setIsFilterOpen(false)}>Reset</button>
-                    <button className="filter-apply-btn" onClick={() => setIsFilterOpen(false)}>Apply Filters</button>
+                    <button 
+                      className="filter-reset-btn" 
+                      onClick={() => {
+                        handleResetFilters();
+                      }}
+                    >
+                      Reset
+                    </button>
+                    <button 
+                      className="filter-apply-btn" 
+                      onClick={() => setIsFilterOpen(false)}
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
               </div>
@@ -415,14 +507,14 @@ export function HRMSEmployees() {
               </tr>
             </thead>
             <tbody>
-              {employees.length === 0 ? (
+              {filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="no-employees">
-                    No employees found.
+                    No employees found matching the filters.
                   </td>
                 </tr>
               ) : (
-                employees.map((employee) => (
+                filteredEmployees.map((employee) => (
                   <tr key={employee._id}>
                     <td>{employee.employeeCode}</td>
                     <td>

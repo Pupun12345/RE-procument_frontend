@@ -1,5 +1,7 @@
 .loans-wrapper {
   padding: 20px 24px 32px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .breadcrumb {
@@ -26,7 +28,6 @@
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 6px;
-  margin-right: 300px;
 }
 
 .subtitle {
@@ -118,8 +119,33 @@
   border: 1px solid #e5e7eb;
 }
 
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-y: visible;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
 }
 
@@ -129,10 +155,11 @@ thead th {
   color: #64748b;
   text-align: left;
   padding-bottom: 14px;
+  padding-right: 16px;
 }
 
 tbody td {
-  padding: 18px 0;
+  padding: 18px 16px 18px 0;
   vertical-align: middle;
   border-top: 1px solid #eef2f7;
 }
@@ -158,6 +185,107 @@ tbody td {
 .amount,
 .outstanding {
   font-weight: 600;
+}
+
+/* Mobile Card Layout */
+.mobile-cards {
+  display: none;
+  max-height: 500px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-cards::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-cards::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.mobile-cards::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.mobile-cards::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.loan-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.loan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.loan-card-employee {
+  flex: 1;
+}
+
+.loan-card-employee .employee-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.loan-card-employee .employee-id {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.loan-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.loan-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.loan-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loan-card-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.loan-card-value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.loan-card-progress {
+  margin-top: 8px;
+}
+
+.loan-card-progress .repayment-text {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.loan-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* ================= REPAYMENT ================= */
@@ -225,28 +353,368 @@ tbody td {
 }
 
 .pagination {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover {
+  background: #f3f4f6;
+}
+
+.pagination button.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-edit:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn-delete {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-delete:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ================= LOAN DIALOG ================= */
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.dialog {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dialog-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-input,
+.form-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #f9fafb;
+}
+
+.btn-submit {
+  flex: 1;
+  padding: 12px 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover {
+  background: #1d4ed8;
 }
 
 /* ================= RESPONSIVE ================= */
 
+
 @media (max-width: 1024px) {
+  .loans-wrapper {
+    padding: 16px 16px 24px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
   }
 }
 
+
 @media (max-width: 768px) {
+  .loans-wrapper {
+    padding: 8px 8px 16px;
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-outline,
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
   .summary-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .summary-card {
+    padding: 12px;
+  }
+
+  .summary-card h3 {
+    font-size: 18px;
+  }
+
+
+  .table-wrapper {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+    max-height: 400px;
   }
 
   .table-card {
-    overflow-x: auto;
+    padding: 12px;
   }
 
-  table {
-    min-width: 900px;
+  .table-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .pagination button {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 40px;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .loans-wrapper {
+    padding: 4px 4px 12px;
+  }
+
+  .loan-card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .loan-card-body {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .loan-card-employee .employee-name {
+    font-size: 14px;
+  }
+
+  .loan-card-value {
+    font-size: 13px;
+  }
+
+  .mobile-cards {
+    max-height: 350px;
+  }
+
+  .pagination {
+    gap: 4px;
+  }
+
+  .pagination button {
+    padding: 6px 8px;
+    font-size: 11px;
+    min-width: 36px;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .dialog {
+    padding: 16px;
+    max-width: 90vw;
+  }
+
+  .dialog-title {
+    font-size: 18px;
+  }
+
+  .form-input,
+  .form-select {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
   }
 }
 

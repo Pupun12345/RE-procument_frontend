@@ -284,7 +284,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  justify-content: center;
+  width: fit-content;
 }
 
  .icon-btn.view-btn{
@@ -441,6 +441,20 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filter-summary {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f0f9ff;
+  border-radius: 6px;
+  border-left: 3px solid #2563eb;
+}
+
+.filter-summary span {
+  font-size: 13px;
+  color: #1e40af;
+  font-weight: 500;
 }
 
 .filter-actions {
