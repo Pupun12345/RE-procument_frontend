@@ -107,6 +107,7 @@ export default function HRMSDashboardLayout({ children }: Props) {
     },
     {
       label: "Employee Managements",
+      path : "/dashboard/hrms/employees/management",
     },
     {
       label: "Salary Sheet",
