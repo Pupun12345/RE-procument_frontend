@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sun, Moon, TrendingUp, Download } from "lucide-react";
 import "./shift-management.css";
-import { getEmployees } from "../../../services/employeeService";
+import { 
+  getEmployees, 
+  updateEmployeeShift, 
+  bulkAssignShift, 
+  getShiftStats,
+  type Employee as EmployeeType 
+} from "../../../services/employeeService";
 
 interface Employee {
   _id: string;
@@ -9,15 +16,19 @@ interface Employee {
   employeeName: string;
   designation: string;
   currentShift: "day" | "night";
-  duration: number;
+  shiftDuration: number;
   employeePhoto?: string;
 }
 
 export function ShiftManagement() {
+  const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [departmentFilter, setDepartmentFilter] = useState("All Departments");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -36,26 +47,27 @@ export function ShiftManagement() {
   useEffect(() => {
     applyFilters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employees, departmentFilter]);
+  }, [employees, departmentFilter, searchTerm]);
 
   const fetchEmployees = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getEmployees();
       
-      // Transform data and add shift information (mock for now)
-      const transformed = data.map((emp, index: number) => ({
+      // Transform data with actual shift information from backend
+      const transformed = data.map((emp) => ({
         _id: emp._id,
         employeeCode: emp.employeeCode,
         employeeName: emp.employeeName,
         designation: emp.designation || "Staff",
-        currentShift: index % 2 === 0 ? "day" : "night" as "day" | "night",
-        duration: Math.floor(Math.random() * 4) + 8, // 8-12 hours
+        currentShift: emp.currentShift || "day" as "day" | "night",
+        shiftDuration: emp.shiftDuration || 8,
         employeePhoto: emp.employeePhoto,
       }));
 
       setEmployees(transformed);
-      calculateStats(transformed);
+      // Fetch stats from backend
+      fetchShiftStats();
     } catch (error) {
       console.error("Error fetching employees:", error);
     } finally {
@@ -63,27 +75,39 @@ export function ShiftManagement() {
     }
   }, []);
 
-  const calculateStats = (employeeList: Employee[]) => {
-    const dayShift = employeeList.filter((emp) => emp.currentShift === "day").length;
-    const nightShift = employeeList.filter((emp) => emp.currentShift === "night").length;
-
-    setStats({
-      totalDayShift: dayShift,
-      totalNightShift: nightShift,
-      shiftCompliance: 98.4,
-    });
+  const fetchShiftStats = async () => {
+    try {
+      const statsData = await getShiftStats();
+      setStats({
+        totalDayShift: statsData.totalDayShift,
+        totalNightShift: statsData.totalNightShift,
+        shiftCompliance: statsData.shiftCompliance,
+      });
+    } catch (error) {
+      console.error("Error fetching shift stats:", error);
+    }
   };
 
   const applyFilters = useCallback(() => {
     let filtered = [...employees];
 
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((emp) =>
+        emp.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.designation.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply department filter
     if (departmentFilter !== "All Departments") {
       filtered = filtered.filter((emp) => emp.designation === departmentFilter);
     }
 
     setFilteredEmployees(filtered);
     setCurrentPage(1);
-  }, [employees, departmentFilter]);
+  }, [employees, departmentFilter, searchTerm]);
 
   const handleShiftChange = (employeeId: string, newShift: "day" | "night") => {
     setEmployees((prev) =>
@@ -93,13 +117,92 @@ export function ShiftManagement() {
     );
   };
 
-  const handleUpdateShift = (employeeId: string) => {
-    // Here you would make an API call to update the shift
-    alert(`Updating shift for employee ${employeeId}`);
+  const handleUpdateShift = async (employeeId: string) => {
+    try {
+      const employee = employees.find(emp => emp._id === employeeId);
+      if (!employee) return;
+
+      await updateEmployeeShift(employeeId, employee.currentShift, employee.shiftDuration);
+      alert(`Shift updated successfully for employee ${employee.employeeName}`);
+      fetchShiftStats();
+    } catch (error: any) {
+      console.error("Error updating shift:", error);
+      alert(`Failed to update shift: ${error.message || 'Unknown error'}`);
+    }
   };
 
   const handleAddEmployee = () => {
-    alert("Add Employee functionality");
+    navigate("/dashboard/registration/employee");
+  };
+
+  const handleBulkAssign = async () => {
+    if (selectedEmployees.length === 0) {
+      alert("Please select employees first");
+      return;
+    }
+    const shift = confirm("Assign to Day Shift? (Cancel for Night Shift)") ? "day" : "night";
+    
+    try {
+      const result = await bulkAssignShift(selectedEmployees, shift as "day" | "night");
+      
+      // Update local state
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          selectedEmployees.includes(emp._id) ? { ...emp, currentShift: shift as "day" | "night" } : emp
+        )
+      );
+      
+      setSelectedEmployees([]);
+      fetchShiftStats();
+      alert(`${result.modifiedCount} employees assigned to ${shift} shift successfully`);
+    } catch (error: any) {
+      console.error("Error bulk assigning shifts:", error);
+      alert(`Failed to assign shifts: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleDownload = () => {
+    // Create CSV content
+    const headers = ["Employee Code", "Employee Name", "Designation", "Current Shift", "Duration (hrs)"];
+    const rows = filteredEmployees.map((emp) => [
+      emp.employeeCode,
+      emp.employeeName,
+      emp.designation,
+      emp.currentShift,
+      emp.shiftDuration.toString(),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `employee_shifts_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleEmployeeSelection = (employeeId: string) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(employeeId)
+        ? prev.filter((id) => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEmployees.length === currentEmployees.length) {
+      setSelectedEmployees([]);
+    } else {
+      setSelectedEmployees(currentEmployees.map((emp) => emp._id));
+    }
   };
 
   // Pagination
@@ -131,9 +234,16 @@ export function ShiftManagement() {
             <svg className="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M7.333 12.667A5.333 5.333 0 1 0 7.333 2a5.333 5.333 0 0 0 0 10.667zM14 14l-2.9-2.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <input type="text" placeholder="Search by Ctrl Name..." />
+            <input 
+              type="text" 
+              placeholder="Search by Name, Code or Designation..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <button className="btn-bulk-assign">Bulk Assign</button>
+          <button className="btn-bulk-assign" onClick={handleBulkAssign}>
+            Bulk Assign {selectedEmployees.length > 0 && `(${selectedEmployees.length})`}
+          </button>
         </div>
       </div>
 
@@ -183,24 +293,26 @@ export function ShiftManagement() {
       {/* Filter and Action Section */}
       <div className="filter-section">
         <div className="filter-left">
-          <button className="filter-toggle">
+          <button className="filter-toggle" onClick={() => setShowFilters(!showFilters)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </button>
-          <button className="download-btn">
+          <button className="download-btn" onClick={handleDownload}>
             <Download size={16} />
           </button>
-          <div className="department-filter">
-            <span>Show:</span>
-            <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showFilters && (
+            <div className="department-filter">
+              <span>Show:</span>
+              <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <button className="btn-add-employee" onClick={handleAddEmployee}>
           + Add Employee
@@ -212,6 +324,14 @@ export function ShiftManagement() {
         <table className="employee-table">
           <thead>
             <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={selectedEmployees.length === currentEmployees.length && currentEmployees.length > 0}
+                  onChange={toggleSelectAll}
+                  style={{ cursor: "pointer" }}
+                />
+              </th>
               <th>EMPLOYEE PROFILE</th>
               <th style={{paddingLeft: '60px'}}>CURRENT SHIFT</th>
               <th>SHIFT SELECTION</th>
@@ -222,13 +342,21 @@ export function ShiftManagement() {
           <tbody>
             {currentEmployees.length === 0 ? (
               <tr>
-                <td colSpan={5} className="no-data">
+                <td colSpan={6} className="no-data">
                   No employees found
                 </td>
               </tr>
             ) : (
               currentEmployees.map((employee) => (
                 <tr key={employee._id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedEmployees.includes(employee._id)}
+                      onChange={() => toggleEmployeeSelection(employee._id)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </td>
                   <td>
                     <div className="employee-profile">
                       <div className="employee-avatar">
@@ -286,7 +414,7 @@ export function ShiftManagement() {
                     </div>
                   </td>
                   <td>
-                    <span className="duration">{employee.duration} <span className="hours-label">hrs</span></span>
+                    <span className="duration">{employee.shiftDuration} <span className="hours-label">hrs</span></span>
                   </td>
                   <td>
                     <button

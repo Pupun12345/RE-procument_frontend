@@ -23,6 +23,9 @@ export interface Employee {
   bankIfscCode?: string;
   address?: string;
   employeePhoto?: string;
+  currentShift?: "day" | "night";
+  shiftDuration?: number;
+  lastShiftUpdate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -75,6 +78,63 @@ export async function deleteEmployee(id: string): Promise<void> {
     await axios.delete(`/employees/${id}`);
   } catch (error: any) {
     console.error("Error deleting employee:", error);
+    throw error.response?.data || error.message;
+  }
+}
+
+// Shift Management APIs
+
+export interface ShiftStats {
+  totalEmployees: number;
+  totalDayShift: number;
+  totalNightShift: number;
+  shiftCompliance: number;
+}
+
+// Update employee shift
+export async function updateEmployeeShift(
+  employeeId: string, 
+  currentShift: "day" | "night", 
+  shiftDuration?: number
+): Promise<Employee> {
+  try {
+    const response = await axios.put(`/employees/shift/${employeeId}`, {
+      currentShift,
+      shiftDuration: shiftDuration || 8
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error updating employee shift:", error);
+    throw error.response?.data || error.message;
+  }
+}
+
+// Bulk assign shifts to multiple employees
+export async function bulkAssignShift(
+  employeeIds: string[], 
+  currentShift: "day" | "night", 
+  shiftDuration?: number
+): Promise<{ message: string; modifiedCount: number }> {
+  try {
+    const response = await axios.post("/employees/shift/bulk-assign", {
+      employeeIds,
+      currentShift,
+      shiftDuration: shiftDuration || 8
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error bulk assigning shifts:", error);
+    throw error.response?.data || error.message;
+  }
+}
+
+// Get shift statistics
+export async function getShiftStats(): Promise<ShiftStats> {
+  try {
+    const response = await axios.get("/employees/shift/stats");
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching shift stats:", error);
     throw error.response?.data || error.message;
   }
 }
