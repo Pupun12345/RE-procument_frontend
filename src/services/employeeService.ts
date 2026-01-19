@@ -38,6 +38,17 @@ export async function getEmployees(): Promise<Employee[]> {
   }
 }
 
+// Fetch a single employee by employee code
+export async function getEmployeeByCode(employeeCode: string): Promise<Employee> {
+  try {
+    const response = await axios.get(`/employees/code/${employeeCode}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching employee by code:", error);
+    throw error.response?.data || error.message;
+  }
+}
+
 // Fetch a single employee by ID
 export async function getEmployeeById(id: string): Promise<Employee> {
   try {

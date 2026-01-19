@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast, { Toaster } from 'react-hot-toast';
 import "./loans-advances.css";
+import { loanAPI } from "../../../services/loanService"
+import { getEmployeeByCode } from "../../../services/employeeService";
+import { handleExportExcel } from "../../../services/ExcelService";
+
+import Loader from "../../../components/Loader";
 
 interface LoanData {
-  id: string;
+  _id: string;
   employeeName: string;
   employeeId: string;
   loanType: string;
@@ -10,105 +17,27 @@ interface LoanData {
   originalAmount: number;
   paidAmount: number;
   outstanding: number;
-  status: 'active' | 'paid' | 'pending';
+  status: 'paid' | 'pending';
 }
 
 const LoansAdvances = () => {
-  const [loans, setLoans] = useState<LoanData[]>([
-    {
-      id: '1',
-      employeeName: 'Wade Warren',
-      employeeId: 'EMP-2023-001',
-      loanType: 'Personal Loan',
-      loanRef: '#LN-8922',
-      originalAmount: 15000,
-      paidAmount: 6000,
-      outstanding: 9000,
-      status: 'active'
-    },
-    {
-      id: '2',
-      employeeName: 'Jane Doe',
-      employeeId: 'EMP-2023-045',
-      loanType: 'Salary Advance',
-      loanRef: '#AD-1102',
-      originalAmount: 2500,
-      paidAmount: 2500,
-      outstanding: 0,
-      status: 'paid'
-    },
-    {
-      id: '3',
-      employeeName: 'John Smith',
-      employeeId: 'EMP-2023-012',
-      loanType: 'Emergency Loan',
-      loanRef: '#LN-8923',
-      originalAmount: 8000,
-      paidAmount: 3200,
-      outstanding: 4800,
-      status: 'active'
-    },
-    {
-      id: '4',
-      employeeName: 'Sarah Johnson',
-      employeeId: 'EMP-2023-078',
-      loanType: 'Personal Loan',
-      loanRef: '#LN-8924',
-      originalAmount: 12000,
-      paidAmount: 12000,
-      outstanding: 0,
-      status: 'paid'
-    },
-    {
-      id: '5',
-      employeeName: 'Mike Wilson',
-      employeeId: 'EMP-2023-089',
-      loanType: 'Salary Advance',
-      loanRef: '#AD-1103',
-      originalAmount: 3500,
-      paidAmount: 1750,
-      outstanding: 1750,
-      status: 'active'
-    },
-    {
-      id: '6',
-      employeeName: 'Emily Davis',
-      employeeId: 'EMP-2023-034',
-      loanType: 'Personal Loan',
-      loanRef: '#LN-8925',
-      originalAmount: 20000,
-      paidAmount: 0,
-      outstanding: 20000,
-      status: 'pending'
-    },
-    {
-      id: '7',
-      employeeName: 'Robert Brown',
-      employeeId: 'EMP-2023-056',
-      loanType: 'Emergency Loan',
-      loanRef: '#LN-8926',
-      originalAmount: 5000,
-      paidAmount: 2500,
-      outstanding: 2500,
-      status: 'active'
-    },
-    {
-      id: '8',
-      employeeName: 'Lisa Anderson',
-      employeeId: 'EMP-2023-067',
-      loanType: 'Personal Loan',
-      loanRef: '#LN-8927',
-      originalAmount: 18000,
-      paidAmount: 9000,
-      outstanding: 9000,
-      status: 'active'
-    }
-  ]);
+  const queryClient = useQueryClient();
+  const { data: loans = [], isLoading } = useQuery<LoanData[]>({
+    queryKey: ['loans'],
+    queryFn: loanAPI.getAllLoans
+  });
+  
+  const { data: stats = { totalOutstanding: 0, pendingLoans: 0, recoveredThisMonth: 0, paidLoans: 0 }, isLoading: statsLoading } = useQuery({
+    queryKey: ['stats'],
+    queryFn: loanAPI.getStats
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [showDialog, setShowDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingLoanId, setDeletingLoanId] = useState<string | null>(null);
   const [editingLoan, setEditingLoan] = useState<LoanData | null>(null);
   const [formData, setFormData] = useState({
     employeeName: '',
@@ -116,6 +45,43 @@ const LoansAdvances = () => {
     loanType: '',
     amount: '',
     paidAmount: ''
+  });
+  const [isLoadingEmployee, setIsLoadingEmployee] = useState(false);
+  
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: loanAPI.deleteLoan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      toast.success('Loan deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.message || 'Failed to delete loan');
+    }
+  });
+  
+  const createMutation = useMutation<LoanData, Error, { employeeName: string; employeeId: string; loanType: string; originalAmount: number }>({
+    mutationFn: loanAPI.createLoan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      toast.success('Loan created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.message || 'Failed to create loan');
+    }
+  });
+  
+  const updateMutation = useMutation<LoanData, Error, { id: string; data: { paymentAmount?: number; loanType?: string; originalAmount?: number } }>({
+    mutationFn: ({ id, data }) => loanAPI.updateLoan(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      toast.success('Loan updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.message || 'Failed to update loan');
+    }
   });
 
   // Pagination
@@ -125,7 +91,7 @@ const LoansAdvances = () => {
   const currentLoans = loans.slice(startIndex, endIndex);
 
   const handleEdit = (id: string) => {
-    const loan = loans.find(l => l.id === id);
+    const loan = loans.find(l => l._id === id);
     if (loan) {
       setEditingLoan(loan);
       setFormData({
@@ -133,51 +99,32 @@ const LoansAdvances = () => {
         employeeId: loan.employeeId,
         loanType: loan.loanType,
         amount: loan.originalAmount.toString(),
-        paidAmount: loan.paidAmount.toString()
+        paidAmount: ''
       });
       setShowEditDialog(true);
     }
   };
 
-  //delete
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this loan?')) {
-      const updatedLoans = loans.filter(loan => loan.id !== id);
-      setLoans(updatedLoans);
-      const newTotalPages = Math.ceil(updatedLoans.length / itemsPerPage);
-      if (currentPage > newTotalPages && newTotalPages > 0) {
-        setCurrentPage(newTotalPages);
-      }
+    setDeletingLoanId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingLoanId) {
+      deleteMutation.mutate(deletingLoanId);
+      setShowDeleteDialog(false);
+      setDeletingLoanId(null);
     }
   };
 
-  //export to excel
-  const handleExportExcel = () => {
-    const headers = ['Employee Name', 'Employee ID', 'Loan Type', 'Loan Reference', 'Original Amount', 'Paid Amount', 'Outstanding', 'Status'];
-    const csvData = loans.map(loan => [
-      loan.employeeName,
-      loan.employeeId,
-      loan.loanType,
-      loan.loanRef,
-      loan.originalAmount,
-      loan.paidAmount,
-      loan.outstanding,
-      loan.status
-    ]);
-    
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
-      .join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `loans-advances-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const cancelDelete = () => {
+    setShowDeleteDialog(false);
+    setDeletingLoanId(null);
+  };
+
+  const handleExcelExportButton = () => {
+    handleExportExcel(loans);
   };
 
   const handleNewLoan = () => {
@@ -191,58 +138,101 @@ const LoansAdvances = () => {
     setFormData({ employeeName: '', employeeId: '', loanType: '', amount: '', paidAmount: '' });
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.employeeName && formData.employeeId && formData.loanType && formData.amount) {
-      if (editingLoan) {
-        const updatedLoans = loans.map(l => 
-          l.id === editingLoan.id 
-            ? { 
-                ...l, 
-                employeeName: formData.employeeName,
-                employeeId: formData.employeeId,
-                loanType: formData.loanType,
-                originalAmount: Number(formData.amount),
-                paidAmount: Number(formData.paidAmount || 0),
-                outstanding: Number(formData.amount) - Number(formData.paidAmount || 0)
-              }
-            : l
-        );
-        setLoans(updatedLoans);
-      } else {
-        const newLoan: LoanData = {
-          id: (loans.length + 1).toString(),
-          employeeName: formData.employeeName,
-          employeeId: formData.employeeId,
-          loanType: formData.loanType,
-          loanRef: `#LN-${8920 + loans.length + 1}`,
-          originalAmount: Number(formData.amount),
-          paidAmount: 0,
-          outstanding: Number(formData.amount),
-          status: 'pending'
-        };
-        setLoans([...loans, newLoan]);
-      }
-      handleDialogClose();
+    // Validate form data
+    if (!formData.employeeName?.trim() || !formData.employeeId?.trim() || !formData.loanType || !formData.amount) {
+      toast.error('Please fill in all required fields');
+      return;
     }
+
+    const amount = Number(formData.amount);
+    if (isNaN(amount) || amount < 1000) {
+      toast.error('Loan amount must be at least ₹1000');
+      return;
+    }
+    
+    if (editingLoan) {
+      const newPayment = Number(formData.paidAmount || 0);
+      
+      if (isNaN(newPayment) || newPayment < 0) {
+        toast.error('Payment amount must be a valid positive number');
+        return;
+      }
+      
+      if (newPayment > editingLoan.outstanding) {
+        toast.error('Payment amount cannot be greater than the outstanding amount');
+        return;
+      }
+      
+      updateMutation.mutate({
+        id: editingLoan._id,
+        data: {
+          paymentAmount: newPayment,
+          loanType: formData.loanType,
+          originalAmount: amount
+        }
+      });
+    } else {
+      createMutation.mutate({
+        employeeName: formData.employeeName.trim(),
+        employeeId: formData.employeeId.trim(),
+        loanType: formData.loanType,
+        originalAmount: amount
+      });
+    }
+    handleDialogClose();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleEmployeeIdKeyPress = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const employeeId = (e.target as HTMLInputElement).value.trim();
+      if (employeeId && !editingLoan) {
+        setIsLoadingEmployee(true);
+        try {
+          const employee = await getEmployeeByCode(employeeId);
+          if (employee && employee.employeeName) {
+            setFormData(prev => ({
+              ...prev,
+              employeeId: employeeId,
+              employeeName: employee.employeeName
+            }));
+            toast.success('Employee details loaded');
+          } else {
+            throw new Error('Employee data incomplete');
+          }
+        } catch (error) {
+          setFormData(prev => ({
+            ...prev,
+            employeeId: employeeId,
+            employeeName: ''
+          }));
+          toast.error('Employee not found or invalid ID');
+        } finally {
+          setIsLoadingEmployee(false);
+        }
+      }
+    }
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // Calculate stats
-  const totalOutstanding = loans.reduce((sum, loan) => sum + loan.outstanding, 0);
-  const activeLoans = loans.filter(loan => loan.status === 'active').length;
-  const recoveredThisMonth = loans.reduce((sum, loan) => sum + loan.paidAmount, 0);
-  const pendingRequests = loans.filter(loan => loan.status === 'pending').length;
+
+  if (isLoading || statsLoading) {
+    return <Loader />;
+  }
+  
   return (
     <div className="loans-wrapper">
+      <Toaster position="top-right" />
       <div className="breadcrumb">
         Home / Payroll / <span>Loans & Advances</span>
       </div>
@@ -252,12 +242,12 @@ const LoansAdvances = () => {
         <div>
           <h1>Loans & Advances</h1>
           <p className="subtitle">
-            Track employee disbursements, repayments, and outstanding balances for FY 2023–2024.
+            Track employee disbursements, repayments, and outstanding balances for FY {new Date().getFullYear()}–{new Date().getFullYear() + 1}.
           </p>
         </div>
 
         <div className="header-actions">
-          <button className="btn-outline" onClick={handleExportExcel}>⬇ Export Excel</button>
+          <button className="btn-outline" onClick={handleExcelExportButton}>⬇ Export Excel</button>
           <button className="btn-primary" onClick={handleNewLoan}>＋ Issue New Loan</button>
         </div>
       </div>
@@ -266,26 +256,26 @@ const LoansAdvances = () => {
       <div className="summary-grid">
         <div className="summary-card">
           <p className="summary-title">Total Outstanding</p>
-          <h3>₹{totalOutstanding.toLocaleString()}</h3>
-          <span className="trend up">+2.5%</span>
+          <h3>₹{stats.totalOutstanding.toLocaleString()}</h3>
+          <span className={`trend ${stats.outstandingTrend || 'neutral'}`}>{(stats.outstandingChange || 0) > 0 ? '+' : ''}{stats.outstandingChange || 0}%</span>
         </div>
 
         <div className="summary-card">
-          <p className="summary-title">Active Loans</p>
-          <h3>{activeLoans}</h3>
-          <span className="trend down">-1.0%</span>
+          <p className="summary-title">Pending Loans</p>
+          <h3>{stats.pendingLoans}</h3>
+          <span className={`trend ${stats.pendingTrend || 'neutral'}`}>{(stats.pendingChange || 0) > 0 ? '+' : ''}{stats.pendingChange || 0}%</span>
         </div>
 
         <div className="summary-card">
           <p className="summary-title">Recovered (May)</p>
-          <h3>₹{recoveredThisMonth.toLocaleString()}</h3>
-          <span className="trend up">+5.0%</span>
+          <h3>₹{stats.recoveredThisMonth.toLocaleString()}</h3>
+          <span className={`trend ${stats.recoveredTrend || 'neutral'}`}>{(stats.recoveredChange || 0) > 0 ? '+' : ''}{stats.recoveredChange || 0}%</span>
         </div>
 
         <div className="summary-card">
-          <p className="summary-title">Pending Requests</p>
-          <h3>{pendingRequests}</h3>
-          <span className="trend neutral">0%</span>
+          <p className="summary-title">Paid Loans</p>
+          <h3>{stats.paidLoans}</h3>
+          <span className={`trend ${stats.paidTrend || 'neutral'}`}>{(stats.paidChange || 0) > 0 ? '+' : ''}{stats.paidChange || 0}%</span>
         </div>
       </div>
 
@@ -310,7 +300,7 @@ const LoansAdvances = () => {
               {currentLoans.map((loan) => {
                 const progressPercent = Math.round((loan.paidAmount / loan.originalAmount) * 100);
                 return (
-                  <tr key={loan.id}>
+                  <tr key={loan._id}>
                     <td>
                       <div className="employee-cell">
                         <div className="employee-name">{loan.employeeName}</div>
@@ -331,7 +321,7 @@ const LoansAdvances = () => {
                       <div className="repayment-cell">
                         <div className="repayment-text">₹{loan.paidAmount.toLocaleString()} paid</div>
                         <div className="progress-bar">
-                          <div style={{ width: `${progressPercent}%` }} />
+                          <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
                         </div>
                         <div className="repayment-percent">{progressPercent}%</div>
                       </div>
@@ -343,14 +333,14 @@ const LoansAdvances = () => {
                       <div className="action-buttons">
                         <button 
                           className="btn-edit" 
-                          onClick={() => handleEdit(loan.id)}
+                          onClick={() => handleEdit(loan._id)}
                           title="Edit loan"
                         >
                           ✏️
                         </button>
                         <button 
                           className="btn-delete" 
-                          onClick={() => handleDelete(loan.id)}
+                          onClick={() => handleDelete(loan._id)}
                           title="Delete loan"
                         >
                           🗑️
@@ -368,7 +358,7 @@ const LoansAdvances = () => {
           {currentLoans.map((loan) => {
             const progressPercent = Math.round((loan.paidAmount / loan.originalAmount) * 100);
             return (
-              <div key={loan.id} className="loan-card">
+              <div key={loan._id} className="loan-card">
                 <div className="loan-card-header">
                   <div className="loan-card-employee">
                     <div className="employee-name">{loan.employeeName}</div>
@@ -377,14 +367,14 @@ const LoansAdvances = () => {
                   <div className="loan-card-actions">
                     <button 
                       className="btn-edit" 
-                      onClick={() => handleEdit(loan.id)}
+                      onClick={() => handleEdit(loan._id)}
                       title="Edit loan"
                     >
                       ✏️
                     </button>
                     <button 
                       className="btn-delete" 
-                      onClick={() => handleDelete(loan.id)}
+                      onClick={() => handleDelete(loan._id)}
                       title="Delete loan"
                     >
                       🗑️
@@ -418,7 +408,7 @@ const LoansAdvances = () => {
                 <div className="loan-card-progress">
                   <div className="repayment-text">₹{loan.paidAmount.toLocaleString()} paid of ₹{loan.originalAmount.toLocaleString()}</div>
                   <div className="progress-bar">
-                    <div style={{ width: `${progressPercent}%` }} />
+                    <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
                   </div>
                   <div className="repayment-percent">{progressPercent}% completed</div>
                 </div>
@@ -470,31 +460,42 @@ const LoansAdvances = () => {
             </div>
             
             <form className="dialog-form" onSubmit={handleFormSubmit}>
-              <div className="form-group">
-                <label className="form-label">Employee Name</label>
-                <input
-                  type="text"
-                  name="employeeName"
-                  className="form-input"
-                  value={formData.employeeName}
-                  onChange={handleInputChange}
-                  placeholder="Enter employee name"
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label className="form-label">Employee ID</label>
-                <input
-                  type="text"
-                  name="employeeId"
-                  className="form-input"
-                  value={formData.employeeId}
-                  onChange={handleInputChange}
-                  placeholder="e.g., EMP-2023-001"
-                  required
-                />
-              </div>
+              {!editingLoan && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Employee ID</label>
+                    <input
+                      type="text"
+                      name="employeeId"
+                      className="form-input"
+                      value={formData.employeeId}
+                      onChange={handleInputChange}
+                      onKeyPress={handleEmployeeIdKeyPress}
+                      placeholder="e.g., EMP-2023-001 (Press Enter to load)"
+                      required
+                    />
+                    {isLoadingEmployee && <small style={{ color: '#3b82f6' }}>Loading employee details...</small>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Employee Name</label>
+                    <input
+                      type="text"
+                      name="employeeName"
+                      className="form-input"
+                      value={formData.employeeName}
+                      onChange={handleInputChange}
+                      placeholder="Enter employee name"
+                      required
+                      readOnly={!!formData.employeeName && !editingLoan}
+                      style={{
+                        backgroundColor: formData.employeeName && !editingLoan ? '#f8fafc' : 'white',
+                        cursor: formData.employeeName && !editingLoan ? 'not-allowed' : 'text'
+                      }}
+                    />
+                  </div>
+                </>
+              )}
               
               <div className="form-group">
                 <label className="form-label">Loan Type</label>
@@ -504,6 +505,7 @@ const LoansAdvances = () => {
                   value={formData.loanType}
                   onChange={handleInputChange}
                   required
+                  disabled={!!editingLoan}
                 >
                   <option value="">Select loan type</option>
                   <option value="Personal Loan">Personal Loan</option>
@@ -524,21 +526,26 @@ const LoansAdvances = () => {
                   placeholder="Enter amount in rupees"
                   min="1000"
                   required
+                  disabled={!!editingLoan}
                 />
               </div>
               
               {editingLoan && (
                 <div className="form-group">
-                  <label className="form-label">Paid Amount (₹)</label>
+                  <label className="form-label">Payment Amount (₹)</label>
                   <input
                     type="number"
                     name="paidAmount"
                     className="form-input"
                     value={formData.paidAmount}
                     onChange={handleInputChange}
-                    placeholder="Enter paid amount"
+                    placeholder="Enter payment amount"
                     min="0"
+                    max={editingLoan.outstanding}
                   />
+                  <small style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                    Outstanding: ₹{editingLoan.outstanding.toLocaleString()}
+                  </small>
                 </div>
               )}
               
@@ -554,11 +561,34 @@ const LoansAdvances = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="dialog-overlay" onClick={cancelDelete}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="dialog-header">
+              <h2 className="dialog-title">Confirm Delete</h2>
+              <button className="dialog-close" onClick={cancelDelete}>×</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <p>Are you sure you want to delete this loan? This action cannot be undone.</p>
+            </div>
+            <div className="dialog-actions">
+              <button type="button" className="btn-cancel" onClick={cancelDelete}>Cancel</button>
+              <button type="button" className="btn-submit" onClick={confirmDelete} style={{ background: '#ef4444' }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default LoansAdvances;
+
+
+
+
 
 
 
