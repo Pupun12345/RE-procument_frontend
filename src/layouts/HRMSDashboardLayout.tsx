@@ -134,7 +134,7 @@ export default function HRMSDashboardLayout({ children }: Props) {
     },
     {
       label: "Reports",
-      path: "/dashboard/hrms/payroll/reports",
+      path: "/dashboard/hrms/reports/yearly",
     },
   ];
 

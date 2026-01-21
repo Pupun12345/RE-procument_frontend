@@ -37,6 +37,7 @@ import { HRMSDashboard } from "../src/pages/HRMS/Dashboard/HRMSDashboard";
 import { HRMSEmployees } from "../src/pages/HRMS/Employees/HRMSEmployees";
 import LoansAdvances from "../src/pages/HRMS/Loan/LoansAdvances";
 import { ShiftManagement } from "../src/pages/HRMS/Employees/EmployeeManagement";
+import { Report } from "../src/pages/HRMS/Report";
 export default function AppRouter() {
   return (
     <Routes>
@@ -396,6 +397,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <HRMSDashboardLayout>
               <ShiftManagement />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/reports/yearly"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <Report />
             </HRMSDashboardLayout>
           </ProtectedRoute>
         }
