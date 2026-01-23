@@ -184,7 +184,9 @@ export default function Login() {
           fontSize: 12,
         }}
       >
-        <a style={footerLinkStyle}>Forgot User ID?</a>
+        <a style={footerLinkStyle} onClick={() => navigate("/forgot-password")}>
+          Forgot User ID?
+        </a>
         <a style={footerLinkStyle} onClick={() => navigate("/forgot-password")}>
           Forgot Password?
         </a>
@@ -260,7 +262,7 @@ const captchaInputStyle: CSSProperties = {
 
 const loginBtnStyle: CSSProperties = {
   width: "100%",
-  height: 44,
+  height: 38,
   borderRadius: 12,
   background: "linear-gradient(90deg,#4dafff,#b47bff)",
   fontWeight: 600,
