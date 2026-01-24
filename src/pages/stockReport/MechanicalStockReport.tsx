@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import styles from "./stockreport.module.css";
+import api from "../../api/axios";
 
 interface Stock {
   itemName: string;
@@ -27,14 +28,16 @@ const MechanicalStockReport: React.FC = () => {
       try {
         setLoading(true);
 
-        const res = await fetch(
-          `http://localhost:4000/api/stock/mechanical?page=${page}&limit=${PAGE_SIZE}&search=${search}`
-        );
+        const { data } = await api.get("/stock/mechanical", {
+          params: {
+            page,
+            limit: PAGE_SIZE,
+            search,
+          },
+        });
 
-        const result = await res.json();
-
-        setStocks(result.data);
-        setTotal(result.total);
+        setStocks(data.data || []);
+        setTotal(data.total || 0);
       } catch (err) {
         console.error("Failed to fetch stock report", err);
       } finally {
@@ -108,19 +111,19 @@ const MechanicalStockReport: React.FC = () => {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
@@ -202,15 +205,15 @@ const MechanicalStockReport: React.FC = () => {
                       s.qty > 10
                         ? styles.inStock
                         : s.qty > 0
-                        ? styles.lowStock
-                        : styles.outStock
+                          ? styles.lowStock
+                          : styles.outStock
                     }
                   >
                     {s.qty > 10
                       ? "In Stock"
                       : s.qty > 0
-                      ? "Low Stock"
-                      : "Out of Stock"}
+                        ? "Low Stock"
+                        : "Out of Stock"}
                   </td>
                 </tr>
               ))}
