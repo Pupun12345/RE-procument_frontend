@@ -4,6 +4,8 @@ import { Search, Filter, Download, Edit, Trash2, X } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./gateway.css";
+import api from "../../api/axios";
+import type { AxiosError } from "axios";
 
 interface Party {
   id: string;
@@ -41,27 +43,11 @@ export function VendorGateway() {
     end: null as Date | null,
   });
 
-  const url = "http://localhost:4000"; // Replace with your API URL
-
-  // Fetch vendors
   useEffect(() => {
     const fetchVendors = async () => {
-      const token = localStorage.getItem("token");
-
       try {
-        const res = await fetch(`${url}/api/vendors`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
+        const { data } = await api.get("/vendors");
 
-        if (!res.ok) {
-          console.error("Failed to fetch vendors");
-          return;
-        }
-
-        const data = await res.json();
         const vendorList = Array.isArray(data) ? data : data.vendors || [];
 
         setParties(
@@ -74,7 +60,7 @@ export function VendorGateway() {
             publishedDate: v.publishedDate
               ? new Date(v.publishedDate).toISOString().split("T")[0]
               : "",
-          }))
+          })),
         );
       } catch (err) {
         console.error("Error fetching vendors:", err);
@@ -88,23 +74,22 @@ export function VendorGateway() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this vendor?")) return;
 
-    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`${url}/api/vendors/${id}`, {
-        method: "DELETE",
-        headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-      });
-
-      if (!res.ok) {
-        alert("Delete failed");
-        return;
-      }
+      await api.delete(`/vendors/${id}`);
 
       alert("Vendor deleted successfully!");
+
       setParties((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error deleting vendor:", error);
-      alert("Server Error");
+
+      const err = error as AxiosError<{ message?: string }>;
+
+      if (err.response?.status === 401) {
+        alert("Session expired. Please login again.");
+      } else {
+        alert(err.response?.data?.message || "Delete failed");
+      }
     }
   };
 
@@ -113,36 +98,32 @@ export function VendorGateway() {
 
   const handleSaveEdit = async () => {
     if (!editingParty) return;
-    const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`${url}/api/vendors/${editingParty.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({
-          partyName: editingParty.name,
-          address: editingParty.address,
-          gstNumber: editingParty.gst,
-          contactNumber: editingParty.contact,
-        }),
+      await api.put(`/vendors/${editingParty.id}`, {
+        partyName: editingParty.name,
+        address: editingParty.address,
+        gstNumber: editingParty.gst,
+        contactNumber: editingParty.contact,
       });
 
-      if (!res.ok) {
-        alert("Update failed");
-        return;
-      }
-
       alert("Vendor updated successfully!");
+
       setParties((prev) =>
-        prev.map((p) => (p.id === editingParty.id ? { ...editingParty } : p))
+        prev.map((p) => (p.id === editingParty.id ? { ...editingParty } : p)),
       );
+
       setEditingParty(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating vendor:", error);
-      alert("Server Error");
+
+      const err = error as AxiosError<{ message?: string }>;
+
+      if (err.response?.status === 401) {
+        alert("Session expired. Please login again.");
+      } else {
+        alert(err.response?.data?.message || "Update failed");
+      }
     }
   };
 
