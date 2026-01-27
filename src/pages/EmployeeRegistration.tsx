@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import "./employee-registration.css";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 interface EmployeeFormData {
   employeeName: string;
@@ -78,6 +79,7 @@ export default function EmployeeRegistration() {
       reader.readAsDataURL(file);
     }
   };
+  const navigate = useNavigate();
 
   const handleSaveEmployee = () => {
     const {
@@ -159,8 +161,9 @@ export default function EmployeeRegistration() {
   };
 
   const handleBack = () => {
-    console.log("Going back");
+    navigate(-1); // goes to previous page
   };
+
   return (
     <div className="employee-reg-container">
       <div className="employee-reg-content">
@@ -204,14 +207,14 @@ export default function EmployeeRegistration() {
             </div>
             <div className="employee-reg-field">
               <label>
-                SP Number{" "}
+                Safety Pass Number{" "}
                 <span className="required" style={{ color: "red" }}>
                   *
                 </span>
               </label>
               <input
                 type="text"
-                placeholder="Enter SP number"
+                placeholder="Enter safety pass number"
                 value={formData.spNumber}
                 onChange={(e) => handleInputChange("spNumber", e.target.value)}
               />
@@ -429,18 +432,6 @@ export default function EmployeeRegistration() {
                   handleInputChange("panCardNumber", e.target.value)
                 }
                 maxLength={10}
-              />
-            </div>
-
-            <div className="employee-reg-field">
-              <label>Safety Pass Number</label>
-              <input
-                type="text"
-                placeholder="Enter safety pass number"
-                value={formData.safetyPassNumber}
-                onChange={(e) =>
-                  handleInputChange("safetyPassNumber", e.target.value)
-                }
               />
             </div>
 

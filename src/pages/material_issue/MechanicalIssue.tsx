@@ -143,7 +143,7 @@ const DistributionPage: React.FC = () => {
 
   const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
   const [editItemState, setEditItemState] = useState<ItemEditState | null>(
-    null
+    null,
   );
 
   // Open item edit modal from the add items table
@@ -220,7 +220,7 @@ const DistributionPage: React.FC = () => {
 
   // Delete record from report section
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this PPE issue?")) return;
+    if (!window.confirm("Delete this mechanical issue?")) return;
 
     try {
       await api.delete(`/issue/mechanical/${id}`);
@@ -242,8 +242,8 @@ const DistributionPage: React.FC = () => {
         const data = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.data)
-          ? res.data.data
-          : [];
+            ? res.data.data
+            : [];
 
         setStockItems(data);
       } catch {
@@ -274,7 +274,7 @@ const DistributionPage: React.FC = () => {
     const search = filters.search.toLowerCase();
 
     const itemMatch = r.items.some((i) =>
-      i.itemName.toLowerCase().includes(search)
+      i.itemName.toLowerCase().includes(search),
     );
 
     const personMatch = r.issuedTo.toLowerCase().includes(search);
@@ -330,19 +330,19 @@ const DistributionPage: React.FC = () => {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
@@ -365,7 +365,7 @@ const DistributionPage: React.FC = () => {
           new Date(r.issueDate).toLocaleDateString("en-IN"),
           r.issuedTo,
           r.location || "",
-        ])
+        ]),
       ),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
@@ -406,7 +406,7 @@ const DistributionPage: React.FC = () => {
         r.issueDate,
         r.issuedTo,
         r.location || "",
-      ])
+      ]),
     );
 
     const csvContent =
@@ -516,14 +516,14 @@ const DistributionPage: React.FC = () => {
                         value={row.itemName}
                         onChange={(e) => {
                           const selected = stockItems.find(
-                            (s) => s.itemName === e.target.value
+                            (s) => s.itemName === e.target.value,
                           );
 
                           updateItem(index, "itemName", e.target.value);
                           updateItem(
                             index,
                             "unit",
-                            selected ? selected.unit : ""
+                            selected ? selected.unit : "",
                           );
                         }}
                       >
@@ -734,7 +734,7 @@ const DistributionPage: React.FC = () => {
                         <td>
                           {r.items
                             .map(
-                              (i) => `${i.itemName} (${i.issuedQty} ${i.unit})`
+                              (i) => `${i.itemName} (${i.issuedQty} ${i.unit})`,
                             )
                             .join(", ")}
                         </td>
@@ -904,7 +904,7 @@ const DistributionPage: React.FC = () => {
                   value={editItemState.itemName}
                   onChange={(e) => {
                     const selected = stockItems.find(
-                      (s) => s.itemName === e.target.value
+                      (s) => s.itemName === e.target.value,
                     );
                     setEditItemState({
                       ...editItemState,

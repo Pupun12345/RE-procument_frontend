@@ -255,10 +255,8 @@ const PurchaseEntryPage: React.FC = () => {
 
     try {
       if (editingId) {
-        // ✅ UPDATE existing record
         await api.put(`/purchases/ppe/${editingId}`, payload);
       } else {
-        // ✅ CREATE new record
         await api.post("/purchases/ppe", payload);
       }
 

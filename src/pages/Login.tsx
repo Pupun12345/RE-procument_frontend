@@ -149,7 +149,7 @@ export default function Login() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10,marginBottom:10 }}>
           <div style={captchaBoxStyle}>{generatedCaptcha}</div>
           
           <input
@@ -186,7 +186,9 @@ export default function Login() {
           fontSize: 12,
         }}
       >
-        <a style={footerLinkStyle}>Forgot User ID?</a>
+        <a style={footerLinkStyle} onClick={() => navigate("/forgot-password")}>
+          Forgot User ID?
+        </a>
         <a style={footerLinkStyle} onClick={() => navigate("/forgot-password")}>
           Forgot Password?
         </a>
@@ -212,7 +214,7 @@ const iconStyle: CSSProperties = {
   position: "absolute",
   left: 12,
   top: "50%",
-  transform: "translateY(-50%)",
+  transform: "translateY(calc(-50% - 4px))",
   color: "#ddd",
 };
 
@@ -258,11 +260,12 @@ const captchaInputStyle: CSSProperties = {
   background: "rgba(0,0,0,0.25)",
   color: "white",
   fontSize: 14,
+  margin: 0,
 };
 
 const loginBtnStyle: CSSProperties = {
   width: "100%",
-  height: 44,
+  height: 38,
   borderRadius: 12,
   background: "linear-gradient(90deg,#4dafff,#b47bff)",
   fontWeight: 600,
