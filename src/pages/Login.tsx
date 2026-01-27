@@ -122,7 +122,7 @@ export default function Login() {
       {/* FORM */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ position: "relative" }}>
-          <FaUser style={iconStyle} />
+          <FaUser style={{ paddingBottom: 8, height: 20, ...iconStyle}} />
           <input
             placeholder="Username / Email"
             value={email}
@@ -132,7 +132,7 @@ export default function Login() {
         </div>
 
         <div style={{ position: "relative" }}>
-          <FaLock style={iconStyle} />
+          <FaLock style={{ paddingBottom: 8, height: 20, ...iconStyle}} />
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
@@ -151,6 +151,14 @@ export default function Login() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={captchaBoxStyle}>{generatedCaptcha}</div>
+          
+          <input
+            placeholder="Enter Captcha"
+            value={captcha}
+            onChange={(e) => setCaptcha(e.target.value)}
+            style={{ marginTop: 15, ...captchaInputStyle }}
+          />
+
           <button
             type="button"
             onClick={refreshCaptcha}
@@ -158,12 +166,6 @@ export default function Login() {
           >
             <FaSyncAlt />
           </button>
-          <input
-            placeholder="Enter Captcha"
-            value={captcha}
-            onChange={(e) => setCaptcha(e.target.value)}
-            style={captchaInputStyle}
-          />
         </div>
 
         <Button

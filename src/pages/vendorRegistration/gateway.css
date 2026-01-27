@@ -201,9 +201,15 @@ body {
   padding: 16px;
 }
 
+.gateway-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .gateway-table-wrapper table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px;
 }
 
 .gateway-table-wrapper th,
@@ -322,6 +328,17 @@ body {
     height: 44px;
     margin-top: 0;
   }
+
+  .gateway-table-wrapper {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .gateway-table-wrapper th,
+  .gateway-table-wrapper td {
+    white-space: nowrap;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -342,6 +359,18 @@ body {
 
   .gateway-table-wrapper th,
   .gateway-table-wrapper td {
-    padding: 8px;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    min-width: 36px;
+    height: 32px;
+    padding: 0 8px;
+  }
+
+  .gateway-list-section {
+    padding: 12px;
   }
 }

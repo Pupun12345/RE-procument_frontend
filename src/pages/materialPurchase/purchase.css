@@ -325,10 +325,17 @@ button.orange:hover {
 }
 
 /* ================= REPORT TABLE ================= */
+.report-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 20px;
+}
+
 .report-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  min-width: 900px;
 }
 
 .report-table th {
@@ -407,6 +414,94 @@ button.orange:hover {
   .report-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .report-table-wrapper {
+    margin: 0 -32px;
+    padding: 0 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .purchase-container {
+    padding: 20px;
+  }
+
+  .report-table-wrapper {
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
+  .report-table th,
+  .report-table td {
+    white-space: nowrap;
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .report-toolbar {
+    gap: 12px;
+  }
+
+  .report-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .report-filters input {
+    width: 100%;
+  }
+
+  .report-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .report-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .purchase-container {
+    padding: 16px;
+    margin: 20px auto;
+  }
+
+  .report-table-wrapper {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    min-width: 70px;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .report-title {
+    font-size: 1.2rem;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tabs button {
+    width: 100%;
   }
 }
 /* ENTRY TABLE */

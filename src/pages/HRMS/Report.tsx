@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -11,109 +11,137 @@ import {
   ChevronDown
 } from "lucide-react";
 import "./report.css";
-
-interface MonthlyData {
-  month: string;
-  headcount: number;
-  basicPay: number;
-  hra: number;
-  allowances: number;
-  grossSalary: number;
-  pfEmp: number;
-  esiEmp: number;
-}
+import { 
+  getYearlyReport, 
+  getAllFiscalYears,
+  type MonthlyData,
+  type YearlyData
+} from "../../services/payrollService";
 
 export function Report() {
   const navigate = useNavigate();
   const [fiscalYear, setFiscalYear] = useState("FY 2023-2024");
   const [showYearDropdown, setShowYearDropdown] = useState(false);
-
-  // Sample data for the report
-  const yearlyData = {
-    totalGrossSalary: 12450000,
-    totalDeductions: 1250000,
-    totalWagesAccrued: 50000,
-    netPayableSalary: 11200000,
-    grossSalaryChange: 12.5,
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [fiscalYears, setFiscalYears] = useState<string[]>([]);
+  
+  // Data from backend
+  const [yearlyData, setYearlyData] = useState<YearlyData>({
+    totalGrossSalary: 0,
+    totalDeductions: 0,
+    totalWagesAccrued: 0,
+    netPayableSalary: 0,
+    grossSalaryChange: 0,
     deductionsStatus: "consistent",
-    wagesAccruedChange: -5,
+    wagesAccruedChange: 0,
     salaryStatus: "cleared"
+  });
+  
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [totals, setTotals] = useState({
+    basicPay: 0,
+    hra: 0,
+    allowances: 0,
+    grossSalary: 0,
+    pfEmp: 0,
+    esiEmp: 0,
+    netSalary: 0
+  });
+
+  // Fetch fiscal years on mount
+  useEffect(() => {
+    fetchFiscalYears();
+  }, []);
+
+  // Fetch report data when fiscal year changes
+  useEffect(() => {
+    if (fiscalYear) {
+      fetchReportData(fiscalYear);
+    }
+  }, [fiscalYear]);
+
+  const fetchFiscalYears = async () => {
+    try {
+      const years = await getAllFiscalYears();
+      setFiscalYears(years);
+      if (years.length > 0 && !fiscalYear) {
+        setFiscalYear(years[0]);
+      }
+    } catch (err: any) {
+      console.error("Error fetching fiscal years:", err);
+      // If no fiscal years exist, use default
+      setFiscalYears(["FY 2023-2024", "FY 2022-2023", "FY 2021-2022"]);
+    }
   };
 
-  const monthlyData: MonthlyData[] = [
-    {
-      month: "April 2023",
-      headcount: 142,
-      basicPay: 3456000,
-      hra: 225000,
-      allowances: 125000,
-      grossSalary: 3808000,
-      pfEmp: 54000,
-      esiEmp: 12000
-    },
-    {
-      month: "May 2023",
-      headcount: 145,
-      basicPay: 3455000,
-      hra: 227500,
-      allowances: 128000,
-      grossSalary: 3810500,
-      pfEmp: 54600,
-      esiEmp: 12150
-    },
-    {
-      month: "June 2023",
-      headcount: 148,
-      basicPay: 3462000,
-      hra: 231000,
-      allowances: 130000,
-      grossSalary: 3823000,
-      pfEmp: 55440,
-      esiEmp: 12345
-    },
-    {
-      month: "July 2023",
-      headcount: 150,
-      basicPay: 3486000,
-      hra: 240000,
-      allowances: 160000,
-      grossSalary: 3908000,
-      pfEmp: 57600,
-      esiEmp: 13500
-    },
-    {
-      month: "August 2023",
-      headcount: 151,
-      basicPay: 3482000,
-      hra: 241000,
-      allowances: 155000,
-      grossSalary: 3858000,
-      pfEmp: 57840,
-      esiEmp: 12970
+  const fetchReportData = async (year: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await getYearlyReport(year);
+      setYearlyData(response.yearlyData);
+      setMonthlyData(response.monthlyData);
+      setTotals(response.totals);
+    } catch (err: any) {
+      console.error("Error fetching report data:", err);
+      setError(err.message || "Failed to load report data");
+      // Keep using sample data if backend fails
+      loadSampleData();
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  // Calculate totals
-  const totals = monthlyData.reduce(
-    (acc, curr) => ({
-      headcount: acc.headcount,
-      basicPay: acc.basicPay + curr.basicPay,
-      hra: acc.hra + curr.hra,
-      allowances: acc.allowances + curr.allowances,
-      grossSalary: acc.grossSalary + curr.grossSalary,
-      pfEmp: acc.pfEmp + curr.pfEmp,
-      esiEmp: acc.esiEmp + curr.esiEmp
-    }),
-    {
-      headcount: 0,
-      basicPay: 0,
-      hra: 0,
-      allowances: 0,
-      grossSalary: 0,
-      pfEmp: 0,
-      esiEmp: 0
-    }
-  );
+  const loadSampleData = () => {
+    // Fallback sample data
+    const sampleMonthlyData: MonthlyData[] = [
+      {
+        month: "April 2023",
+        monthNumber: 4,
+        year: 2023,
+        headcount: 142,
+        basicPay: 3456000,
+        hra: 225000,
+        allowances: 125000,
+        grossSalary: 3808000,
+        pfEmp: 54000,
+        esiEmp: 12000,
+        netSalary: 3742000
+      },
+      {
+        month: "May 2023",
+        monthNumber: 5,
+        year: 2023,
+        headcount: 145,
+        basicPay: 3455000,
+        hra: 227500,
+        allowances: 128000,
+        grossSalary: 3810500,
+        pfEmp: 54600,
+        esiEmp: 12150,
+        netSalary: 3743750
+      },
+    ];
+    
+    setMonthlyData(sampleMonthlyData);
+    
+    const sampleTotals = sampleMonthlyData.reduce(
+      (acc, curr) => ({
+        basicPay: acc.basicPay + curr.basicPay,
+        hra: acc.hra + curr.hra,
+        allowances: acc.allowances + curr.allowances,
+        grossSalary: acc.grossSalary + curr.grossSalary,
+        pfEmp: acc.pfEmp + curr.pfEmp,
+        esiEmp: acc.esiEmp + curr.esiEmp,
+        netSalary: acc.netSalary + curr.netSalary
+      }),
+      { basicPay: 0, hra: 0, allowances: 0, grossSalary: 0, pfEmp: 0, esiEmp: 0, netSalary: 0 }
+    );
+    
+    setTotals(sampleTotals);
+  };
 
   // Annual trends data for chart
   const annualTrends = [
@@ -157,6 +185,30 @@ export function Report() {
     alert("Exporting to Excel...");
   };
 
+  if (loading) {
+    return (
+      <div className="yearly-report-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading report data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && monthlyData.length === 0) {
+    return (
+      <div className="yearly-report-container">
+        <div className="error-container">
+          <p className="error-message">{error}</p>
+          <button onClick={() => fetchReportData(fiscalYear)} className="retry-button">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="yearly-report-container">
       {/* Header Section */}
@@ -190,33 +242,18 @@ export function Report() {
               </button>
               {showYearDropdown && (
                 <div className="year-dropdown-menu">
-                  <div 
-                    className="year-dropdown-item"
-                    onClick={() => {
-                      setFiscalYear("FY 2023-2024");
-                      setShowYearDropdown(false);
-                    }}
-                  >
-                    FY 2023-2024
-                  </div>
-                  <div 
-                    className="year-dropdown-item"
-                    onClick={() => {
-                      setFiscalYear("FY 2022-2023");
-                      setShowYearDropdown(false);
-                    }}
-                  >
-                    FY 2022-2023
-                  </div>
-                  <div 
-                    className="year-dropdown-item"
-                    onClick={() => {
-                      setFiscalYear("FY 2021-2022");
-                      setShowYearDropdown(false);
-                    }}
-                  >
-                    FY 2021-2022
-                  </div>
+                  {fiscalYears.map((year) => (
+                    <div 
+                      key={year}
+                      className="year-dropdown-item"
+                      onClick={() => {
+                        setFiscalYear(year);
+                        setShowYearDropdown(false);
+                      }}
+                    >
+                      {year}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -405,7 +442,7 @@ export function Report() {
           </table>
         </div>
         <div className="table-footer">
-          <span className="viewing-text">Viewing 5 of 12 months</span>
+          <span className="viewing-text">Viewing {monthlyData.length} of 12 months</span>
         </div>
       </div>
     </div>

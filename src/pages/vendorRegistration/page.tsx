@@ -70,7 +70,7 @@ export default function VendorForm() {
               className="vendor-reg-gateway-btn"
               title="Go to Vendor Gateway"
             >
-              <FaEdit className="vendor-reg-gateway-icon" />
+              <FaEdit className="vendor-reg-gateway-icon" style={{marginTop: 14}}/>
             </button>
           </div>
 

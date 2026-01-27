@@ -650,54 +650,55 @@ const PurchaseEntryPage: React.FC = () => {
             </div>
           </div>
 
-          <table className="entry-table">
-            <thead>
-              <tr>
-                <th>Party Name</th>
-                <th>Invoice No</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total (₹)</th>
-                <th>Total Weight (kg)</th>
-                <th>Edit</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {purchases.length === 0 ? (
+          <div className="report-table-wrapper">
+            <table className="entry-table">
+              <thead>
                 <tr>
-                  <td
-                    colSpan={7}
-                    style={{ textAlign: "center", padding: "20px" }}
-                  >
-                    No purchases found
-                  </td>
+                  <th>Party Name</th>
+                  <th>Invoice No</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total (₹)</th>
+                  <th>Total Weight (kg)</th>
+                  <th>Edit</th>
+                  <th>Delete</th>
                 </tr>
-              ) : (
-                purchases.map((p) => (
-                  <tr key={p._id}>
-                    <td>{p.partyName}</td>
-                    <td>{p.invoiceNo}</td>
-                    <td>{p.invoiceDate}</td>
-                    <td>
-                      {p.items.map((i) => (
-                        <div key={i.name}>
-                          {i.name} – {i.qty} × {i.puw || 0} kg ={" "}
-                          <b>{i.weight || 0} kg</b>
-                        </div>
-                      ))}
+              </thead>
+
+              <tbody>
+                {purchases.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{ textAlign: "center", padding: "20px" }}
+                    >
+                      No purchases found
                     </td>
-                    <td className="amount">₹{p.total.toFixed(2)}</td>
-                    <td>{totalWeight(p.items).toFixed(2)} kg</td>
-                    <td>
-                      <button
-                        className="edit-btn"
-                        onClick={() => handleEditPurchase(p)}
-                      >
-                        Edit
-                      </button>
-                    </td>
+                  </tr>
+                ) : (
+                  purchases.map((p) => (
+                    <tr key={p._id}>
+                      <td>{p.partyName}</td>
+                      <td>{p.invoiceNo}</td>
+                      <td>{p.invoiceDate}</td>
+                      <td>
+                        {p.items.map((i) => (
+                          <div key={i.name}>
+                            {i.name} – {i.qty} × {i.puw || 0} kg ={" "}
+                            <b>{i.weight || 0} kg</b>
+                          </div>
+                        ))}
+                      </td>
+                      <td className="amount">₹{p.total.toFixed(2)}</td>
+                      <td>{totalWeight(p.items).toFixed(2)} kg</td>
+                      <td>
+                        <button
+                          className="edit-btn"
+                          onClick={() => handleEditPurchase(p)}
+                        >
+                          Edit
+                        </button>
+                      </td>
 
                     <td>
                       <button
@@ -712,6 +713,7 @@ const PurchaseEntryPage: React.FC = () => {
               )}
             </tbody>
           </table>
+          </div>
         </>
       )}
 

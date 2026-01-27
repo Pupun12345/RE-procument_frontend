@@ -201,7 +201,7 @@ export default function ForgotPassword() {
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {step === 1 && (
               <div style={{ position: "relative" }}>
-                <FaUser style={iconStyle} />
+                <FaUser style={{ paddingBottom: 8, height: 20, ...iconStyle}} />
                 <input
                   placeholder="Registered Email"
                   value={email}

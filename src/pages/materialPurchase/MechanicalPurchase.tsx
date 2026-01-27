@@ -575,49 +575,51 @@ const MechanicalPurchasePage: React.FC = () => {
             </div>
           </div>
 
-          <table className="report-table">
-            <thead>
-              <tr>
-                <th>Party Name</th>
-                <th>Invoice No</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total (₹)</th>
-                <th>Edit</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {purchases.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.partyName}</td>
-                  <td>{p.invoiceNumber}</td>
-                  <td>{p.invoiceDate}</td>
-                  <td>{p.items.map((x) => x.itemName).join(", ")}</td>
-                  <td className="amount">₹{p.total.toFixed(2)}</td>
-
-                  <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEditPurchase(i)}
-                    >
-                      Edit
-                    </button>
-                  </td>
-
-                  <td>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeletePurchase(i)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="report-table-wrapper">
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Party Name</th>
+                  <th>Invoice No</th>
+                  <th>Date</th>
+                  <th>Items</th>
+                  <th>Total (₹)</th>
+                  <th>Edit</th>
+                  <th>Delete</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {purchases.map((p, i) => (
+                  <tr key={i}>
+                    <td>{p.partyName}</td>
+                    <td>{p.invoiceNumber}</td>
+                    <td>{p.invoiceDate}</td>
+                    <td>{p.items.map((x) => x.itemName).join(", ")}</td>
+                    <td className="amount">₹{p.total.toFixed(2)}</td>
+
+                    <td>
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEditPurchase(i)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+
+                    <td>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeletePurchase(i)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 

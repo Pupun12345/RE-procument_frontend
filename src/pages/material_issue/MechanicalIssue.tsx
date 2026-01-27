@@ -29,7 +29,7 @@ interface StockItem {
   _id: string;
   itemName: string;
   unit: string;
-  issuedQty: number;
+  qty: number;
 }
 
 interface FormState {
