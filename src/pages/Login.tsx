@@ -149,7 +149,7 @@ export default function Login() {
           </button>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10,marginBottom:10 }}>
           <div style={captchaBoxStyle}>{generatedCaptcha}</div>
           <button
             type="button"
@@ -212,7 +212,7 @@ const iconStyle: CSSProperties = {
   position: "absolute",
   left: 12,
   top: "50%",
-  transform: "translateY(-50%)",
+  transform: "translateY(calc(-50% - 4px))",
   color: "#ddd",
 };
 
@@ -258,6 +258,7 @@ const captchaInputStyle: CSSProperties = {
   background: "rgba(0,0,0,0.25)",
   color: "white",
   fontSize: 14,
+  margin: 0,
 };
 
 const loginBtnStyle: CSSProperties = {
