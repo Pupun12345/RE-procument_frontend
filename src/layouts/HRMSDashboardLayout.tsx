@@ -62,6 +62,45 @@ export default function HRMSDashboardLayout({ children }: Props) {
     return location.pathname === path;
   };
 
+
+  const employeeSubItems = [
+    {
+      label: "Employees Details",
+      path: "/dashboard/hrms/employees",
+    },
+    {
+      label: "Employee Managements",
+      path : "/dashboard/hrms/employees/management",
+    },
+    {
+      label: "Salary Sheet",
+      path: "/dashboard/hrms/salary-sheet",
+    },
+    {
+      label: "Attendance",
+      path: "/dashboard/hrms/attendance",
+    },
+  ];
+
+  const payrollSubItems = [
+    {
+      label: "Employee Management",
+      path: "/dashboard/hrms/payroll/employee-management",
+    },
+    {
+      label: "Payroll Processing",
+      path: "/dashboard/hrms/payroll/processing",
+    },
+    {
+      label: "Attendance",
+      path: "/dashboard/hrms/payroll/attendance",
+    },
+    {
+      label: "Reports",
+      path: "/dashboard/hrms/reports/yearly",
+    },
+  ];
+  
   const menuItems = [
     {
       icon: <LayoutDashboard size={20} />,
@@ -98,41 +137,8 @@ export default function HRMSDashboardLayout({ children }: Props) {
       label: "Activity Logs",
       path: "/dashboard/hrms/activity-logs",
     },
-  ];
-
-  const employeeSubItems = [
     {
-      label: "Employees Details",
-      path: "/dashboard/hrms/employees",
-    },
-    {
-      label: "Employee Managements",
-      path : "/dashboard/hrms/employees/management",
-    },
-    {
-      label: "Salary Sheet",
-      path: "/dashboard/hrms/salary-sheet",
-    },
-    {
-      label: "Attendance",
-      path: "/dashboard/hrms/attendance",
-    },
-  ];
-
-  const payrollSubItems = [
-    {
-      label: "Employee Management",
-      path: "/dashboard/hrms/payroll/employee-management",
-    },
-    {
-      label: "Payroll Processing",
-      path: "/dashboard/hrms/payroll/processing",
-    },
-    {
-      label: "Attendance",
-      path: "/dashboard/hrms/payroll/attendance",
-    },
-    {
+      icon: <BarChart3 size={20} />,
       label: "Reports",
       path: "/dashboard/hrms/reports/yearly",
     },
@@ -173,22 +179,7 @@ export default function HRMSDashboardLayout({ children }: Props) {
 
         {/* Navigation Menu */}
         <nav className="hrms-nav">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              className={`hrms-nav-item ${
-                isActive(item.path) ? "active" : ""
-              }`}
-              onClick={() => {
-                navigate(item.path);
-                setIsSidebarOpen(false);
-              }}
-            >
-              <span className="hrms-nav-icon">{item.icon}</span>
-              <span className="hrms-nav-label">{item.label}</span>
-            </button>
-          ))}
-
+        
           {/* Expandable Employee Section */}
           <div>
             <button
@@ -262,6 +253,22 @@ export default function HRMSDashboardLayout({ children }: Props) {
               </div>
             )}
           </div>
+            {menuItems.map((item, index) => (
+            <button
+              key={index}
+              className={`hrms-nav-item ${
+                isActive(item.path) ? "active" : ""
+              }`}
+              onClick={() => {
+                navigate(item.path);
+                setIsSidebarOpen(false);
+              }}
+            >
+              <span className="hrms-nav-icon">{item.icon}</span>
+              <span className="hrms-nav-label">{item.label}</span>
+            </button>
+          ))}
+
         </nav>
 
         {/* Settings Section */}

@@ -199,6 +199,7 @@ export function HRMSEmployees() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingEmployeeId(null);
+    setEditPhoto(null);
     setFormData({
       name: "",
       employeeCode: "",
@@ -267,11 +268,21 @@ export function HRMSEmployees() {
 
       if (editingEmployeeId) {
         await updateEmployee(editingEmployeeId, fd);
+        // Refresh the employee list
+        await fetchEmployees();
+        // If the view modal is open for this employee, refresh it
+        if (selectedEmployee && selectedEmployee._id === editingEmployeeId) {
+          const data = await getEmployees();
+          const updatedEmployee = data.find((emp: EmployeeType) => emp._id === editingEmployeeId);
+          if (updatedEmployee) {
+            setSelectedEmployee(updatedEmployee);
+          }
+        }
       } else {
         await addEmployee(fd);
+        await fetchEmployees();
       }
 
-      await fetchEmployees();
       handleCloseModal();
     } catch (err: any) {
       console.error(err);
@@ -287,6 +298,8 @@ export function HRMSEmployees() {
       const data = await getEmployees();
       const employee = data.find((emp: EmployeeType) => emp._id === id);
       if (employee) {
+        console.log("Selected Employee Data:", employee);
+        console.log("Employee Photo URL:", employee.employeePhoto);
         setSelectedEmployee(employee);
         setIsViewModalOpen(true);
       } else {
@@ -323,6 +336,15 @@ export function HRMSEmployees() {
       setError(err.message || "Failed to delete employee");
       alert("Failed to delete employee: " + (err.message || "Unknown error"));
     }
+  };
+
+  // Helper function to get full image URL
+  const getImageUrl = (photoPath: string | undefined) => {
+    if (!photoPath) return "";
+    if (photoPath.startsWith("http")) return photoPath;
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
+    const serverURL = baseURL.replace("/api", "");
+    return `${serverURL}${photoPath}`;
   };
 
   return (
@@ -523,10 +545,11 @@ export function HRMSEmployees() {
                           {employee.employeePhoto ? (
                             <>
                               <img
-                                src={employee.employeePhoto}
+                                src={getImageUrl(employee.employeePhoto)}
                                 alt={employee.name}
                                 className="table-profile-picture"
                                 onError={(e) => {
+                                  console.error("Table image failed to load:", getImageUrl(employee.employeePhoto));
                                   const target = e.currentTarget;
                                   target.style.display = "none";
                                   const parent = target.parentElement;
@@ -625,19 +648,6 @@ export function HRMSEmployees() {
             <form onSubmit={handleSubmit} className="employee-form">
               <div className="form-group">
                 <label htmlFor="name">Employee Name *</label>
-                <div className="form-group">
-                  <label>Employee Photo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setEditPhoto(e.target.files[0]);
-                      }
-                    }}
-                  />
-                </div>
-
                 <input
                   type="text"
                   id="name"
@@ -647,6 +657,35 @@ export function HRMSEmployees() {
                   required
                   disabled={submitting}
                   placeholder="Enter employee name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Employee Photo</label>
+                {editPhoto && (
+                  <div style={{ marginBottom: "10px" }}>
+                    <img 
+                      src={URL.createObjectURL(editPhoto)} 
+                      alt="Preview" 
+                      style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "50%" }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setEditPhoto(null)}
+                      style={{ marginLeft: "10px", padding: "5px 10px", cursor: "pointer" }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      setEditPhoto(e.target.files[0]);
+                    }
+                  }}
                 />
               </div>
 
@@ -911,10 +950,14 @@ export function HRMSEmployees() {
               <div className="profile-picture-container">
                 {selectedEmployee.employeePhoto ? (
                   <img
-                    src={selectedEmployee.employeePhoto}
+                    src={getImageUrl(selectedEmployee.employeePhoto)}
                     alt={selectedEmployee.employeeName}
                     className="profile-picture"
+                    onLoad={() => {
+                      console.log("Image loaded successfully:", getImageUrl(selectedEmployee.employeePhoto));
+                    }}
                     onError={(e) => {
+                      console.error("Image failed to load:", getImageUrl(selectedEmployee.employeePhoto));
                       e.currentTarget.src =
                         "https://via.placeholder.com/150/cccccc/666666?text=No+Photo";
                     }}
