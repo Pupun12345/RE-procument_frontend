@@ -1,0 +1,58 @@
+/* ================= HOLIDAY MANAGEMENT ================= */
+.holiday-management {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.1);
+  border: 1px solid #fcd34d;
+}
+
+.holiday-management .card-header h3 {
+  color: #92400e;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.holiday-management table {
+  background: #ffffff;
+  border: 2px solid #fed7aa;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.holiday-management thead {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.holiday-management th {
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.holiday-management tbody tr:hover {
+  background: #fffbeb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
+}
+
+.holiday-management .btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.holiday-management .btn-outline {
+  border: 1px solid #f59e0b;
+  color: #d97706;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 5px;
+}
+
+.holiday-management .btn-outline:hover {
+  background: #fffbeb;
+  transform: translateY(-1px);
+}

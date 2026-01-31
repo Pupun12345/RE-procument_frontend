@@ -1,0 +1,59 @@
+/* ================= STAT CARD ================= */
+
+.stat-card {
+  background: #ffffff;
+  padding: 18px 20px;
+  border-radius: 12px;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #f1f5f9;
+  margin-top: 2vh;
+}
+
+.stat-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.stat-change {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stat-value.success {
+  color: #16a34a;
+}
+.stat-change.success {
+  color: #16a34a;
+}
+
+.stat-value.warning {
+  color: #f97316;
+}
+.stat-change.warning {
+  color: #f97316;
+}
+
+.stat-value.danger {
+  color: #ef4444;
+}
+.stat-change.danger {
+  color: #ef4444;
+}
