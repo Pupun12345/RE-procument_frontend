@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './InventoryTable.css'
+import './TableMechanical.css'
 
 interface ReportItem {
     itemName: string
@@ -30,23 +30,23 @@ export default function InventoryTable() {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        fetchPPEReport()
+        fetchMechanicalReport()
     }, [])
 
-    const fetchPPEReport = async () => {
+    const fetchMechanicalReport = async () => {
         try {
             setLoading(true)
-            const response = await fetch('http://localhost:4000/api/reports/ppe')
+            const response = await fetch('http://localhost:4000/api/reports/mechanical')
             
             if (!response.ok) {
-                throw new Error('Failed to fetch PPE report')
+                throw new Error('Failed to fetch mechanical report')
             }
             
             const data = await response.json()
             setReportData(data)
             setError(null)
         } catch (err) {
-            console.error('Error fetching PPE report:', err)
+            console.error('Error fetching mechanical report:', err)
             setError(err instanceof Error ? err.message : 'Failed to load report')
         } finally {
             setLoading(false)
@@ -67,7 +67,7 @@ export default function InventoryTable() {
     if (loading) {
         return (
             <div className="table-card">
-                <div className="loading">Loading PPE report...</div>
+                <div className="loading">Loading mechanical report...</div>
             </div>
         )
     }
@@ -76,7 +76,7 @@ export default function InventoryTable() {
         return (
             <div className="table-card">
                 <div className="error">Error: {error}</div>
-                <button onClick={fetchPPEReport}>Retry</button>
+                <button onClick={fetchMechanicalReport}>Retry</button>
             </div>
         )
     }
@@ -91,7 +91,7 @@ export default function InventoryTable() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <button className="filter-btn" title="Filter items" onClick={fetchPPEReport}>
+                    <button className="filter-btn" title="Filter items" onClick={fetchMechanicalReport}>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                         </svg>

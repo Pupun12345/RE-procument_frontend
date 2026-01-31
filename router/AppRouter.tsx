@@ -38,6 +38,9 @@ import { HRMSEmployees } from "../src/pages/HRMS/Employees/HRMSEmployees";
 import LoansAdvances from "../src/pages/HRMS/Loan/LoansAdvances";
 import { ShiftManagement } from "../src/pages/HRMS/Employees/EmployeeManagement";
 import { Report } from "../src/pages/HRMS/Report";
+import PPE from "../src/pages/final-report/PPE"
+import Mechanical from "../src/pages/final-report/Mechanical"
+import Scaffolding from "../src/pages/final-report/Scaffolding"
 export default function AppRouter() {
   return (
     <Routes>
@@ -408,6 +411,36 @@ export default function AppRouter() {
             <HRMSDashboardLayout>
               <Report />
             </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/final-report/ppe"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <PPE />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/final-report/mechanical"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Mechanical />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/final-report/scaffolding"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Scaffolding />
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />

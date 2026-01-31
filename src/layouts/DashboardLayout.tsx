@@ -340,9 +340,9 @@ export default function DashboardLayout({ children }: Props) {
               />
             </SubGroup>
             <SubGroup label="Final Report">
-              <SubItem label="PPE" />
-              <SubItem label="Mechanical" />
-              <SubItem label="Scaffolding" />
+              <SubItem label="PPE" path="/dashboard/final-report/ppe" />
+              <SubItem label="Mechanical" path="/dashboard/final-report/mechanical" />
+              <SubItem label="Scaffolding" path="/dashboard/final-report/scaffolding" />
             </SubGroup>
           </SidebarExpandable>
 
