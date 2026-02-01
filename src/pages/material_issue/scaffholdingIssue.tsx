@@ -448,15 +448,10 @@ export default function ScaffoldingIssuePage() {
 
     let tempTotalPages = 1;
 
-    // Get matching records based on filters
-    const pdfRecords = records.filter((rec) => {
-      const searchText = filters.search.toLowerCase();
-      const issuedToMatch = rec.issuedTo.toLowerCase().includes(searchText);
-      const itemMatch = rec.items.some((i) =>
-        i.itemName.toLowerCase().includes(searchText)
-      );
-      return issuedToMatch || itemMatch || !searchText;
-    });
+    // Use filteredRecords which already includes both date and search filtering
+    const pdfRecords = filteredRecords.map(fr => {
+      return records.find(r => r._id === fr._id);
+    }).filter(Boolean) as IssueRecord[];
 
     autoTable(doc, {
       startY: 65,
