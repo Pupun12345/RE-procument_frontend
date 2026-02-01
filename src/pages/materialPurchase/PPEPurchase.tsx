@@ -70,6 +70,10 @@ const PurchaseEntryPage: React.FC = () => {
 
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [filters, setFilters] = useState({
+    search: "",
+    date: ""
+  });
 
   /* ================= OLD STOCK STATE ================= */
   const [oldItemName, setOldItemName] = useState("");
@@ -229,6 +233,30 @@ const PurchaseEntryPage: React.FC = () => {
     }
   };
 
+  /* ================= FILTERED PURCHASES ================= */
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter((p) => {
+      const searchText = filters.search.toLowerCase().trim();
+      
+      // Search filter - party name and item names only
+      if (searchText) {
+        const partyMatch = p.partyName.toLowerCase().includes(searchText);
+        const itemMatch = p.items.some((i) =>
+          i.itemName.toLowerCase().includes(searchText)
+        );
+        if (!partyMatch && !itemMatch) return false;
+      }
+      
+      // Date filter - exact date match
+      if (filters.date) {
+        const purchaseDate = new Date(p.invoiceDate).toISOString().split('T')[0];
+        if (purchaseDate !== filters.date) return false;
+      }
+      
+      return true;
+    });
+  }, [purchases, filters]);
+
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
     if (!partyName || !invoiceNumber || !invoiceDate) {
@@ -357,7 +385,7 @@ const PurchaseEntryPage: React.FC = () => {
       startY: 65,
       margin: { top: 70, bottom: 65 },
       head: [["Party", "Invoice", "Date", "Items", "Total"]],
-      body: purchases.map((p) => [
+      body: filteredPurchases.map((p) => [
         p.partyName,
         p.invoiceNumber,
         new Date(p.invoiceDate).toLocaleDateString("en-IN"),
@@ -384,11 +412,11 @@ const PurchaseEntryPage: React.FC = () => {
     doc.save("ppe_purchase_report.pdf");
   };
 
-  /* ================= EXPORT CSV (UNCHANGED) ================= */
+  /* ================= EXPORT CSV ================= */
   const exportCSV = () => {
     const csv = [
       ["Party", "Invoice", "Date", "Items", "Total"],
-      ...purchases.map((p) => [
+      ...filteredPurchases.map((p) => [
         p.partyName,
         p.invoiceNumber,
         p.invoiceDate,
@@ -575,9 +603,16 @@ const PurchaseEntryPage: React.FC = () => {
 
           <div className="report-toolbar">
             <div className="report-filters">
-              <input placeholder="Search Party Name" />
-              <input type="date" />
-              <input type="date" />
+              <input 
+                placeholder="Search Party / Item Name" 
+                value={filters.search}
+                onChange={(e) => setFilters({...filters, search: e.target.value})}
+              />
+              <input 
+                type="date" 
+                value={filters.date}
+                onChange={(e) => setFilters({...filters, date: e.target.value})}
+              />
             </div>
             <div className="report-actions">
               <button className="green" onClick={exportPDF}>
@@ -604,7 +639,7 @@ const PurchaseEntryPage: React.FC = () => {
               </thead>
 
               <tbody>
-                {purchases.map((p, i) => (
+                {filteredPurchases.map((p, i) => (
                   <tr key={i}>
                     <td>{p.partyName}</td>
                     <td>{p.invoiceNumber}</td>
@@ -615,7 +650,10 @@ const PurchaseEntryPage: React.FC = () => {
                     <td>
                       <button
                         className="edit-btn"
-                        onClick={() => handleEditPurchase(i)}
+                        onClick={() => {
+                          const originalIndex = purchases.findIndex(purchase => purchase._id === p._id);
+                          handleEditPurchase(originalIndex);
+                        }}
                       >
                         Edit
                       </button>
@@ -624,7 +662,10 @@ const PurchaseEntryPage: React.FC = () => {
                     <td>
                       <button
                         className="delete-btn"
-                        onClick={() => handleDeletePurchase(i)}
+                        onClick={() => {
+                          const originalIndex = purchases.findIndex(purchase => purchase._id === p._id);
+                          handleDeletePurchase(originalIndex);
+                        }}
                       >
                         Delete
                       </button>

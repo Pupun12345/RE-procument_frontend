@@ -80,6 +80,10 @@ const PurchaseEntryPage: React.FC = () => {
   /* ================= REPORT STATE ================= */
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    search: "",
+    date: ""
+  });
 
   /* ================= OLD STOCK STATE ================= */
   const [oldItemName, setOldItemName] = useState("");
@@ -229,6 +233,30 @@ const PurchaseEntryPage: React.FC = () => {
     }
   };
 
+  /* ================= FILTERED PURCHASES ================= */
+  const filteredPurchases = useMemo(() => {
+    return purchases.filter((p) => {
+      const searchText = filters.search.toLowerCase().trim();
+      
+      // Search filter - party name and item names only
+      if (searchText) {
+        const partyMatch = p.partyName.toLowerCase().includes(searchText);
+        const itemMatch = p.items.some((i) =>
+          i.name.toLowerCase().includes(searchText)
+        );
+        if (!partyMatch && !itemMatch) return false;
+      }
+      
+      // Date filter - exact date match
+      if (filters.date) {
+        const purchaseDate = new Date(p.invoiceDate).toISOString().split('T')[0];
+        if (purchaseDate !== filters.date) return false;
+      }
+      
+      return true;
+    });
+  }, [purchases, filters]);
+
   /* ================= SAVE PURCHASE ================= */
   const savePurchase = async () => {
     if (!partyName || !invoiceNo || !invoiceDate) {
@@ -364,7 +392,7 @@ const PurchaseEntryPage: React.FC = () => {
       startY: 65,
       margin: { top: 70, bottom: 65 },
       head: [["Party", "Invoice", "Date", "Items", "Total"]],
-      body: purchases.map((p) => [
+      body: filteredPurchases.map((p) => [
         p.partyName,
         p.invoiceNo,
         new Date(p.invoiceDate).toLocaleDateString("en-IN"),
@@ -397,11 +425,11 @@ const PurchaseEntryPage: React.FC = () => {
       0
     );
 
-  /* ================= EXPORT CSV (UNCHANGED) ================= */
+  /* ================= EXPORT CSV ================= */
   const exportCSV = () => {
     const csv = [
       ["Party", "Invoice", "Date", "Items", "Total"],
-      ...purchases.map((p) => [
+      ...filteredPurchases.map((p) => [
         p.partyName,
         p.invoiceNo,
         p.invoiceDate,
@@ -635,9 +663,16 @@ const PurchaseEntryPage: React.FC = () => {
 
           <div className="report-toolbar">
             <div className="report-filters">
-              <input placeholder="Search Party Name" />
-              <input type="date" />
-              <input type="date" />
+              <input 
+                placeholder="Search Party / Item Name" 
+                value={filters.search}
+                onChange={(e) => setFilters({...filters, search: e.target.value})}
+              />
+              <input 
+                type="date" 
+                value={filters.date}
+                onChange={(e) => setFilters({...filters, date: e.target.value})}
+              />
             </div>
 
             <div className="report-actions">
@@ -666,17 +701,17 @@ const PurchaseEntryPage: React.FC = () => {
               </thead>
 
               <tbody>
-                {purchases.length === 0 ? (
+                {filteredPurchases.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       style={{ textAlign: "center", padding: "20px" }}
                     >
                       No purchases found
                     </td>
                   </tr>
                 ) : (
-                  purchases.map((p) => (
+                  filteredPurchases.map((p) => (
                     <tr key={p._id}>
                       <td>{p.partyName}</td>
                       <td>{p.invoiceNo}</td>
