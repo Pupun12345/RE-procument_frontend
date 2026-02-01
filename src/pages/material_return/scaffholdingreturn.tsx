@@ -20,7 +20,6 @@ interface ReturnRecord {
   location?: string;
   woNumber?: string;
   supervisorName?: string;
-  tslName?: string;
   items: {
     itemName: string;
     unit: string;
@@ -42,7 +41,6 @@ interface FormState {
   returnQuantity?: string;
   woNumber?: string;
   supervisorName?: string;
-  tslName?: string;
 }
 
 interface FilterState {
@@ -187,7 +185,6 @@ export default function ScaffoldingIssuePage() {
     returnQuantity: "",
     woNumber: "",
     supervisorName: "",
-    tslName: "",
   });
 
   const [filters, setFilters] = useState<FilterState>({
@@ -203,7 +200,6 @@ export default function ScaffoldingIssuePage() {
     location?: string;
     woNumber?: string;
     supervisorName?: string;
-    tslName?: string;
     items: {
       itemName: string;
       unit: string;
@@ -325,7 +321,6 @@ export default function ScaffoldingIssuePage() {
       location: r.location,
       woNumber: r.woNumber,
       supervisorName: r.supervisorName,
-      tslName: r.tslName,
       items: mapped,
     });
   };
@@ -380,7 +375,6 @@ export default function ScaffoldingIssuePage() {
         location: editRecord.location,
         woNumber: editRecord.woNumber,
         supervisorName: editRecord.supervisorName,
-        tslName: editRecord.tslName,
         items: itemsPayload,
       };
 
@@ -402,7 +396,6 @@ export default function ScaffoldingIssuePage() {
     location: r.location,
     woNumber: r.woNumber,
     supervisorName: r.supervisorName,
-    tslName: r.tslName,
 
     itemsText: r.items.map((i) => `${i.itemName} (${i.quantity})`).join(", "),
 
@@ -412,10 +405,35 @@ export default function ScaffoldingIssuePage() {
   const filteredRecords = reportRows.filter((r) => {
     const searchText = (filters.search || "").toLowerCase();
 
-    const returnedBy = (r.returnedBy || "").toLowerCase();
-    const itemsText = (r.itemsText || "").toLowerCase();
+    // Search filter - ONLY TSL Manager name, item names, and W/O Number
+    if (!searchText) {
+      // If no search text, apply only date filter
+      let dateMatch = true;
+      if (filters.to) {
+        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        dateMatch = recordDate === filters.to;
+      }
+      return dateMatch;
+    }
 
-    return returnedBy.includes(searchText) || itemsText.includes(searchText);
+    // Get the original record to access items array
+    const originalRecord = records.find(rec => rec._id === r._id);
+    const itemMatch = originalRecord ? originalRecord.items.some((i) =>
+      i.itemName.toLowerCase().includes(searchText)
+    ) : false;
+    const tslManagerMatch = (r.returnedBy || "").toLowerCase().includes(searchText);
+    const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
+    const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
+
+    // Date filter - exact date match when date is selected
+    let dateMatch = true;
+    if (filters.to) {
+      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const selectedDate = filters.to;
+      dateMatch = recordDate === selectedDate;
+    }
+
+    return searchMatch && dateMatch;
   });
 
   // Pagination logic
@@ -466,17 +484,11 @@ export default function ScaffoldingIssuePage() {
     };
 
     const tempTotalPages = 1;
-    // Get matching records based on filters
-    const pdfRecords = records.filter((rec) => {
-      const searchText = (filters.search || "").toLowerCase();
-      const personMatch = (rec.personName || "")
-        .toLowerCase()
-        .includes(searchText);
-      const itemMatch = rec.items.some((i) =>
-        i.itemName.toLowerCase().includes(searchText)
-      );
-      return personMatch || itemMatch || !searchText;
-    });
+    // Use filteredRecords which already includes both date and search filtering
+    const pdfRecords = filteredRecords.map(fr => {
+      // Map back to original record structure for PDF generation
+      return records.find(r => r._id === fr._id);
+    }).filter(Boolean) as ReturnRecord[];
 
     autoTable(doc, {
       startY: 65,
@@ -487,11 +499,10 @@ export default function ScaffoldingIssuePage() {
           "Unit",
           "Qty",
           "Date",
-          "Person",
+          "Returned by TSL Manager",
           "Location",
           "W/O Number",
           "Supervisor",
-          "TSL",
         ],
       ],
       body: pdfRecords.flatMap((r) =>
@@ -504,7 +515,6 @@ export default function ScaffoldingIssuePage() {
           r.location || "",
           r.woNumber || "",
           r.supervisorName || "",
-          r.tslName || "",
         ])
       ),
       styles: { fontSize: 8, halign: "center", cellPadding: 2 },
@@ -529,16 +539,21 @@ export default function ScaffoldingIssuePage() {
       "Item",
       "Unit",
       "Date",
-      "Person",
+      "Returned by TSL Manager",
       "Location",
       "W/O Number",
       "Supervisor Name",
-      "TSL Name",
       "Unit Weight",
       "Issued Weight",
       "Issued Quantity",
     ];
-    const rows = records.flatMap((r) =>
+    
+    // Use filteredRecords and map back to original records
+    const filteredOriginalRecords = filteredRecords.map(fr => {
+      return records.find(r => r._id === fr._id);
+    }).filter(Boolean) as ReturnRecord[];
+    
+    const rows = filteredOriginalRecords.flatMap((r) =>
       r.items.map((i) => [
         i.itemName,
         i.unit,
@@ -547,7 +562,6 @@ export default function ScaffoldingIssuePage() {
         r.location || "",
         r.woNumber || "",
         r.supervisorName || "",
-        r.tslName || "",
         i.unitWeight || "",
         i.returnWeight || "",
         i.quantity,
@@ -645,21 +659,12 @@ export default function ScaffoldingIssuePage() {
                     }
                   />
                 </div>
-                <div className="ppe-form-group">
-                  <input
-                    className="ppe-input"
-                    type="text"
-                    placeholder="TSL Name"
-                    value={form.tslName || ""}
-                    onChange={(e) => handleChange("tslName", e.target.value)}
-                  />
-                </div>
 
                 <div className="ppe-form-group">
                   <input
                     className="ppe-input"
                     type="text"
-                    placeholder="Issued To (Person Name) *"
+                    placeholder="Returned by TSL Manager *"
                     value={form.personName}
                     onChange={(e) => handleChange("personName", e.target.value)}
                   />
@@ -863,8 +868,7 @@ export default function ScaffoldingIssuePage() {
                       woNumber: form.woNumber,
                       location: form.location,
                       personName: form.personName,
-                      supervisorName: form.supervisorName, // ✅
-                      tslName: form.tslName, // ✅
+                      supervisorName: form.supervisorName,
                       returnDate: form.issueDate,
 
                       items: materials
@@ -916,7 +920,6 @@ export default function ScaffoldingIssuePage() {
                         returnQuantity: "",
                         woNumber: "",
                         supervisorName: "",
-                        tslName: "",
                       });
 
                       showToast("success", "Materials issued successfully");
@@ -949,7 +952,7 @@ export default function ScaffoldingIssuePage() {
                 <input
                   className="ppe-search-input"
                   type="text"
-                  placeholder="Search Item / Person"
+                  placeholder="Search TSL Manager / Item / W/O Number"
                   value={filters.search}
                   onChange={(e) => {
                     setFilters({ ...filters, search: e.target.value });
@@ -989,11 +992,10 @@ export default function ScaffoldingIssuePage() {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Issued To</th>
+                    <th>Returned by TSL Manager</th>
                     <th>Location</th>
                     <th>W/O Number</th>
                     <th>Supervisor</th>
-                    <th>TSL</th>
                     <th>Items Issued</th>
                     <th>Total Qty</th>
                     {isAdmin && <th>Edit</th>}
@@ -1009,7 +1011,6 @@ export default function ScaffoldingIssuePage() {
                       <td>{r.location || "-"}</td>
                       <td>{r.woNumber || "-"}</td>
                       <td>{r.supervisorName || "-"}</td>
-                      <td>{r.tslName || "-"}</td>
                       <td>{r.itemsText}</td>
                       <td>{r.totalQty}</td>
                       {isAdmin && (
@@ -1135,7 +1136,7 @@ export default function ScaffoldingIssuePage() {
                   }
                 />
 
-                <label>Returned By</label>
+                <label>Returned by TSL Manager</label>
                 <input
                   value={editRecord.personName ?? ""}
                   onChange={(e) =>
@@ -1159,14 +1160,6 @@ export default function ScaffoldingIssuePage() {
                       ...editRecord,
                       supervisorName: e.target.value,
                     })
-                  }
-                />
-
-                <label>TSL Name</label>
-                <input
-                  value={editRecord.tslName ?? ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, tslName: e.target.value })
                   }
                 />
 

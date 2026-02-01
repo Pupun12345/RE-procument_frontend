@@ -22,7 +22,6 @@ interface IssueRecord {
   location?: string;
   woNumber?: string;
   supervisorName?: string;
-  tslName?: string;
   items: {
     itemName: string;
     unit: string;
@@ -45,7 +44,6 @@ interface FormState {
   issuedQuantity?: string;
   woNumber?: string;
   supervisorName?: string;
-  tslName?: string;
 }
 
 interface FilterState {
@@ -65,7 +63,6 @@ interface EditableIssue {
   unitWeight?: number | string;
   issuedQuantity?: number | string;
   issuedWeight?: number | string;
-  tslName?: string;
   items: {
     itemName: string;
     unit: string;
@@ -187,7 +184,6 @@ export default function ScaffoldingIssuePage() {
     issuedQuantity: "",
     woNumber: "",
     supervisorName: "",
-    tslName: "",
   });
 
   const [filters, setFilters] = useState<FilterState>({
@@ -252,7 +248,6 @@ export default function ScaffoldingIssuePage() {
       location: record.location,
       woNumber: record.woNumber,
       supervisorName: record.supervisorName,
-      tslName: record.tslName,
       items: mapped,
     });
   };
@@ -306,7 +301,6 @@ export default function ScaffoldingIssuePage() {
         location: editRecord.location,
         woNumber: editRecord.woNumber,
         supervisorName: editRecord.supervisorName,
-        tslName: editRecord.tslName,
         items: itemsPayload,
       };
 
@@ -360,7 +354,6 @@ export default function ScaffoldingIssuePage() {
     location: issue.location,
     woNumber: issue.woNumber,
     supervisorName: issue.supervisorName,
-    tslName: issue.tslName,
 
     itemsText: issue.items
       .map(
@@ -373,12 +366,37 @@ export default function ScaffoldingIssuePage() {
   }));
 
   const filteredRecords = reportRows.filter((r) => {
-    const searchText = filters.search.toLowerCase();
+    const searchText = filters.search.toLowerCase().trim();
+    
+    // Search filter - ONLY TSL Manager name, item names, and W/O Number
+    if (!searchText) {
+      // If no search text, apply only date filter
+      let dateMatch = true;
+      if (filters.to) {
+        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        dateMatch = recordDate === filters.to;
+      }
+      return dateMatch;
+    }
 
-    return (
-      r.issuedTo.toLowerCase().includes(searchText) ||
-      r.itemsText.toLowerCase().includes(searchText)
-    );
+    // Get the original record to access items array
+    const originalRecord = records.find(rec => rec._id === r._id);
+    const itemMatch = originalRecord ? originalRecord.items.some((i) =>
+      i.itemName.toLowerCase().includes(searchText)
+    ) : false;
+    const tslManagerMatch = r.issuedTo.toLowerCase().includes(searchText);
+    const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
+    const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
+
+    // Date filter - exact date match when date is selected
+    let dateMatch = true;
+    if (filters.to) {
+      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const selectedDate = filters.to;
+      dateMatch = recordDate === selectedDate;
+    }
+
+    return searchMatch && dateMatch;
   });
 
   // Pagination logic
@@ -449,11 +467,10 @@ export default function ScaffoldingIssuePage() {
           "Unit",
           "Qty",
           "Date",
-          "Person",
+          "Issue to TSL Manager",
           "Location",
           "W/O Number",
           "Supervisor",
-          "TSL",
         ],
       ],
       body: pdfRecords.flatMap((r) =>
@@ -466,7 +483,6 @@ export default function ScaffoldingIssuePage() {
           r.location || "",
           r.woNumber || "",
           r.supervisorName || "",
-          r.tslName || "",
         ])
       ),
       styles: { fontSize: 8, halign: "center", cellPadding: 2 },
@@ -489,11 +505,10 @@ export default function ScaffoldingIssuePage() {
   const exportCSV = (): void => {
     const headers = [
       "Date",
-      "Issued To",
+      "Issue to TSL Manager",
       "Location",
       "W/O Number",
       "Supervisor",
-      "TSL",
       "Items",
       "Total Qty",
     ];
@@ -504,7 +519,6 @@ export default function ScaffoldingIssuePage() {
       r.location || "",
       r.woNumber || "",
       r.supervisorName || "",
-      r.tslName || "",
       r.itemsText.replace(/\n/g, " | "),
       r.totalQty,
     ]);
@@ -601,21 +615,12 @@ export default function ScaffoldingIssuePage() {
                     }
                   />
                 </div>
-                <div className="ppe-form-group">
-                  <input
-                    className="ppe-input"
-                    type="text"
-                    placeholder="TSL Name"
-                    value={form.tslName || ""}
-                    onChange={(e) => handleChange("tslName", e.target.value)}
-                  />
-                </div>
 
                 <div className="ppe-form-group">
                   <input
                     className="ppe-input"
                     type="text"
-                    placeholder="Issued To (Person Name) *"
+                    placeholder="Issue to TSL Manager *"
                     value={form.personName}
                     onChange={(e) => handleChange("personName", e.target.value)}
                   />
@@ -805,7 +810,6 @@ export default function ScaffoldingIssuePage() {
                       location: form.location,
                       woNumber: form.woNumber,
                       supervisorName: form.supervisorName,
-                      tslName: form.tslName,
 
                       items: materials
                         .filter((m) => m.itemName && m.issuedQuantity) // safety
@@ -855,7 +859,6 @@ export default function ScaffoldingIssuePage() {
                         issuedQuantity: "",
                         woNumber: "",
                         supervisorName: "",
-                        tslName: "",
                       });
 
                       showToast("success", "Materials issued successfully");
@@ -888,7 +891,7 @@ export default function ScaffoldingIssuePage() {
                 <input
                   className="ppe-search-input"
                   type="text"
-                  placeholder="Search Item / Person"
+                  placeholder="Search TSL Manager / Item / W/O Number"
                   value={filters.search}
                   onChange={(e) => {
                     setFilters({ ...filters, search: e.target.value });
@@ -928,11 +931,10 @@ export default function ScaffoldingIssuePage() {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Issued To</th>
+                    <th>Issue to TSL Manager</th>
                     <th>Location</th>
                     <th>W/O Number</th>
                     <th>Supervisor</th>
-                    <th>TSL</th>
                     <th>Items Issued</th>
                     <th>Total Qty</th>
                     {isAdmin && <th>Edit</th>}
@@ -948,7 +950,6 @@ export default function ScaffoldingIssuePage() {
                       <td>{r.location || "-"}</td>
                       <td>{r.woNumber || "-"}</td>
                       <td>{r.supervisorName || "-"}</td>
-                      <td>{r.tslName || "-"}</td>
                       <td>{r.itemsText}</td>
                       <td>{r.totalQty}</td>
                       {isAdmin && (
@@ -1051,7 +1052,7 @@ export default function ScaffoldingIssuePage() {
                   }
                 />
 
-                <label>Issued To</label>
+                <label>Issue to TSL Manager</label>
                 <input
                   value={editRecord.issuedTo ?? ""}
                   onChange={(e) =>
@@ -1075,14 +1076,6 @@ export default function ScaffoldingIssuePage() {
                       ...editRecord,
                       supervisorName: e.target.value,
                     })
-                  }
-                />
-
-                <label>TSL Name</label>
-                <input
-                  value={editRecord.tslName ?? ""}
-                  onChange={(e) =>
-                    setEditRecord({ ...editRecord, tslName: e.target.value })
                   }
                 />
 

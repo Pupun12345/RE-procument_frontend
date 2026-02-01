@@ -271,21 +271,34 @@ const DistributionPage: React.FC = () => {
   // Add item logic
 
   const filteredRecords = records.filter((r) => {
-    const search = filters.search.toLowerCase();
+    const search = filters.search.toLowerCase().trim();
+
+    // Search filter - ONLY person name and item names
+    if (!search) {
+      // If no search text, apply only date filter
+      let dateMatch = true;
+      if (filters.from) {
+        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        dateMatch = recordDate === filters.from;
+      }
+      return dateMatch;
+    }
 
     const itemMatch = r.items.some((i) =>
-      i.itemName.toLowerCase().includes(search),
+      i.itemName.toLowerCase().includes(search)
     );
-
     const personMatch = r.issuedTo.toLowerCase().includes(search);
+    const searchMatch = itemMatch || personMatch;
 
-    const date = new Date(r.issueDate);
-    const from = filters.from ? new Date(filters.from) : null;
-    const to = filters.to ? new Date(filters.to) : null;
+    // Date filter - exact date match when date is selected
+    let dateMatch = true;
+    if (filters.from) {
+      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const selectedDate = filters.from;
+      dateMatch = recordDate === selectedDate;
+    }
 
-    const dateMatch = (!from || date >= from) && (!to || date <= to);
-
-    return (itemMatch || personMatch) && dateMatch;
+    return searchMatch && dateMatch;
   });
 
   // ====================== EXPORT ======================
