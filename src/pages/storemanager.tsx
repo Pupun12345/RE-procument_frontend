@@ -9,13 +9,15 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./storemanager.css";
+import { useAuthStore } from "../store/authStore";
 
 export function StoreManager() {
   const navigate = useNavigate();
-
   const handleBackToDashboard = () => {
     navigate("/dashboard");
   };
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   const modules = [
     {
@@ -25,6 +27,7 @@ export function StoreManager() {
       icon: ShoppingCart,
       color: "bg-green-500",
       action: "Open Material Purchase",
+      adminOnly: true, // 👈 ADD
       onClick: () => {
         navigate("/dashboard/material-purchase");
       },
@@ -105,36 +108,43 @@ export function StoreManager() {
 
         {/* Module Cards Grid */}
         <div className="grid grid-cols-3 lg:grid-cols-3 gap-6">
-          {modules.map((module) => {
-            const Icon = module.icon;
-            return (
-              <div
-                key={module.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
-              >
+          {modules
+            .filter((module) => {
+              if (module.adminOnly && !isAdmin) return false;
+              return true;
+            })
+            .map((module) => {
+              const Icon = module.icon;
+              return (
                 <div
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                    module.color ?? ""
-                  }`}
-                  style={module.bg ? { backgroundColor: module.bg } : undefined}
+                  key={module.id}
+                  className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
                 >
-                  <Icon size={26} strokeWidth={2.2} className="text-white" />
+                  <div
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
+                      module.color ?? ""
+                    }`}
+                    style={
+                      module.bg ? { backgroundColor: module.bg } : undefined
+                    }
+                  >
+                    <Icon size={26} strokeWidth={2.2} className="text-white" />
+                  </div>
+
+                  <h3 className="text-gray-900 mb-2">{module.title}</h3>
+                  <p className="text-sm text-gray-600 mb-6 min-h-\[40px\]">
+                    {module.description}
+                  </p>
+
+                  <button
+                    onClick={module.onClick}
+                    className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    {module.action}
+                  </button>
                 </div>
-
-                <h3 className="text-gray-900 mb-2">{module.title}</h3>
-                <p className="text-sm text-gray-600 mb-6 min-h-\[40px\]">
-                  {module.description}
-                </p>
-
-                <button
-                  onClick={module.onClick}
-                  className="w-full py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  {module.action}
-                </button>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </main>
     </div>

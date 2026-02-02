@@ -8,9 +8,13 @@ import {
   FaCog,
   FaQuestionCircle,
 } from "react-icons/fa";
+import { useAuthStore } from "../store/authStore";
+  
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { role } = useAuthStore();
+  const isAdmin = role === "admin";
 
   return (
     <DashboardLayout>
@@ -26,14 +30,16 @@ export default function Dashboard() {
           gap: 24,
         }}
       >
-         <ModuleCard
-          icon={<FaFileAlt />}
-          color="#8b5cf6"
-          title="Registration"
-          desc="Generate and view business reports and analytics"
-          onClick={() => navigate("/dashboard/registration")}
-        />
-        
+        {isAdmin && (
+          <ModuleCard
+            icon={<FaFileAlt />}
+            color="#8b5cf6"
+            title="Registration"
+            desc="Generate and view business reports and analytics"
+            onClick={() => navigate("/dashboard/registration")}
+          />
+        )}
+
         <ModuleCard
           icon={<FaWarehouse />}
           color="#3b82f6"
@@ -47,7 +53,7 @@ export default function Dashboard() {
           color="#22c55e"
           title="HRMS"
           desc="Human resource management and employee records"
-          onClick={()=> navigate("/dashboard/hrms")}
+          onClick={() => navigate("/dashboard/hrms")}
         />
 
         <ModuleCard
@@ -56,8 +62,6 @@ export default function Dashboard() {
           title="Vehicle Management"
           desc="Track and manage company vehicles and maintenance"
         />
-
-       
 
         <ModuleCard
           icon={<FaCog />}
