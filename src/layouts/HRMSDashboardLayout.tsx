@@ -39,6 +39,7 @@ export default function HRMSDashboardLayout({ children }: Props) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [employeeMenuOpen, setEmployeeMenuOpen] = useState(false);
   const [payrollMenuOpen, setPayrollMenuOpen] = useState(false);
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -95,8 +96,19 @@ export default function HRMSDashboardLayout({ children }: Props) {
       label: "Attendance",
       path: "/dashboard/hrms/payroll/attendance",
     },
+  ];
+
+  const reportsSubItems = [
     {
-      label: "Reports",
+      label: "Monthly Report",
+      path: "/dashboard/hrms/reports/monthly",
+    },
+    {
+      label: "Quarterly Report",
+      path: "/dashboard/hrms/reports/weekly",
+    },
+    {
+      label: "Yearly Report",
       path: "/dashboard/hrms/reports/yearly",
     },
   ];
@@ -136,11 +148,6 @@ export default function HRMSDashboardLayout({ children }: Props) {
       icon: <Activity size={20} />,
       label: "Activity Logs",
       path: "/dashboard/hrms/activity-logs",
-    },
-    {
-      icon: <BarChart3 size={20} />,
-      label: "Reports",
-      path: "/dashboard/hrms/reports/yearly",
     },
   ];
 
@@ -253,7 +260,45 @@ export default function HRMSDashboardLayout({ children }: Props) {
               </div>
             )}
           </div>
-            {menuItems.map((item, index) => (
+
+          {/* Expandable Reports Section */}
+          <div>
+            <button
+              className={`hrms-nav-item ${
+                reportsSubItems.some(sub => isActive(sub.path)) ? "active" : ""
+              }`}
+              onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
+            >
+              <span className="hrms-nav-icon">
+                <FileText size={20} />
+              </span>
+              <span className="hrms-nav-label">Reports</span>
+              <span className="hrms-nav-chevron">
+                {reportsMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+            </button>
+            
+            {reportsMenuOpen && (
+              <div className="hrms-nav-submenu">
+                {reportsSubItems.map((subItem, index) => (
+                  <button
+                    key={index}
+                    className={`hrms-nav-subitem ${
+                      isActive(subItem.path) ? "active" : ""
+                    }`}
+                    onClick={() => {
+                      navigate(subItem.path);
+                      setIsSidebarOpen(false);
+                    }}
+                  >
+                    {subItem.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {menuItems.map((item, index) => (
             <button
               key={index}
               className={`hrms-nav-item ${

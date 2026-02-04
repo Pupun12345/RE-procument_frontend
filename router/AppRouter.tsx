@@ -37,7 +37,11 @@ import { HRMSDashboard } from "../src/pages/HRMS/Dashboard/HRMSDashboard";
 import { HRMSEmployees } from "../src/pages/HRMS/Employees/HRMSEmployees";
 import LoansAdvances from "../src/pages/HRMS/Loan/LoansAdvances";
 import { ShiftManagement } from "../src/pages/HRMS/Employees/EmployeeManagement";
-import { Report } from "../src/pages/HRMS/Report";
+import { Report } from "../src/pages/HRMS/Reports/Report";
+import { MonthlyReport } from "../src/pages/HRMS/Reports/MonthlyReport";
+import { YearlyReport } from "../src/pages/HRMS/Reports/YearlyReport";
+import { WeeklyReport } from "../src/pages/HRMS/Reports/WeeklyReport";
+import { ReportsManager } from "../src/pages/HRMS/Reports/ReportsManager";
 import PPE from "../src/pages/final-report/PPE"
 import Mechanical from "../src/pages/final-report/Mechanical"
 import Scaffolding from "../src/pages/final-report/Scaffolding"
@@ -405,11 +409,41 @@ export default function AppRouter() {
         }
       />
       <Route
+        path="/dashboard/hrms/reports"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <ReportsManager />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/dashboard/hrms/reports/yearly"
         element={
           <ProtectedRoute>
             <HRMSDashboardLayout>
-              <Report />
+              <YearlyReport />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/reports/monthly"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <MonthlyReport />
+            </HRMSDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/hrms/reports/weekly"
+        element={
+          <ProtectedRoute>
+            <HRMSDashboardLayout>
+              <WeeklyReport />
             </HRMSDashboardLayout>
           </ProtectedRoute>
         }

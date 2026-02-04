@@ -16,9 +16,9 @@ import {
   getAllFiscalYears,
   type MonthlyData,
   type YearlyData
-} from "../../services/payrollService";
+} from "../../../services/payrollService";
 
-export function Report() {
+export function WeeklyReport() {
   const navigate = useNavigate();
   const [fiscalYear, setFiscalYear] = useState("FY 2023-2024");
   const [showYearDropdown, setShowYearDropdown] = useState(false);
@@ -70,7 +70,6 @@ export function Report() {
       }
     } catch (err: any) {
       console.error("Error fetching fiscal years:", err);
-      // If no fiscal years exist, use default
       setFiscalYears(["FY 2023-2024", "FY 2022-2023", "FY 2021-2022"]);
     }
   };
@@ -87,7 +86,6 @@ export function Report() {
     } catch (err: any) {
       console.error("Error fetching report data:", err);
       setError(err.message || "Failed to load report data");
-      // Keep using sample data if backend fails
       loadSampleData();
     } finally {
       setLoading(false);
@@ -95,7 +93,6 @@ export function Report() {
   };
 
   const loadSampleData = () => {
-    // Fallback sample data
     const sampleMonthlyData: MonthlyData[] = [
       {
         month: "April 2023",
@@ -145,18 +142,10 @@ export function Report() {
 
   // Annual trends data for chart
   const annualTrends = [
-    { month: "Jan", value: 85 },
-    { month: "Feb", value: 88 },
-    { month: "Mar", value: 90 },
-    { month: "Apr", value: 92 },
-    { month: "May", value: 94 },
-    { month: "Jun", value: 97 },
-    { month: "Jul", value: 98 },
-    { month: "Aug", value: 99 },
-    { month: "Sep", value: 100 },
-    { month: "Oct", value: 102 },
-    { month: "Nov", value: 104 },
-    { month: "Dec", value: 105 }
+    { month: "Q1", value: 85 },
+    { month: "Q2", value: 92 },
+    { month: "Q3", value: 98 },
+    { month: "Q4", value: 105 }
   ];
 
   const formatCurrency = (value: number) => {
@@ -168,8 +157,29 @@ export function Report() {
     }).format(value);
   };
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat("en-US").format(value);
+  const getQuarterlyData = () => {
+    // Group monthly data into quarters
+    const quarters: MonthlyData[] = [];
+    for (let i = 0; i < monthlyData.length; i += 3) {
+      const chunk = monthlyData.slice(i, i + 3);
+      if (chunk.length > 0) {
+        const quarterNum = Math.floor(i / 3) + 1;
+        quarters.push({
+          month: `Q${quarterNum} ${chunk[0].year}`,
+          monthNumber: chunk[0].monthNumber,
+          year: chunk[0].year,
+          headcount: Math.round(chunk.reduce((sum, d) => sum + d.headcount, 0) / chunk.length),
+          basicPay: chunk.reduce((sum, d) => sum + d.basicPay, 0),
+          hra: chunk.reduce((sum, d) => sum + d.hra, 0),
+          allowances: chunk.reduce((sum, d) => sum + d.allowances, 0),
+          grossSalary: chunk.reduce((sum, d) => sum + d.grossSalary, 0),
+          pfEmp: chunk.reduce((sum, d) => sum + d.pfEmp, 0),
+          esiEmp: chunk.reduce((sum, d) => sum + d.esiEmp, 0),
+          netSalary: chunk.reduce((sum, d) => sum + d.netSalary, 0)
+        });
+      }
+    }
+    return quarters;
   };
 
   const handleBackToPayroll = () => {
@@ -181,7 +191,6 @@ export function Report() {
   };
 
   const handleExportExcel = () => {
-    // Export functionality would be implemented here
     alert("Exporting to Excel...");
   };
 
@@ -219,13 +228,11 @@ export function Report() {
           </button>
           <div className="header-content">
             <div className="breadcrumb">
-              <span className="breadcrumb-item">Record's</span>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span className="breadcrumb-item active">Financials</span>
+              <span className="breadcrumb-item active">Quarterly Report</span>
             </div>
-            <h1 className="report-title">Yearly Data Report</h1>
+            <h1 className="report-title" style={{textAlign: "start", marginLeft: "3px"}}>Quarterly Data Report</h1>
             <p className="report-subtitle">
-              A comprehensive payroll summary and financial trends for the fiscal year.
+              A comprehensive quarterly payroll summary and financial trends for the fiscal year.
             </p>
           </div>
         </div>
@@ -341,10 +348,10 @@ export function Report() {
         </div>
       </div>
 
-      {/* Annual Salary Trends Chart */}
+      {/* Quarterly Salary Trends Chart */}
       <div className="chart-section">
         <div className="chart-header">
-          <h2 className="chart-title">Annual Salary Trends</h2>
+          <h2 className="chart-title">Quarterly Salary Trends</h2>
           <div className="chart-legend">
             <div className="legend-item">
               <span className="legend-dot legend-gross"></span>
@@ -374,10 +381,12 @@ export function Report() {
         </div>
       </div>
 
-      {/* Detailed Monthly Breakdown Table */}
+      {/* Detailed Quarterly Breakdown Table */}
       <div className="table-section">
         <div className="table-header">
-          <h2 className="table-title">Detailed Monthly Breakdown</h2>
+          <div className="table-title-group">
+            <h2 className="table-title">Quarterly Breakdown</h2>
+          </div>
           <div className="table-actions">
             <button className="table-action-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -400,8 +409,8 @@ export function Report() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>MONTH</th>
-                <th>HEADCOUNT</th>
+                <th>QUARTER</th>
+                <th>AVG HEADCOUNT</th>
                 <th>BASIC PAY</th>
                 <th>H.R.A</th>
                 <th>ALLOWANCES</th>
@@ -411,12 +420,11 @@ export function Report() {
               </tr>
             </thead>
             <tbody>
-              {monthlyData.map((data, index) => (
+              {getQuarterlyData().map((data, index) => (
                 <tr key={index}>
                   <td className="month-cell">
                     <div className="month-wrapper">
-                      <span className="month-name">{data.month.split(" ")[0]}</span>
-                      <span className="month-year">{data.month.split(" ")[1]}</span>
+                      <span className="month-name">{data.month}</span>
                     </div>
                   </td>
                   <td>{data.headcount}</td>
@@ -442,7 +450,9 @@ export function Report() {
           </table>
         </div>
         <div className="table-footer">
-          <span className="viewing-text">Viewing {monthlyData.length} of 12 months</span>
+          <span className="viewing-text">
+            Viewing {getQuarterlyData().length} quarters
+          </span>
         </div>
       </div>
     </div>
