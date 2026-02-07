@@ -168,52 +168,62 @@ button.download:hover {
   margin-top: 28px;
 }
 
-/* ================= REPORT ================= */
-.report-title {
-  text-align: center;
-  margin: 36px 0 28px;
-  color: #2563eb;
-  letter-spacing: 1px;
-  font-weight: 700;
-}
-
-/* ================= TOOLBAR ================= */
-.report-toolbar {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 32px;                 /* space BETWEEN filters & buttons */
-  margin-bottom: 28px;
-}
-
 /* ================= FILTERS ================= */
 .report-filters {
   display: flex;
   align-items: center;
-  gap: 12px;                 /* tight spacing like reference */
+  gap: 12px; /* tight spacing like reference */
 }
 
-/* Input sizing */
-.report-filters input {
-  height: 48px;
-  line-height: 48px;
+/* ================= REPORT TOOLBAR — FINAL ================= */
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  margin-bottom: 28px;
 }
 
-/* ✅ Make all filter inputs SAME size */
+/* Filters */
+.report-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Inputs */
 .report-filters input {
-  width: 220px;          /* 👈 same width for all */
-  height: 44px;          /* 👈 same height */
-  padding: 0 14px;
-  border-radius: 12px;
+  height: 56px;
+  padding: 0 18px;
+  border-radius: 14px;
   border: 2px solid #000;
   font-size: 14px;
   box-sizing: border-box;
 }
 
+/* Actions */
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+/* Buttons */
+.report-actions button {
+  height: 56px;
+  padding: 0 28px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
 
 .report-filters input:nth-child(2),
 .report-filters input:nth-child(3) {
-  width: 200px;              /* Date inputs */
+  width: 200px; /* Date inputs */
 }
 
 /* ================= ACTIONS ================= */
@@ -221,11 +231,9 @@ button.download:hover {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: auto;         /* pushes buttons to right cleanly */
+  margin-left: auto; /* pushes buttons to right cleanly */
   white-space: nowrap;
 }
-
-
 
 /* ================= BUTTON COLORS ================= */
 button.green {
@@ -257,18 +265,6 @@ button.orange:hover {
   font-weight: 700;
 }
 
-/* ================= TOOLBAR (FIXED) ================= */
-.report-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;          /* ⬅ prevents horizontal scroll */
-  box-sizing: border-box;
-  margin-bottom: 28px;
-}
-
 /* ================= FILTERS ================= */
 .report-filters {
   display: flex;
@@ -280,24 +276,22 @@ button.orange:hover {
 
 /* 🔍 Search Party Name — LARGE */
 
-
-
 /* ================= ACTIONS ================= */
 .report-actions {
   display: flex;
   align-items: center;
   gap: 16px;
   white-space: nowrap;
-  flex-shrink: 0;            /* ⬅ buttons never overflow */
+  flex-shrink: 0; /* ⬅ buttons never overflow */
 }
 
 .report-actions button {
-  height: 40px;          /* ⬅ smaller height */
-  min-width: 110px;      /* ⬅ narrower */
-  padding: 0 18px;       /* ⬅ less horizontal padding */
-  border-radius: 10px;   /* ⬅ slightly tighter */
+  height: 40px; /* ⬅ smaller height */
+  min-width: 110px; /* ⬅ narrower */
+  padding: 0 18px; /* ⬅ less horizontal padding */
+  border-radius: 10px; /* ⬅ slightly tighter */
   font-weight: 600;
-  font-size: 14px;       /* ⬅ keeps text clean */
+  font-size: 14px; /* ⬅ keeps text clean */
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -567,7 +561,7 @@ button.orange:hover {
 }
 /* 🔴 DELETE BUTTON (ENTRY FORM) */
 button.delete {
-  background: #ef4444;        /* red */
+  background: #ef4444; /* red */
   color: #fff;
   border: none;
   padding: 6px 14px;
@@ -639,4 +633,11 @@ button.delete:hover {
 .old-stock-buttons button.clear-stock:hover {
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.45);
   transform: translateY(-2px);
+}
+.summary input {
+  width: 100px; /* 👈 compact GST box */
+  padding: 6px 10px;
+  text-align: center;
+  font-weight: 700;
+  border-radius: 8px;
 }

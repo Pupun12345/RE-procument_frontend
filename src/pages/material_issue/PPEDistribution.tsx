@@ -150,7 +150,7 @@ const DistributionPage: React.FC = () => {
 
   const [editRecord, setEditRecord] = useState<EditableRecord | null>(null);
   const [editItemState, setEditItemState] = useState<ItemEditState | null>(
-    null
+    null,
   );
 
   // Open item edit modal from the add items table
@@ -203,7 +203,7 @@ const DistributionPage: React.FC = () => {
       const itemsPayload = editRecord.items.map((it, idx) =>
         idx === 0
           ? { itemName: it.itemName, unit: it.unit, qty: editRecord.quantity }
-          : { itemName: it.itemName, unit: it.unit, qty: it.qty }
+          : { itemName: it.itemName, unit: it.unit, qty: it.qty },
       );
 
       const payload = {
@@ -277,14 +277,14 @@ const DistributionPage: React.FC = () => {
       // If no search text, apply only date filter
       let dateMatch = true;
       if (filters.from) {
-        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
         dateMatch = recordDate === filters.from;
       }
       return dateMatch;
     }
 
     const itemMatch = r.items.some((i) =>
-      i.itemName.toLowerCase().includes(search)
+      i.itemName.toLowerCase().includes(search),
     );
     const personMatch = r.issuedTo.toLowerCase().includes(search);
     const searchMatch = itemMatch || personMatch;
@@ -292,7 +292,7 @@ const DistributionPage: React.FC = () => {
     // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.from) {
-      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
       const selectedDate = filters.from;
       dateMatch = recordDate === selectedDate;
     }
@@ -342,19 +342,19 @@ const DistributionPage: React.FC = () => {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
@@ -377,7 +377,7 @@ const DistributionPage: React.FC = () => {
           new Date(r.issueDate).toLocaleDateString("en-IN"),
           r.issuedTo,
           r.location || "",
-        ])
+        ]),
       ),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
@@ -523,15 +523,21 @@ const DistributionPage: React.FC = () => {
                         value={row.itemName}
                         onChange={(e) => {
                           const selected = stockItems.find(
-                            (s) => s.itemName === e.target.value
+                            (s) => s.itemName === e.target.value,
                           );
 
                           updateItem(index, "itemName", e.target.value);
                           updateItem(
                             index,
                             "unit",
-                            selected ? selected.unit : ""
+                            selected ? selected.unit : "",
                           );
+                        }}
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "100%",
+                          padding: "8px 12px",
                         }}
                       >
                         <option value="">Select Item</option>
@@ -551,8 +557,14 @@ const DistributionPage: React.FC = () => {
                         placeholder="Quantity"
                         type="number"
                         min="1"
-                        style={{ width: "fit-content" }}
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "120px",
+                          padding: "8px 12px",
+                        }}
                       />
+
                       <input
                         className="ppe-input"
                         value={row.unit}
@@ -560,7 +572,12 @@ const DistributionPage: React.FC = () => {
                           updateItem(index, "unit", e.target.value)
                         }
                         placeholder="Unit"
-                        style={{ width: "fit-content" }} // Adjust width to fit content dynamically
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "120px",
+                          padding: "8px 12px",
+                        }}
                       />
                       <div
                         style={{
@@ -909,7 +926,7 @@ const DistributionPage: React.FC = () => {
                   value={editItemState.itemName}
                   onChange={(e) => {
                     const selected = stockItems.find(
-                      (s) => s.itemName === e.target.value
+                      (s) => s.itemName === e.target.value,
                     );
                     setEditItemState({
                       ...editItemState,

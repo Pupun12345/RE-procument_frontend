@@ -148,7 +148,7 @@ export default function ScaffoldingIssuePage() {
   const updateMaterial = <K extends keyof MaterialRow>(
     index: number,
     key: K,
-    value: MaterialRow[K]
+    value: MaterialRow[K],
   ) => {
     setMaterials((prev) => {
       const updated = [...prev];
@@ -255,7 +255,7 @@ export default function ScaffoldingIssuePage() {
   const updateEditItem = (
     index: number,
     key: "qty" | "unitWeight" | "issuedQuantity",
-    value: string
+    value: string,
   ) => {
     if (!editRecord) return;
     const updated = { ...editRecord } as EditableIssue;
@@ -272,7 +272,7 @@ export default function ScaffoldingIssuePage() {
 
     const uw = parseFloat(String(itemsCopy[index].unitWeight || "0"));
     const iq = parseFloat(
-      String(itemsCopy[index].issuedQuantity ?? itemsCopy[index].qty ?? "0")
+      String(itemsCopy[index].issuedQuantity ?? itemsCopy[index].qty ?? "0"),
     );
     if (!isNaN(uw) && !isNaN(iq)) {
       itemsCopy[index].issuedWeight = uw * iq;
@@ -333,10 +333,10 @@ export default function ScaffoldingIssuePage() {
       // Update the field, then recalculate issuedWeight
       const updatedForm = { ...form, [field]: value };
       const unitWeightNum = parseFloat(
-        field === "unitWeight" ? value : updatedForm.unitWeight || "0"
+        field === "unitWeight" ? value : updatedForm.unitWeight || "0",
       );
       const issuedQuantityNum = parseFloat(
-        field === "issuedQuantity" ? value : updatedForm.issuedQuantity || "0"
+        field === "issuedQuantity" ? value : updatedForm.issuedQuantity || "0",
       );
       let issuedWeight = "";
       if (!isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)) {
@@ -358,7 +358,7 @@ export default function ScaffoldingIssuePage() {
     itemsText: issue.items
       .map(
         (i) =>
-          `${i.itemName} – ${i.qty} × ${i.unitWeight} kg = ${i.issuedWeight} kg`
+          `${i.itemName} – ${i.qty} × ${i.unitWeight} kg = ${i.issuedWeight} kg`,
       )
       .join("\n"),
 
@@ -367,23 +367,25 @@ export default function ScaffoldingIssuePage() {
 
   const filteredRecords = reportRows.filter((r) => {
     const searchText = filters.search.toLowerCase().trim();
-    
+
     // Search filter - ONLY TSL Manager name, item names, and W/O Number
     if (!searchText) {
       // If no search text, apply only date filter
       let dateMatch = true;
       if (filters.to) {
-        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
         dateMatch = recordDate === filters.to;
       }
       return dateMatch;
     }
 
     // Get the original record to access items array
-    const originalRecord = records.find(rec => rec._id === r._id);
-    const itemMatch = originalRecord ? originalRecord.items.some((i) =>
-      i.itemName.toLowerCase().includes(searchText)
-    ) : false;
+    const originalRecord = records.find((rec) => rec._id === r._id);
+    const itemMatch = originalRecord
+      ? originalRecord.items.some((i) =>
+          i.itemName.toLowerCase().includes(searchText),
+        )
+      : false;
     const tslManagerMatch = r.issuedTo.toLowerCase().includes(searchText);
     const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
     const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
@@ -391,7 +393,7 @@ export default function ScaffoldingIssuePage() {
     // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.to) {
-      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
       const selectedDate = filters.to;
       dateMatch = recordDate === selectedDate;
     }
@@ -403,7 +405,7 @@ export default function ScaffoldingIssuePage() {
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
   const paginatedRecords = filteredRecords.slice(
     (currentPage - 1) * recordsPerPage,
-    currentPage * recordsPerPage
+    currentPage * recordsPerPage,
   );
 
   const exportPDF = (): void => {
@@ -432,26 +434,28 @@ export default function ScaffoldingIssuePage() {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
     let tempTotalPages = 1;
 
     // Use filteredRecords which already includes both date and search filtering
-    const pdfRecords = filteredRecords.map(fr => {
-      return records.find(r => r._id === fr._id);
-    }).filter(Boolean) as IssueRecord[];
+    const pdfRecords = filteredRecords
+      .map((fr) => {
+        return records.find((r) => r._id === fr._id);
+      })
+      .filter(Boolean) as IssueRecord[];
 
     autoTable(doc, {
       startY: 65,
@@ -478,7 +482,7 @@ export default function ScaffoldingIssuePage() {
           r.location || "",
           r.woNumber || "",
           r.supervisorName || "",
-        ])
+        ]),
       ),
       styles: { fontSize: 8, halign: "center", cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
@@ -676,7 +680,7 @@ export default function ScaffoldingIssuePage() {
                         value={row.itemName}
                         onChange={(e) => {
                           const selected = items.find(
-                            (i) => i.itemName === e.target.value
+                            (i) => i.itemName === e.target.value,
                           );
 
                           updateMaterial(index, "itemName", e.target.value);
@@ -684,8 +688,16 @@ export default function ScaffoldingIssuePage() {
                           updateMaterial(
                             index,
                             "unitWeight",
-                            String(selected?.puw || "")
+                            String(selected?.puw || ""),
                           );
+                        }}
+                        style={{
+                          width: "95%",
+                          height: "38px",
+                          minHeight: "38px",
+                          padding: "4px 10px",
+                          borderRadius: "10px",
+                          boxSizing: "border-box",
                         }}
                       >
                         <option value="">Select Item</option>
@@ -718,7 +730,7 @@ export default function ScaffoldingIssuePage() {
                           updateMaterial(
                             index,
                             "issuedQuantity",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         placeholder="Issued Quantity"
@@ -1146,7 +1158,7 @@ export default function ScaffoldingIssuePage() {
                             updateEditItem(
                               idx,
                               "issuedQuantity",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                         />
@@ -1287,7 +1299,7 @@ export default function ScaffoldingIssuePage() {
                   onChange={(e) => {
                     const unitWeightNum = parseFloat(e.target.value || "0");
                     const issuedQuantityNum = parseFloat(
-                      editMaterialState.issuedQuantity || "0"
+                      editMaterialState.issuedQuantity || "0",
                     );
                     const issuedWeight =
                       !isNaN(unitWeightNum) && !isNaN(issuedQuantityNum)
@@ -1321,7 +1333,7 @@ export default function ScaffoldingIssuePage() {
                   value={editMaterialState.issuedQuantity}
                   onChange={(e) => {
                     const unitWeightNum = parseFloat(
-                      editMaterialState.unitWeight || "0"
+                      editMaterialState.unitWeight || "0",
                     );
                     const issuedQuantityNum = parseFloat(e.target.value || "0");
                     const issuedWeight =

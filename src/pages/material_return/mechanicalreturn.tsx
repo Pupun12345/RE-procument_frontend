@@ -141,10 +141,10 @@ const DistributionPage: React.FC = () => {
   }
 
   const [editRecord, setEditRecord] = useState<EditableReturnRecord | null>(
-    null
+    null,
   );
   const [editItemState, setEditItemState] = useState<ItemEditState | null>(
-    null
+    null,
   );
 
   // Open item edit modal from the add items table
@@ -282,14 +282,14 @@ const DistributionPage: React.FC = () => {
       // If no search text, apply only date filter
       let dateMatch = true;
       if (filters.from) {
-        const recordDate = new Date(r.returnDate).toISOString().split('T')[0];
+        const recordDate = new Date(r.returnDate).toISOString().split("T")[0];
         dateMatch = recordDate === filters.from;
       }
       return dateMatch;
     }
 
     const itemMatch = r.items.some((i) =>
-      i.itemName.toLowerCase().includes(search)
+      i.itemName.toLowerCase().includes(search),
     );
     const personMatch = r.personName.toLowerCase().includes(search);
     const searchMatch = itemMatch || personMatch;
@@ -297,7 +297,7 @@ const DistributionPage: React.FC = () => {
     // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.from) {
-      const recordDate = new Date(r.returnDate).toISOString().split('T')[0];
+      const recordDate = new Date(r.returnDate).toISOString().split("T")[0];
       const selectedDate = filters.from;
       dateMatch = recordDate === selectedDate;
     }
@@ -347,19 +347,19 @@ const DistributionPage: React.FC = () => {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
@@ -382,7 +382,7 @@ const DistributionPage: React.FC = () => {
           new Date(r.returnDate).toLocaleDateString("en-IN"),
           r.personName,
           r.location || "",
-        ])
+        ]),
       ),
 
       styles: { fontSize: 10, halign: "center", cellPadding: 3 },
@@ -423,7 +423,7 @@ const DistributionPage: React.FC = () => {
         new Date(r.returnDate).toLocaleDateString("en-IN"),
         r.personName,
         r.location || "",
-      ])
+      ]),
     );
 
     const csvContent =
@@ -518,12 +518,76 @@ const DistributionPage: React.FC = () => {
                   </button>
                 </div>
                 <div className="ppe-material-table">
-                  <div className="ppe-table-head">
-                    <span>#</span>
-                    <span>Item Name</span>
-                    <span>Quantity</span>
-                    <span>Unit</span>
-                    <span>Action</span>
+                  <div
+                    className="ppe-table-head"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "50px 2.4fr 1.2fr 1.1fr 160px",
+                      gap: "16px",
+                      alignItems: "center",
+                      padding: "12px 0",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: 42,
+                        padding: "0 12px",
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      #
+                    </span>
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: 42,
+                        padding: "0 12px",
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      Item Name
+                    </span>
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: 42,
+                        padding: "0 12px",
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      Quantity
+                    </span>
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: 42,
+                        padding: "0 12px",
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      Unit
+                    </span>
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        height: 42,
+                        padding: "0 12px",
+                        fontWeight: 600,
+                        color: "#374151",
+                      }}
+                    >
+                      Action
+                    </span>
                   </div>
                   {items.map((row, index) => (
                     <div className="ppe-table-row" key={index}>
@@ -533,14 +597,14 @@ const DistributionPage: React.FC = () => {
                         value={row.itemName}
                         onChange={(e) => {
                           const selected = stockItems.find(
-                            (s) => s.itemName === e.target.value
+                            (s) => s.itemName === e.target.value,
                           );
 
                           updateItem(index, "itemName", e.target.value);
                           updateItem(
                             index,
                             "unit",
-                            selected ? selected.unit : ""
+                            selected ? selected.unit : "",
                           );
                         }}
                       >
@@ -561,7 +625,6 @@ const DistributionPage: React.FC = () => {
                         placeholder="Quantity"
                         type="number"
                         min="1"
-                        style={{ width: "fit-content" }}
                       />
                       <input
                         className="ppe-input"
@@ -570,7 +633,10 @@ const DistributionPage: React.FC = () => {
                           updateItem(index, "unit", e.target.value)
                         }
                         placeholder="Unit"
-                        style={{ width: "fit-content" }} // Adjust width to fit content dynamically
+                        style={{
+                          width: "100%",
+                          minWidth: 0,
+                        }}
                       />
                       <div
                         style={{
@@ -710,7 +776,10 @@ const DistributionPage: React.FC = () => {
                 onChange={(e) =>
                   setFilters({ ...filters, from: e.target.value })
                 }
-                style={{ width: "fit-content" }} // Adjusted width to fit content
+                style={{
+                  width: "100%",
+                  minWidth: 0,
+                }}
               />
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -751,7 +820,7 @@ const DistributionPage: React.FC = () => {
                         <td>
                           {r.items
                             .map(
-                              (i) => `${i.itemName} (${i.quantity} ${i.unit})`
+                              (i) => `${i.itemName} (${i.quantity} ${i.unit})`,
                             )
                             .join(", ")}
                         </td>
@@ -944,7 +1013,7 @@ const DistributionPage: React.FC = () => {
                   value={editItemState.itemName}
                   onChange={(e) => {
                     const selected = stockItems.find(
-                      (s) => s.itemName === e.target.value
+                      (s) => s.itemName === e.target.value,
                     );
                     setEditItemState({
                       ...editItemState,

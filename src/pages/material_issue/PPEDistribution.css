@@ -558,4 +558,17 @@ input[type="date"].ppe-input {
     min-width: 800px;
   }
 }
+.ppe-table-head,
+.ppe-table-row {
+  display: grid;
+  grid-template-columns: 
+    50px        /* # */
+    2fr         /* Item Name */
+    1fr         /* Quantity */
+    1fr         /* Unit */
+    140px;      /* Action */
+
+  align-items: center;
+  column-gap: 14px;
+}
 

@@ -63,7 +63,7 @@ const emptyItem: Item = {
 
 const PurchaseEntryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"entry" | "report" | "old">(
-    "entry"
+    "entry",
   );
 
   /* ================= MASTER DATA ================= */
@@ -82,7 +82,7 @@ const PurchaseEntryPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     search: "",
-    date: ""
+    date: "",
   });
 
   /* ================= OLD STOCK STATE ================= */
@@ -127,14 +127,14 @@ const PurchaseEntryPage: React.FC = () => {
     () =>
       items.reduce(
         (sum, i) => sum + Number(i.qty || 0) * Number(i.rate || 0),
-        0
+        0,
       ),
-    [items]
+    [items],
   );
 
   const gstAmount = useMemo(
     () => (subtotal * Number(gstPercent || 0)) / 100,
-    [subtotal, gstPercent]
+    [subtotal, gstPercent],
   );
 
   const total = subtotal + gstAmount;
@@ -155,7 +155,7 @@ const PurchaseEntryPage: React.FC = () => {
   const updateItem = (
     index: number,
     field: keyof Item,
-    value: string | number | ""
+    value: string | number | "",
   ) => {
     const updated = [...items];
     updated[index] = { ...updated[index], [field]: value };
@@ -164,7 +164,7 @@ const PurchaseEntryPage: React.FC = () => {
 
   const handleDeletePurchase = async (id: string) => {
     const confirm = window.confirm(
-      "Are you sure you want to delete this purchase?"
+      "Are you sure you want to delete this purchase?",
     );
     if (!confirm) return;
 
@@ -237,22 +237,24 @@ const PurchaseEntryPage: React.FC = () => {
   const filteredPurchases = useMemo(() => {
     return purchases.filter((p) => {
       const searchText = filters.search.toLowerCase().trim();
-      
+
       // Search filter - party name and item names only
       if (searchText) {
         const partyMatch = p.partyName.toLowerCase().includes(searchText);
         const itemMatch = p.items.some((i) =>
-          i.name.toLowerCase().includes(searchText)
+          i.name.toLowerCase().includes(searchText),
         );
         if (!partyMatch && !itemMatch) return false;
       }
-      
+
       // Date filter - exact date match
       if (filters.date) {
-        const purchaseDate = new Date(p.invoiceDate).toISOString().split('T')[0];
+        const purchaseDate = new Date(p.invoiceDate)
+          .toISOString()
+          .split("T")[0];
         if (purchaseDate !== filters.date) return false;
       }
-      
+
       return true;
     });
   }, [purchases, filters]);
@@ -371,19 +373,19 @@ const PurchaseEntryPage: React.FC = () => {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
 
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
     const tempTotalPages = 1; // Placeholder, will update later
@@ -422,7 +424,7 @@ const PurchaseEntryPage: React.FC = () => {
     items.reduce(
       (sum, i) =>
         sum + Number(i.weight ?? Number(i.qty || 0) * Number(i.puw || 0)),
-      0
+      0,
     );
 
   /* ================= EXPORT CSV ================= */
@@ -595,7 +597,7 @@ const PurchaseEntryPage: React.FC = () => {
                         updateItem(
                           idx,
                           "rate",
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
                     />
@@ -633,7 +635,7 @@ const PurchaseEntryPage: React.FC = () => {
                 value={gstPercent}
                 onChange={(e) =>
                   setGstPercent(
-                    e.target.value === "" ? "" : Number(e.target.value)
+                    e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
               />
@@ -659,27 +661,126 @@ const PurchaseEntryPage: React.FC = () => {
       {/* ================= REPORT ================= */}
       {activeTab === "report" && (
         <>
-          <h2 className="report-title">SCAFFOLDING PURCHASE REPORT</h2>
+          <h2
+            style={{
+              textAlign: "center",
+              fontSize: "28px",
+              fontWeight: 700,
+              letterSpacing: "1px",
+              margin: "40px 0 32px",
+            }}
+          >
+            SCAFFOLDING PURCHASE REPORT
+          </h2>
 
-          <div className="report-toolbar">
-            <div className="report-filters">
-              <input 
-                placeholder="Search Party / Item Name" 
-                value={filters.search}
-                onChange={(e) => setFilters({...filters, search: e.target.value})}
-              />
-              <input 
-                type="date" 
+          <div
+            className="report-toolbar"
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto 32px",
+              padding: "0 16px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "18px",
+                width: "100%",
+              }}
+            >
+              {/* SEARCH */}
+              <div
+                style={{
+                  position: "relative",
+                  flex: 3,
+                  minWidth: 280,
+                  height: "56px",
+                  display: "flex",
+                  alignItems: "center",
+                  boxSizing: "border-box",
+                }}
+              >
+                <input
+                  placeholder="Search Party / Item Name"
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    padding: "0 16px",
+                    borderRadius: "18px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "16px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              {/* DATE */}
+              <input
+                type="date"
                 value={filters.date}
-                onChange={(e) => setFilters({...filters, date: e.target.value})}
+                onChange={(e) =>
+                  setFilters({ ...filters, date: e.target.value })
+                }
+                style={{
+                  flex: 1.4,
+                  minWidth: 200,
+                  height: "56px",
+                  padding: "0 18px",
+                  borderRadius: "18px",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "15px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
               />
-            </div>
 
-            <div className="report-actions">
-              <button className="green" onClick={exportPDF}>
+              {/* PDF */}
+              <button
+                onClick={exportPDF}
+                className="green"
+                style={{
+                  height: "56px",
+                  padding: "0 32px",
+                  borderRadius: "18px",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  border: "1px solid transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                }}
+              >
                 Download PDF
               </button>
-              <button className="orange" onClick={exportCSV}>
+
+              {/* CSV */}
+              <button
+                onClick={exportCSV}
+                className="orange"
+                style={{
+                  height: "56px",
+                  padding: "0 32px",
+                  borderRadius: "18px",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  border: "1px solid transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxSizing: "border-box",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                }}
+              >
                 Export CSV
               </button>
             </div>
@@ -735,19 +836,19 @@ const PurchaseEntryPage: React.FC = () => {
                         </button>
                       </td>
 
-                    <td>
-                      <button
-                        className="delete-btn"
-                        onClick={() => handleDeletePurchase(p._id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeletePurchase(p._id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </>
       )}
@@ -762,7 +863,7 @@ const PurchaseEntryPage: React.FC = () => {
             value={oldItemName}
             onChange={(e) => {
               const selectedItem = itemMasters.find(
-                (im) => im.itemName === e.target.value
+                (im) => im.itemName === e.target.value,
               );
               setOldItemName(e.target.value);
               if (selectedItem) {

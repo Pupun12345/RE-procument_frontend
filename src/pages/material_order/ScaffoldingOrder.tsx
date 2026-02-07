@@ -158,7 +158,7 @@ export default function ScaffoldingOrder() {
   const updateMaterial = (
     index: number,
     key: keyof MaterialRow,
-    value: string
+    value: string,
   ) => {
     const updated = [...materials];
     updated[index][key] = value;
@@ -347,7 +347,7 @@ export default function ScaffoldingOrder() {
                     value={row.material}
                     onChange={(e) => {
                       const selected = items.find(
-                        (it) => it.itemName === e.target.value
+                        (it) => it.itemName === e.target.value,
                       );
 
                       const updated = [...materials];
@@ -417,8 +417,21 @@ export default function ScaffoldingOrder() {
             <h3>View Orders</h3>
           </div>
 
-          <div className="report-filters">
-            <div className="filter-group">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "20px",
+              alignItems: "end",
+              marginTop: "16px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <label>From Date</label>
               <input
                 type="date"
@@ -429,7 +442,12 @@ export default function ScaffoldingOrder() {
               />
             </div>
 
-            <div className="filter-group">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <label>To Date</label>
               <input
                 type="date"
@@ -440,7 +458,12 @@ export default function ScaffoldingOrder() {
               />
             </div>
 
-            <div className="filter-group">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <label>Supervisor Name</label>
               <input
                 placeholder="Search supervisor..."
@@ -451,7 +474,12 @@ export default function ScaffoldingOrder() {
               />
             </div>
 
-            <div className="filter-group">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <label>Location</label>
               <input
                 placeholder="Search location..."
@@ -482,7 +510,16 @@ export default function ScaffoldingOrder() {
           </p>
 
           <div className="report-table">
-            <div className="table-head">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "3.2fr 1.8fr 1.4fr 1.3fr 2fr 1.4fr 1.8fr",
+                padding: "12px 16px",
+                fontWeight: 600,
+                background: "#f9fafb",
+                borderBottom: "2px solid #e5e7eb",
+              }}
+            >
               <span>Order Number</span>
               <span>Supervisor</span>
               <span>Employee ID</span>
@@ -493,18 +530,52 @@ export default function ScaffoldingOrder() {
             </div>
 
             {filteredOrders.map((o) => (
-              <div className="table-row" key={o._id}>
-                <div className="cell">{o.orderNo}</div>
+              <div
+                key={o._id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "3.2fr 1.8fr 1.4fr 1.3fr 2fr 1.4fr 1.8fr",
+                  padding: "12px 16px",
+                  alignItems: "center",
+                  borderBottom: "1px solid #e5e7eb",
+                }}
+              >
+                <div
+                  className="cell"
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={o.orderNo}
+                >
+                  {o.orderNo}
+                </div>
                 <div className="cell">{o.supervisor}</div>
                 <div className="cell">{o.employeeId}</div>
                 <div className="cell">{formatDate(o.issueDate)}</div>
                 <div className="cell">{o.location}</div>
-                <div className="cell items-cell">
+                <div
+                  className="cell items-cell"
+                  style={{
+                    textAlign: "center",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {o.materials.length} item{o.materials.length > 1 ? "s" : ""}
                 </div>
 
                 {/* ✅ ACTION CELL — MUST be last */}
-                <div className="cell action-cell">
+                <div
+                  className="cell action-cell"
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "8px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   <button
                     className="view-btn"
                     title="View"

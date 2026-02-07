@@ -91,7 +91,7 @@ export default function ScaffoldingIssuePage() {
         unitWeight: String(it.unitWeight),
         returnQuantity: "",
         returnWeight: "",
-      }))
+      })),
     );
   }, [selectedIssueId, issues]); // include issues as dependency
 
@@ -149,7 +149,7 @@ export default function ScaffoldingIssuePage() {
   const updateMaterial = <K extends keyof MaterialRow>(
     index: number,
     key: K,
-    value: MaterialRow[K]
+    value: MaterialRow[K],
   ) => {
     const updated = [...materials];
     updated[index] = {
@@ -221,7 +221,7 @@ export default function ScaffoldingIssuePage() {
   }
 
   const [editRecord, setEditRecord] = useState<EditableIssueRecord | null>(
-    null
+    null,
   );
   const [editMaterialState, setEditMaterialState] =
     useState<MaterialEditState | null>(null);
@@ -257,7 +257,7 @@ export default function ScaffoldingIssuePage() {
   };
   const handleDelete = async (_id: string) => {
     const confirmed = window.confirm(
-      "Are you sure?\nThis will rollback stock and return data."
+      "Are you sure?\nThis will rollback stock and return data.",
     );
 
     if (!confirmed) return;
@@ -288,10 +288,10 @@ export default function ScaffoldingIssuePage() {
       // Update the field, then recalculate returnWeight
       const updatedForm = { ...form, [field]: value };
       const unitWeightNum = parseFloat(
-        field === "unitWeight" ? value : updatedForm.unitWeight || "0"
+        field === "unitWeight" ? value : updatedForm.unitWeight || "0",
       );
       const returnQuantityNum = parseFloat(
-        field === "returnQuantity" ? value : updatedForm.returnQuantity || "0"
+        field === "returnQuantity" ? value : updatedForm.returnQuantity || "0",
       );
       let returnWeight = "";
       if (!isNaN(unitWeightNum) && !isNaN(returnQuantityNum)) {
@@ -328,7 +328,7 @@ export default function ScaffoldingIssuePage() {
   const updateEditItem = (
     index: number,
     key: "quantity" | "unitWeight" | "returnQuantity",
-    value: string
+    value: string,
   ) => {
     if (!editRecord) return;
     const updated = { ...editRecord } as EditableIssueRecord;
@@ -346,8 +346,8 @@ export default function ScaffoldingIssuePage() {
     const uw = parseFloat(String(itemsCopy[index].unitWeight || "0"));
     const rq = parseFloat(
       String(
-        itemsCopy[index].returnQuantity ?? itemsCopy[index].quantity ?? "0"
-      )
+        itemsCopy[index].returnQuantity ?? itemsCopy[index].quantity ?? "0",
+      ),
     );
     if (!isNaN(uw) && !isNaN(rq)) {
       itemsCopy[index].returnWeight = uw * rq;
@@ -410,25 +410,29 @@ export default function ScaffoldingIssuePage() {
       // If no search text, apply only date filter
       let dateMatch = true;
       if (filters.to) {
-        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
         dateMatch = recordDate === filters.to;
       }
       return dateMatch;
     }
 
     // Get the original record to access items array
-    const originalRecord = records.find(rec => rec._id === r._id);
-    const itemMatch = originalRecord ? originalRecord.items.some((i) =>
-      i.itemName.toLowerCase().includes(searchText)
-    ) : false;
-    const tslManagerMatch = (r.returnedBy || "").toLowerCase().includes(searchText);
+    const originalRecord = records.find((rec) => rec._id === r._id);
+    const itemMatch = originalRecord
+      ? originalRecord.items.some((i) =>
+          i.itemName.toLowerCase().includes(searchText),
+        )
+      : false;
+    const tslManagerMatch = (r.returnedBy || "")
+      .toLowerCase()
+      .includes(searchText);
     const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
     const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
 
     // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.to) {
-      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
       const selectedDate = filters.to;
       dateMatch = recordDate === selectedDate;
     }
@@ -440,7 +444,7 @@ export default function ScaffoldingIssuePage() {
   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
   const paginatedRecords = filteredRecords.slice(
     (currentPage - 1) * recordsPerPage,
-    currentPage * recordsPerPage
+    currentPage * recordsPerPage,
   );
 
   const exportPDF = (): void => {
@@ -469,26 +473,28 @@ export default function ScaffoldingIssuePage() {
       doc.text(
         "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
         10,
-        footerY + 5
+        footerY + 5,
       );
       doc.text(
         "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
         75,
-        footerY + 5
+        footerY + 5,
       );
       doc.text(
         `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
         145,
-        footerY + 5
+        footerY + 5,
       );
     };
 
     const tempTotalPages = 1;
     // Use filteredRecords which already includes both date and search filtering
-    const pdfRecords = filteredRecords.map(fr => {
-      // Map back to original record structure for PDF generation
-      return records.find(r => r._id === fr._id);
-    }).filter(Boolean) as ReturnRecord[];
+    const pdfRecords = filteredRecords
+      .map((fr) => {
+        // Map back to original record structure for PDF generation
+        return records.find((r) => r._id === fr._id);
+      })
+      .filter(Boolean) as ReturnRecord[];
 
     autoTable(doc, {
       startY: 65,
@@ -515,7 +521,7 @@ export default function ScaffoldingIssuePage() {
           r.location || "",
           r.woNumber || "",
           r.supervisorName || "",
-        ])
+        ]),
       ),
       styles: { fontSize: 8, halign: "center", cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
@@ -547,12 +553,14 @@ export default function ScaffoldingIssuePage() {
       "Issued Weight",
       "Issued Quantity",
     ];
-    
+
     // Use filteredRecords and map back to original records
-    const filteredOriginalRecords = filteredRecords.map(fr => {
-      return records.find(r => r._id === fr._id);
-    }).filter(Boolean) as ReturnRecord[];
-    
+    const filteredOriginalRecords = filteredRecords
+      .map((fr) => {
+        return records.find((r) => r._id === fr._id);
+      })
+      .filter(Boolean) as ReturnRecord[];
+
     const rows = filteredOriginalRecords.flatMap((r) =>
       r.items.map((i) => [
         i.itemName,
@@ -565,7 +573,7 @@ export default function ScaffoldingIssuePage() {
         i.unitWeight || "",
         i.returnWeight || "",
         i.quantity,
-      ])
+      ]),
     );
 
     const csvContent =
@@ -740,7 +748,7 @@ export default function ScaffoldingIssuePage() {
                         value={row.itemName}
                         onChange={(e) => {
                           const selected = items.find(
-                            (i) => i.itemName === e.target.value
+                            (i) => i.itemName === e.target.value,
                           );
 
                           updateMaterial(index, "itemName", e.target.value);
@@ -748,8 +756,22 @@ export default function ScaffoldingIssuePage() {
                           updateMaterial(
                             index,
                             "unitWeight",
-                            String(selected?.puw || "")
+                            String(selected?.puw || ""),
                           );
+                        }}
+                        style={{
+                          width: "100%",
+                          height: "38px",
+                          padding: "6px 12px",
+                          borderRadius: "10px",
+                          boxSizing: "border-box",
+                          border: "1px solid #e5e7eb",
+                          backgroundColor: "#fff",
+                          fontSize: "14px",
+                          outline: "none",
+                          appearance: "none",
+                          WebkitAppearance: "none",
+                          MozAppearance: "none",
                         }}
                       >
                         <option value="">Select Item</option>
@@ -782,7 +804,7 @@ export default function ScaffoldingIssuePage() {
                           updateMaterial(
                             index,
                             "returnQuantity",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         placeholder="Return Quantity"
@@ -883,7 +905,7 @@ export default function ScaffoldingIssuePage() {
                     if (payload.items.length === 0) {
                       showToast(
                         "error",
-                        "Enter return quantity for at least one item"
+                        "Enter return quantity for at least one item",
                       );
                       return;
                     }
@@ -1019,7 +1041,7 @@ export default function ScaffoldingIssuePage() {
                             className="report-edit-btn"
                             onClick={() => {
                               const orig = records.find(
-                                (rec) => rec._id === r._id
+                                (rec) => rec._id === r._id,
                               );
                               if (orig) openEdit(orig);
                             }}
@@ -1237,7 +1259,7 @@ export default function ScaffoldingIssuePage() {
                             updateEditItem(
                               idx,
                               "returnQuantity",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                         />
@@ -1400,7 +1422,7 @@ export default function ScaffoldingIssuePage() {
                   value={editMaterialState.returnQuantity}
                   onChange={(e) => {
                     const unitWeightNum = parseFloat(
-                      editMaterialState.unitWeight || "0"
+                      editMaterialState.unitWeight || "0",
                     );
                     const returnQuantityNum = parseFloat(e.target.value || "0");
                     const returnWeight =

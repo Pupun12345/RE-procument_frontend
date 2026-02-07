@@ -278,14 +278,14 @@ const DistributionPage: React.FC = () => {
       // If no search text, apply only date filter
       let dateMatch = true;
       if (filters.from) {
-        const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
         dateMatch = recordDate === filters.from;
       }
       return dateMatch;
     }
 
     const itemMatch = r.items.some((i) =>
-      i.itemName.toLowerCase().includes(search)
+      i.itemName.toLowerCase().includes(search),
     );
     const personMatch = r.issuedTo.toLowerCase().includes(search);
     const searchMatch = itemMatch || personMatch;
@@ -293,7 +293,7 @@ const DistributionPage: React.FC = () => {
     // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.from) {
-      const recordDate = new Date(r.issueDate).toISOString().split('T')[0];
+      const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
       const selectedDate = filters.from;
       dateMatch = recordDate === selectedDate;
     }
@@ -539,6 +539,12 @@ const DistributionPage: React.FC = () => {
                             selected ? selected.unit : "",
                           );
                         }}
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "100%",
+                          padding: "8px 12px",
+                        }}
                       >
                         <option value="">Select Item</option>
                         {stockItems.map((s) => (
@@ -557,8 +563,14 @@ const DistributionPage: React.FC = () => {
                         placeholder="Quantity"
                         type="number"
                         min="1"
-                        style={{ width: "fit-content" }}
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "120px",
+                          padding: "8px 12px",
+                        }}
                       />
+
                       <input
                         className="ppe-input"
                         value={row.unit}
@@ -566,8 +578,14 @@ const DistributionPage: React.FC = () => {
                           updateItem(index, "unit", e.target.value)
                         }
                         placeholder="Unit"
-                        style={{ width: "fit-content" }} // Adjust width to fit content dynamically
+                        style={{
+                          height: "42px",
+                          minHeight: "42px",
+                          width: "120px",
+                          padding: "8px 12px",
+                        }}
                       />
+
                       <div
                         style={{
                           display: "flex",
