@@ -747,7 +747,7 @@ const DistributionPage: React.FC = () => {
                     <th>Issued To</th>
                     <th>Location</th>
                     {isAdmin && <th>Edit</th>}
-                    {isAdmin && <th>Delete</th>}
+                    {/* {isAdmin && <th>Delete</th>} */}
                   </tr>
                 </thead>
 
@@ -774,7 +774,7 @@ const DistributionPage: React.FC = () => {
                           </td>
                         )}
 
-                        {isAdmin && (
+                        {/* {isAdmin && (
                           <td>
                             <button
                               className="ppe-action-btn ppe-delete-btn"
@@ -783,7 +783,7 @@ const DistributionPage: React.FC = () => {
                               Delete
                             </button>
                           </td>
-                        )}
+                        )} */}
                       </tr>
                     ))
                   ) : (
@@ -818,6 +818,7 @@ const DistributionPage: React.FC = () => {
                 className="ppe-input"
                 type="number"
                 value={editRecord.quantity}
+                readOnly
                 onChange={(e) =>
                   setEditRecord({
                     ...editRecord,
