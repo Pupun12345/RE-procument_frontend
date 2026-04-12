@@ -1021,7 +1021,7 @@ export default function ScaffoldingIssuePage() {
                     <th>Items Issued</th>
                     <th>Total Qty</th>
                     {isAdmin && <th>Edit</th>}
-                    {isAdmin && <th>Delete</th>}
+                    {/* {isAdmin && <th>Delete</th>} */}
                   </tr>
                 </thead>
 
@@ -1051,7 +1051,7 @@ export default function ScaffoldingIssuePage() {
                         </td>
                       )}
 
-                      {isAdmin && (
+                      {/* {isAdmin && (
                         <td>
                           <button
                             className="report-delete-btn"
@@ -1060,7 +1060,7 @@ export default function ScaffoldingIssuePage() {
                             <MdDelete />
                           </button>
                         </td>
-                      )}
+                      )} */}
                     </tr>
                   ))}
                 </tbody>
@@ -1231,9 +1231,14 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={it.quantity ?? 0}
-                          onChange={(e) =>
-                            updateEditItem(idx, "quantity", e.target.value)
-                          }
+                          // onChange={(e) =>
+                          //   updateEditItem(idx, "quantity", e.target.value)
+                          // }
+                          readOnly
+                          style={{
+                            background: "#f3f4f6",
+                            cursor: "not-allowed",
+                          }}
                         />
                       </div>
 
@@ -1255,13 +1260,18 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={String(it.returnQuantity ?? it.quantity ?? 0)}
-                          onChange={(e) =>
-                            updateEditItem(
-                              idx,
-                              "returnQuantity",
-                              e.target.value,
-                            )
-                          }
+                          readOnly
+                          style={{
+                            background: "#f3f4f6",
+                            cursor: "not-allowed",
+                          }}
+                          // onChange={(e) =>
+                          //   updateEditItem(
+                          //     idx,
+                          //     "returnQuantity",
+                          //     e.target.value,
+                          //   )
+                          // }
                         />
                       </div>
 

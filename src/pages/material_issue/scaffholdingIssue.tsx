@@ -945,7 +945,7 @@ export default function ScaffoldingIssuePage() {
                     <th>Items Issued</th>
                     <th>Total Qty</th>
                     {isAdmin && <th>Edit</th>}
-                    {isAdmin && <th>Delete</th>}
+                    {/* {isAdmin && <th>Delete</th>} */}
                   </tr>
                 </thead>
 
@@ -970,7 +970,7 @@ export default function ScaffoldingIssuePage() {
                         </td>
                       )}
 
-                      {isAdmin && (
+                      {/* {isAdmin && (
                         <td>
                           <button
                             className="report-delete-btn"
@@ -979,7 +979,7 @@ export default function ScaffoldingIssuePage() {
                             <MdDelete />
                           </button>
                         </td>
-                      )}
+                      )} */}
                     </tr>
                   ))}
                 </tbody>
@@ -1132,9 +1132,12 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={it.qty ?? 0}
-                          onChange={(e) =>
-                            updateEditItem(idx, "qty", e.target.value)
-                          }
+                          readOnly
+                          disabled
+                          style={{ background: "#f3f4f6", cursor: "not-allowed" }}
+                          // onChange={(e) =>
+                          //   updateEditItem(idx, "qty", e.target.value)
+                          // }
                         />
                       </div>
 
@@ -1143,9 +1146,12 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={String(it.unitWeight ?? "")}
-                          onChange={(e) =>
-                            updateEditItem(idx, "unitWeight", e.target.value)
-                          }
+                          readOnly
+                          disabled
+                          style={{ background: "#f3f4f6", cursor: "not-allowed" }}
+                          // onChange={(e) =>
+                          //   updateEditItem(idx, "unitWeight", e.target.value)
+                          // }
                         />
                       </div>
 
@@ -1154,13 +1160,16 @@ export default function ScaffoldingIssuePage() {
                         <input
                           type="number"
                           value={String(it.issuedQuantity ?? it.qty ?? 0)}
-                          onChange={(e) =>
-                            updateEditItem(
-                              idx,
-                              "issuedQuantity",
-                              e.target.value,
-                            )
-                          }
+                          readOnly
+                          disabled
+                          style={{ background: "#f3f4f6", cursor: "not-allowed" }}
+                          // onChange={(e) =>
+                          //   updateEditItem(
+                          //     idx,
+                          //     "issuedQuantity",
+                          //     e.target.value,
+                          //   )
+                          // }
                         />
                       </div>
 
