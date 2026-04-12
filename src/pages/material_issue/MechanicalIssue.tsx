@@ -593,7 +593,7 @@ const DistributionPage: React.FC = () => {
                           justifyContent: "center",
                         }}
                       >
-                        <button
+                        {/* <button
                           className="ppe-action-btn ppe-edit-btn"
                           type="button"
                           style={{
@@ -614,7 +614,7 @@ const DistributionPage: React.FC = () => {
                           onClick={() => openItemEdit(index)}
                         >
                           <MdEdit />
-                        </button>
+                        </button> */}
                         <button
                           className="ppe-delete-btn"
                           onClick={() => removeItem(index)}
@@ -754,7 +754,7 @@ const DistributionPage: React.FC = () => {
                     <th>Issued To</th>
                     <th>Location</th>
                     {isAdmin && <th>Edit</th>}
-                    {isAdmin && <th>Delete</th>}
+                    {/* {isAdmin && <th>Delete</th>} */}
                   </tr>
                 </thead>
 
@@ -783,7 +783,7 @@ const DistributionPage: React.FC = () => {
                           </td>
                         )}
 
-                        {isAdmin && (
+                        {/* {isAdmin && (
                           <td>
                             <button
                               className="ppe-action-btn ppe-delete-btn"
@@ -792,7 +792,7 @@ const DistributionPage: React.FC = () => {
                               Delete
                             </button>
                           </td>
-                        )}
+                        )} */}
                       </tr>
                     ))
                   ) : (
@@ -827,6 +827,7 @@ const DistributionPage: React.FC = () => {
                 className="ppe-input"
                 type="number"
                 value={editRecord.quantity}
+                readOnly
                 onChange={(e) =>
                   setEditRecord({
                     ...editRecord,
@@ -933,6 +934,7 @@ const DistributionPage: React.FC = () => {
                 <select
                   className="ppe-input"
                   value={editItemState.itemName}
+                  
                   onChange={(e) => {
                     const selected = stockItems.find(
                       (s) => s.itemName === e.target.value,
@@ -969,6 +971,7 @@ const DistributionPage: React.FC = () => {
                   type="number"
                   min="1"
                   value={editItemState.quantity}
+                  readOnly
                   onChange={(e) =>
                     setEditItemState({
                       ...editItemState,
@@ -994,6 +997,7 @@ const DistributionPage: React.FC = () => {
                   className="ppe-input"
                   type="text"
                   value={editItemState.unit}
+                  readOnly
                   onChange={(e) =>
                     setEditItemState({
                       ...editItemState,
