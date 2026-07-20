@@ -6,7 +6,9 @@ interface ScaffoldingItem {
   itemName: string;
   unit: string;
   totalIssued: number;
+  totalIssuedWeight: number;
   totalReturned: number;
+  totalReturnedWeight: number;
   netIssued: number;
   inField: number;
   currentStock: number;
@@ -17,7 +19,9 @@ interface ReportData {
   summary: {
     totalItems: number;
     totalIssued: number;
+    totalIssuedWeight: number;
     totalReturned: number;
+    totalReturnedWeight: number;
     totalInField: number;
     totalStock: number;
     criticalItems: number;
@@ -120,8 +124,10 @@ export default function InventoryTable() {
           <tr>
             <th>Item Description</th>
             <th>Unit</th>
-            <th>Total Issued</th>
-            <th>Total Returned</th>
+            <th>Total Issued (Qty)</th>
+            <th>Issued Weight (kg)</th>
+            <th>Total Returned (Qty)</th>
+            <th>Returned Weight (kg)</th>
             <th>In Field</th>
             <th>Current Stock</th>
             <th>Status</th>
@@ -130,7 +136,7 @@ export default function InventoryTable() {
         <tbody>
           {filteredData.length === 0 ? (
             <tr>
-              <td colSpan={7} style={{ textAlign: "center", padding: "2rem" }}>
+              <td colSpan={9} style={{ textAlign: "center", padding: "2rem" }}>
                 {searchTerm
                   ? "No items match your search"
                   : "No data available"}
@@ -139,28 +145,16 @@ export default function InventoryTable() {
           ) : (
             filteredData.map((item) => (
               <tr key={item.itemName}>
+                <td><span>{item.itemName}</span></td>
+                <td><span>{item.unit}</span></td>
+                <td><span>{item.totalIssued.toLocaleString()}</span></td>
+                <td><span>{(item.totalIssuedWeight || 0).toFixed(2)}</span></td>
+                <td><span>{item.totalReturned.toLocaleString()}</span></td>
+                <td><span>{(item.totalReturnedWeight || 0).toFixed(2)}</span></td>
+                <td><span>{item.inField.toLocaleString()}</span></td>
+                <td><span>{item.currentStock.toLocaleString()}</span></td>
                 <td>
-                  <span>{item.itemName}</span>
-                </td>
-                <td>
-                  <span>{item.unit}</span>
-                </td>
-                <td>
-                  <span>{item.totalIssued.toLocaleString()}</span>
-                </td>
-                <td>
-                  <span>{item.totalReturned.toLocaleString()}</span>
-                </td>
-                <td>
-                  <span>{item.inField.toLocaleString()}</span>
-                </td>
-                <td>
-                  <span>{item.currentStock.toLocaleString()}</span>
-                </td>
-                <td>
-                  <span
-                    className={`status ${item.status.replace(/\s+/g, "").toLowerCase()}`}
-                  >
+                  <span className={`status ${item.status.replace(/\s+/g, "").toLowerCase()}`}>
                     {item.status}
                   </span>
                 </td>

@@ -13,8 +13,7 @@ import { useAuthStore } from "../store/authStore";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { role } = useAuthStore();
-  const isAdmin = role === "admin";
+   const { role} = useAuthStore();
 
   return (
     <DashboardLayout>
@@ -30,7 +29,7 @@ export default function Dashboard() {
           gap: 24,
         }}
       >
-        {isAdmin && (
+        {role === "admin" && (
           <ModuleCard
             icon={<FaFileAlt />}
             color="#8b5cf6"

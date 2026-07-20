@@ -515,7 +515,8 @@ input[type="date"].sr-input {
   border-radius: 12px;
   overflow-x: auto;
   overflow-y: visible;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  border: 1px solid #e5e7eb;
   width: 100%;
   scrollbar-color: #2563eb #e5e7eb;
   scrollbar-width: thin;
@@ -523,30 +524,42 @@ input[type="date"].sr-input {
 
 .sr-table {
   width: 100%;
-  min-width: 1200px;
+  min-width: 900px;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .sr-table thead {
-  background-color: #f3f4f6;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .sr-table th {
-  padding: 16px 20px;
+  padding: 13px 16px;
   text-align: left;
   font-weight: 600;
-  color: #3b82f6;
-  border-bottom: 2px solid #e5e7eb;
+  font-size: 12px;
+  color: #ffffff;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: none;
+  white-space: nowrap;
 }
 
 .sr-table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
+  vertical-align: top;
+}
+
+.sr-table tbody tr:nth-child(even) {
+  background-color: #f8faff;
 }
 
 .sr-table tbody tr:hover {
-  background-color: #f9fafb;
+  background-color: #eff6ff;
 }
 
 .sr-table tbody tr:last-child {
@@ -554,8 +567,10 @@ input[type="date"].sr-input {
 }
 
 .sr-table td {
-  padding: 16px 20px;
+  padding: 12px 16px;
   color: #374151;
+  vertical-align: top;
+  line-height: 1.5;
 }
 
 .sr-action-btn {
@@ -631,4 +646,51 @@ input[type="date"].sr-input {
   display: flex;
   align-items: center;
   height: 42px; /* match input height */
+}
+
+/* Items cell — numbered list inside td */
+.ppe-table td .item-list-entry,
+.sr-table td .item-list-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px dashed #e5e7eb;
+  font-size: 13px;
+  color: #1e293b;
+  line-height: 1.6;
+}
+
+.ppe-table td .item-list-entry:last-child,
+.sr-table td .item-list-entry:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ppe-table td .item-num,
+.sr-table td .item-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ppe-table td .item-name,
+.sr-table td .item-name {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.ppe-table td .item-meta,
+.sr-table td .item-meta {
+  color: #6b7280;
+  font-size: 12px;
+  white-space: nowrap;
 }
