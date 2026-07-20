@@ -370,17 +370,70 @@ const DistributionPage: React.FC = () => {
       head: [["Item", "Qty", "Unit", "Date", "Person", "Location"]],
 
       body: filteredRecords.flatMap((r) =>
-        r.items.map((item) => [
-          item.itemName,
+        r.items.map((item, index) => [
+          `${index + 1}. ${item.itemName}`,
           item.qty,
           item.unit,
-          new Date(r.issueDate).toLocaleDateString("en-IN"),
-          r.issuedTo,
-          r.location || "",
-        ]),
+
+          index === 0
+            ? {
+              content: new Date(r.issueDate).toLocaleDateString("en-IN"),
+              rowSpan: r.items.length,
+              styles: {
+                valign: "middle",
+              },
+            }
+            : {
+              content: "",
+              styles: {
+                lineWidth: 0, // removes inner lines
+              },
+            },
+
+          index === 0
+            ? {
+              content: r.issuedTo,
+              rowSpan: r.items.length,
+              styles: {
+                valign: "middle",
+              },
+            }
+            : {
+              content: "",
+              styles: {
+                lineWidth: 0,
+              },
+            },
+
+          index === 0
+            ? {
+              content: r.location || "",
+              rowSpan: r.items.length,
+              styles: {
+                valign: "middle",
+              },
+            }
+            : {
+              content: "",
+              styles: {
+                lineWidth: 0,
+              },
+            },
+        ])
       ),
 
-      styles: { fontSize: 10, halign: "center", cellPadding: 3 },
+      styles: {
+        fontSize: 10,
+        halign: "center",
+        valign: "middle", // center vertically
+        cellPadding: 3,
+      },
+
+      columnStyles: {
+        3: { valign: "middle" }, // Date
+        4: { valign: "middle" }, // Person
+        5: { valign: "middle" }, // Location
+      },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
       theme: "grid",
 
@@ -671,8 +724,16 @@ const DistributionPage: React.FC = () => {
 
                       setActiveTab("report");
                       fetchRecords();
-                    } catch {
-                      toast.error("Failed to issue PPE");
+                    } catch (err: any) {
+                      const data = err?.response?.data;
+                      if (data?.message && data.available !== undefined) {
+                        toast.error(
+                          `${data.message}. Available: ${data.available}, Requested: ${data.requested}`,
+                          { duration: 5000 }
+                        );
+                      } else {
+                        toast.error(data?.message || "Failed to issue PPE");
+                      }
                     }
                   }}
                 >
@@ -698,7 +759,9 @@ const DistributionPage: React.FC = () => {
               className="ppe-filter-bar"
               style={{ display: "flex", alignItems: "center", gap: "16px" }}
             >
-              <div className="ppe-search-box">
+              <div className="ppe-search-box" style={{ display: "flex", justifyContent: "center", alignItems
+                :"center"
+               }}>
                 <span className="ppe-search-icon">🔍</span>
                 <input
                   className="ppe-search-input"
@@ -737,17 +800,42 @@ const DistributionPage: React.FC = () => {
 
             <div
               className="ppe-table-container"
-              style={{ margin: "0 auto", maxWidth: 1000 }}
+              style={{
+                margin: "0 auto",
+                maxWidth: 1400,
+                overflowX: "auto",
+              }}
             >
-              <table className="ppe-table">
+              <table
+                className="ppe-table"
+                style={{
+                  width: "100%",
+                  minWidth: "1200px",
+                }}
+              >
                 <thead>
                   <tr>
-                    <th>Items</th>
-                    <th>Date</th>
-                    <th>Issued To</th>
-                    <th>Location</th>
-                    {isAdmin && <th>Edit</th>}
-                    {/* {isAdmin && <th>Delete</th>} */}
+                    <th style={{ color: "black", minWidth: "500px" }}>
+                      Items
+                    </th>
+
+                    <th style={{ color: "black", minWidth: "150px" }}>
+                      Date
+                    </th>
+
+                    <th style={{ color: "black", minWidth: "200px" }}>
+                      Issued To
+                    </th>
+
+                    <th style={{ color: "black", minWidth: "200px" }}>
+                      Location
+                    </th>
+
+                    {isAdmin && (
+                      <th style={{ color: "black", minWidth: "100px" }}>
+                        Edit
+                      </th>
+                    )}
                   </tr>
                 </thead>
 
@@ -755,16 +843,88 @@ const DistributionPage: React.FC = () => {
                   {filteredRecords.length > 0 ? (
                     filteredRecords.map((r) => (
                       <tr key={r._id}>
-                        <td>
-                          {r.items
-                            .map((i) => `${i.itemName} (${i.qty} ${i.unit})`)
-                            .join(", ")}
+                        <td
+                          style={{
+                            minWidth: "500px",
+                            textAlign: "left",
+                            verticalAlign: "top",
+                          }}
+                        >
+                          {r.items.map((i, n) => (
+                            <div
+                              key={n}
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                                padding: "12px 0",
+                                borderBottom:
+                                  n !== r.items.length - 1
+                                    ? "1px solid #e5e7eb"
+                                    : "none",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "30px",
+                                  height: "30px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#2563eb",
+                                  color: "#fff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: 600,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {n + 1}
+                              </span>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px",
+                                  flex: 1,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    lineHeight: "1.5",
+                                  }}
+                                >
+                                  {i.itemName}
+                                </span>
+
+                                <span
+                                  style={{
+                                    width: "fit-content",
+                                    backgroundColor: "#f3f4f6",
+                                    color: "#6b7280",
+                                    padding: "4px 10px",
+                                    borderRadius: "999px",
+                                    fontSize: "12px",
+                                  }}
+                                >
+                                  {i.qty} {i.unit}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </td>
-                        <td>{r.issueDate}</td>
+
+                        <td>
+                          {new Date(r.issueDate).toLocaleDateString("en-IN")}
+                        </td>
+
                         <td>{r.issuedTo}</td>
+
                         <td>{r.location || "-"}</td>
+
                         {isAdmin && (
-                          <td>
+                          <td style={{ textAlign: "center" }}>
                             <button
                               className="ppe-action-btn ppe-edit-btn"
                               onClick={() => openEdit(r)}
@@ -773,22 +933,14 @@ const DistributionPage: React.FC = () => {
                             </button>
                           </td>
                         )}
-
-                        {/* {isAdmin && (
-                          <td>
-                            <button
-                              className="ppe-action-btn ppe-delete-btn"
-                              onClick={() => handleDelete(r._id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        )} */}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center" }}>
+                      <td
+                        colSpan={isAdmin ? 5 : 4}
+                        style={{ textAlign: "center" }}
+                      >
                         No records found
                       </td>
                     </tr>
@@ -796,6 +948,7 @@ const DistributionPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
           </React.Fragment>
         )}
 

@@ -8,7 +8,9 @@ interface ScaffoldingItem {
   itemName: string;
   unit: string;
   totalIssued: number;
+  totalIssuedWeight: number;
   totalReturned: number;
+  totalReturnedWeight: number;
   netIssued: number;
   inField: number;
   currentStock: number;
@@ -19,7 +21,9 @@ interface ReportData {
   summary: {
     totalItems: number;
     totalIssued: number;
+    totalIssuedWeight: number;
     totalReturned: number;
+    totalReturnedWeight: number;
     totalInField: number;
     totalStock: number;
     criticalItems: number;
@@ -52,7 +56,9 @@ export default function ReportHeader() {
       item.itemName,
       item.unit,
       item.totalIssued.toString(),
+      (item.totalIssuedWeight || 0).toFixed(2),
       item.totalReturned.toString(),
+      (item.totalReturnedWeight || 0).toFixed(2),
       item.inField.toString(),
       item.currentStock.toString(),
       item.status,
@@ -61,8 +67,10 @@ export default function ReportHeader() {
   const headers = [
     "Item Description",
     "Unit",
-    "Total Issued",
-    "Total Returned",
+    "Total Issued (Qty)",
+    "Issued Weight (kg)",
+    "Total Returned (Qty)",
+    "Returned Weight (kg)",
     "In Field",
     "Current Stock",
     "Status",
@@ -145,7 +153,9 @@ export default function ReportHeader() {
         item.itemName,
         item.unit,
         item.totalIssued,
+        (item.totalIssuedWeight || 0).toFixed(2),
         item.totalReturned,
+        (item.totalReturnedWeight || 0).toFixed(2),
         item.inField,
         item.currentStock,
         item.status,
@@ -163,9 +173,9 @@ export default function ReportHeader() {
       body: rows,
 
       styles: {
-        fontSize: 9,
+        fontSize: 8,
         halign: "center",
-        cellPadding: 3,
+        cellPadding: 2,
       },
 
       headStyles: {
@@ -180,12 +190,14 @@ export default function ReportHeader() {
         3: { halign: "right" },
         4: { halign: "right" },
         5: { halign: "right" },
+        6: { halign: "right" },
+        7: { halign: "right" },
       },
 
       theme: "grid",
 
       didParseCell: (data: any) => {
-        if (data.section === "body" && data.column.index === 6) {
+        if (data.section === "body" && data.column.index === 8) {
           const status = String(data.cell.raw);
 
           if (status.includes("Healthy")) {

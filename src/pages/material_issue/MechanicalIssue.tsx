@@ -303,133 +303,190 @@ const DistributionPage: React.FC = () => {
 
   // ====================== EXPORT ======================
   const exportPDF = (): void => {
-    const doc = new jsPDF("p", "mm", "a4");
-
+    const doc = new jsPDF("l", "mm", "a4"); // landscape for more columns
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // ------------------------------------------
-    // HEADER (Every Page)
-    // ------------------------------------------
     const addHeader = () => {
       doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18);
-
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("RAY ENGINEERING", 50, 15);
-
       doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
       doc.text("Contact No: 9337670266", 50, 22);
       doc.text("E-Mail: accounts@rayengineering.co", 50, 28);
-
       doc.setLineWidth(0.5);
-      doc.line(10, 40, 200, 40);
-
+      doc.line(10, 40, pageWidth - 10, 40);
       doc.setFontSize(16);
-      doc.text("PPE DISTRIBUTION REPORT", pageWidth / 2, 55, {
-        align: "center",
-      });
+      doc.setFont("helvetica", "bold");
+      doc.text("MECHANICAL ISSUE REPORT", pageWidth / 2, 55, { align: "center" });
     };
 
-    // ------------------------------------------
-    // FOOTER (Every Page)
-    // ------------------------------------------
     const addFooter = (pageNum: number, totalPages: number) => {
       const footerY = pageHeight - 50;
-
-      doc.line(10, footerY, 200, footerY);
+      doc.line(10, footerY, pageWidth - 10, footerY);
       doc.setFontSize(8);
-
-      doc.text(
-        "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
-        10,
-        footerY + 5,
-      );
-
-      doc.text(
-        "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
-        75,
-        footerY + 5,
-      );
-
-      doc.text(
-        `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        145,
-        footerY + 5,
-      );
+      doc.setFont("helvetica", "normal");
+      doc.text("Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)", 10, footerY + 5);
+      doc.text("Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur", 90, footerY + 5);
+      doc.text(`Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`, 190, footerY + 5);
     };
 
-    const tempTotalPages = 1;
+    // Group records by issuedTo (person)
+    const grouped: Record<string, typeof filteredRecords> = {};
+    filteredRecords.forEach((r) => {
+      const key = r.issuedTo || "Unknown";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    });
 
-    // ------------------------------------------
-    // AUTO TABLE
-    // ------------------------------------------
+    // Build table body: grouped rows, items numbered per supervisor
+    const tableBody: any[] = [];
+    const supervisorTotals: { name: string; totalIssuedWeight: number }[] = [];
+
+    Object.entries(grouped).forEach(([supervisor, recs]) => {
+      let itemNum = 1;
+      let supervisorWeight = 0;
+      recs.forEach((r) => {
+        r.items.forEach((item) => {
+          tableBody.push([
+            supervisor,
+            `${itemNum++}. ${item.itemName}`,
+            item.issuedQty,
+            item.unit,
+            new Date(r.issueDate).toLocaleDateString("en-IN"),
+            r.location || "-",
+          ]);
+        });
+      });
+      supervisorTotals.push({ name: supervisor, totalIssuedWeight: supervisorWeight });
+    });
+
+    let tempTotalPages = 1;
     autoTable(doc, {
       startY: 65,
       margin: { top: 70, bottom: 65 },
-
-      head: [["Item", "Qty", "Unit", "Date", "Person", "Location"]],
-
-      body: filteredRecords.flatMap((r) =>
-        r.items.map((item) => [
-          item.itemName,
-          item.issuedQty,
-          item.unit,
-          new Date(r.issueDate).toLocaleDateString("en-IN"),
-          r.issuedTo,
-          r.location || "",
-        ]),
-      ),
-
-      styles: { fontSize: 10, halign: "center", cellPadding: 3 },
-      headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
+      head: [["Issued To", "Item", "Qty", "Unit", "Date", "Location"]],
+      body: tableBody,
+      styles: { fontSize: 8, halign: "center", cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
+      columnStyles: { 1: { halign: "left" }, 0: { halign: "left" } },
       theme: "grid",
-
+      didParseCell: (data: any) => {
+        // Merge supervisor cell vertically by making it blank for repeated rows
+        if (data.section === "body" && data.column.index === 0) {
+          const prevRow = data.row.index > 0 ? tableBody[data.row.index - 1] : null;
+          if (prevRow && prevRow[0] === tableBody[data.row.index][0]) {
+            data.cell.text = [""];
+          }
+        }
+      },
       didDrawPage: (data) => {
         addHeader();
         addFooter(data.pageNumber, tempTotalPages);
       },
     });
 
-    // ------------------------------------------
-    // ADD FOOTERS AFTER ALL PAGES ARE CREATED
-    // ------------------------------------------
-    const totalPages = doc.getNumberOfPages();
 
+    doc.setDrawColor(41, 128, 185);
+    doc.setLineWidth(0.5);
+
+    doc.setFillColor(41, 128, 185);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 255, 255);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+
+    const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       addHeader();
       addFooter(p, totalPages);
     }
 
-    // ------------------------------------------
-    // SAVE PDF
-    // ------------------------------------------
-    doc.save("PPE_Distribution_Report.pdf");
+    doc.save("Mechanical_Issue_Report.pdf");
   };
 
   const exportCSV = (): void => {
-    const headers = ["Item", "Quantity", "Unit", "Date", "Person", "Location"];
+    const headers = [
+      "Issued To",
+      "#",
+      "Item",
+      "Qty",
+      "Unit",
+      "Date",
+      "Location",
+    ];
 
-    const rows = filteredRecords.flatMap((r) =>
-      r.items.map((item) => [
-        item.itemName,
-        item.issuedQty,
-        item.unit,
-        r.issueDate,
-        r.issuedTo,
-        r.location || "",
-      ]),
-    );
+    // Group records by issuedTo
+    const grouped: Record<string, typeof filteredRecords> = {};
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    filteredRecords.forEach((r) => {
+      const key = r.issuedTo || "Unknown";
+
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+
+      grouped[key].push(r);
+    });
+
+    // Build rows
+    const rows: any[] = [];
+
+    Object.entries(grouped).forEach(([supervisor, recs]) => {
+      let itemNum = 1;
+
+      recs.forEach((r) => {
+        r.items.forEach((item) => {
+          rows.push([
+            supervisor,
+            itemNum++,
+            item.itemName,
+            item.issuedQty,
+            item.unit,
+            new Date(r.issueDate).toLocaleDateString("en-IN"),
+            r.location || "-",
+          ]);
+        });
+      });
+    });
+
+    // Convert to CSV format
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((cell) => {
+            const value = cell ?? "";
+            return `"${String(value).replace(/"/g, '""')}"`;
+          })
+          .join(",")
+      )
+      .join("\n");
+
+    // Create and download file
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
+
+    link.href = url;
     link.download = "Mechanical_Issue_Report.csv";
+
+    document.body.appendChild(link);
+
     link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
   };
 
   const addItem = () => {
@@ -744,34 +801,98 @@ const DistributionPage: React.FC = () => {
 
             <div
               className="ppe-table-container"
-              style={{ margin: "0 auto", maxWidth: 1000 }}
+              style={{ margin: "0 auto", maxWidth: 1100 }}
             >
               <table className="ppe-table">
                 <thead>
                   <tr>
-                    <th>Items</th>
-                    <th>Date</th>
-                    <th>Issued To</th>
-                    <th>Location</th>
-                    {isAdmin && <th>Edit</th>}
-                    {/* {isAdmin && <th>Delete</th>} */}
+                    <th style={{ color: "black" }}>#</th>
+                    <th style={{ color: "black" }}>Date</th>
+                    <th style={{ color: "black" }}>Issued To</th>
+                    <th style={{ color: "black" }}>Items</th>
+                    <th style={{ color: "black" }}>Location</th>
+                    {isAdmin && <th style={{ color: "black" }}>Edit</th>}
                   </tr>
                 </thead>
 
                 <tbody>
                   {filteredRecords.length > 0 ? (
-                    filteredRecords.map((r) => (
+                    filteredRecords.map((r, idx) => (
                       <tr key={r._id}>
+                        <td>{idx + 1}</td>
+
                         <td>
-                          {r.items
-                            .map(
-                              (i) => `${i.itemName} (${i.issuedQty} ${i.unit})`,
-                            )
-                            .join(", ")}
+                          {new Date(r.issueDate).toLocaleDateString("en-IN")}
                         </td>
-                        <td>{r.issueDate}</td>
+
                         <td>{r.issuedTo}</td>
+
+                        <td
+                          style={{
+                            minWidth: "300px",
+                            textAlign: "left",
+                          }}
+                        >
+                          {r.items.map((i, n) => (
+                            <div
+                              key={n}
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                                marginBottom: n === r.items.length - 1 ? 0 : "14px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "28px",
+                                  height: "28px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#2563eb",
+                                  color: "white",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: 600,
+                                  fontSize: "14px",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {n + 1}
+                              </span>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    lineHeight: 1.5,
+                                  }}
+                                >
+                                  {i.itemName}
+                                </span>
+
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "#666",
+                                  }}
+                                >
+                                  {i.issuedQty} {i.unit}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </td>
+
                         <td>{r.location || "-"}</td>
+
                         {isAdmin && (
                           <td>
                             <button
@@ -782,22 +903,14 @@ const DistributionPage: React.FC = () => {
                             </button>
                           </td>
                         )}
-
-                        {/* {isAdmin && (
-                          <td>
-                            <button
-                              className="ppe-action-btn ppe-delete-btn"
-                              onClick={() => handleDelete(r._id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        )} */}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: "center" }}>
+                      <td
+                        colSpan={isAdmin ? 6 : 5}
+                        style={{ textAlign: "center" }}
+                      >
                         No records found
                       </td>
                     </tr>
@@ -934,7 +1047,7 @@ const DistributionPage: React.FC = () => {
                 <select
                   className="ppe-input"
                   value={editItemState.itemName}
-                  
+
                   onChange={(e) => {
                     const selected = stockItems.find(
                       (s) => s.itemName === e.target.value,

@@ -26,6 +26,7 @@ interface ReturnRecord {
     quantity: number;
     unitWeight?: number;
     returnWeight?: number;
+    returnedWeight?: number;
   }[];
 }
 
@@ -420,8 +421,8 @@ export default function ScaffoldingIssuePage() {
     const originalRecord = records.find((rec) => rec._id === r._id);
     const itemMatch = originalRecord
       ? originalRecord.items.some((i) =>
-          i.itemName.toLowerCase().includes(searchText),
-        )
+        i.itemName.toLowerCase().includes(searchText),
+      )
       : false;
     const tslManagerMatch = (r.returnedBy || "")
       .toLowerCase()
@@ -448,7 +449,7 @@ export default function ScaffoldingIssuePage() {
   );
 
   const exportPDF = (): void => {
-    const doc = new jsPDF("p", "mm", "a4");
+    const doc = new jsPDF("l", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const addHeader = () => {
@@ -457,131 +458,168 @@ export default function ScaffoldingIssuePage() {
       doc.setFont("helvetica", "bold");
       doc.text("RAY ENGINEERING", 50, 15);
       doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
       doc.text("Contact No: 9337670266", 50, 22);
       doc.text("E-Mail: accounts@rayengineering.co", 50, 28);
       doc.setLineWidth(0.5);
-      doc.line(10, 40, 200, 40);
+      doc.line(10, 40, pageWidth - 10, 40);
       doc.setFontSize(16);
-      doc.text("SCAFFOLDING RETURN REPORT", pageWidth / 2, 55, {
-        align: "center",
-      });
+      doc.setFont("helvetica", "bold");
+      doc.text("SCAFFOLDING RETURN REPORT", pageWidth / 2, 55, { align: "center" });
     };
     const addFooter = (pageNum: number, totalPages: number) => {
       const footerY = pageHeight - 50;
-      doc.line(10, footerY, 200, footerY);
+      doc.line(10, footerY, pageWidth - 10, footerY);
       doc.setFontSize(8);
-      doc.text(
-        "Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)",
-        10,
-        footerY + 5,
-      );
-      doc.text(
-        "Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur",
-        75,
-        footerY + 5,
-      );
-      doc.text(
-        `Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`,
-        145,
-        footerY + 5,
-      );
+      doc.setFont("helvetica", "normal");
+      doc.text("Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)", 10, footerY + 5);
+      doc.text("Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur", 90, footerY + 5);
+      doc.text(`Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${totalPages}`, 190, footerY + 5);
     };
 
-    const tempTotalPages = 1;
-    // Use filteredRecords which already includes both date and search filtering
     const pdfRecords = filteredRecords
-      .map((fr) => {
-        // Map back to original record structure for PDF generation
-        return records.find((r) => r._id === fr._id);
-      })
+      .map((fr) => records.find((r) => r._id === fr._id))
       .filter(Boolean) as ReturnRecord[];
 
+    // Group by supervisorName
+    const grouped: Record<string, ReturnRecord[]> = {};
+    pdfRecords.forEach((r) => {
+      const key = r.supervisorName || "Unknown";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    });
+
+    const tableBody: any[] = [];
+    const supervisorTotals: { name: string; totalIssuedWeight: number }[] = [];
+
+    Object.entries(grouped).forEach(([supervisor, recs]) => {
+      let itemNum = 1;
+      let totalWeight = 0;
+      recs.forEach((r) => {
+        r.items.forEach((item: any) => {
+          const w = Number(item.returnWeight) || 0;
+          totalWeight += w;
+          tableBody.push([
+            supervisor,
+            `${itemNum++}. ${item.itemName}`,
+            item.unit,
+            item.quantity,
+            w > 0 ? w.toFixed(2) : "-",
+            new Date(r.returnDate).toLocaleDateString("en-IN"),
+            r.personName,
+            r.location || "-",
+            r.woNumber || "-",
+          ]);
+        });
+      });
+      supervisorTotals.push({ name: supervisor, totalIssuedWeight: totalWeight });
+    });
+
+    let tempTotalPages = 1;
     autoTable(doc, {
       startY: 65,
       margin: { top: 70, bottom: 65 },
-      head: [
-        [
-          "Item",
-          "Unit",
-          "Qty",
-          "Date",
-          "Returned by TSL Manager",
-          "Location",
-          "W/O Number",
-          "Supervisor",
-        ],
-      ],
-      body: pdfRecords.flatMap((r) =>
-        r.items.map((item: any) => [
-          item.itemName,
-          item.unit,
-          item.quantity,
-          new Date(r.returnDate).toLocaleDateString("en-IN"),
-          r.personName,
-          r.location || "",
-          r.woNumber || "",
-          r.supervisorName || "",
-        ]),
-      ),
-      styles: { fontSize: 8, halign: "center", cellPadding: 2 },
-      headStyles: { fillColor: [41, 128, 185], textColor: "#fff" },
+      head: [["Supervisor", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O No."]],
+      body: tableBody,
+      styles: { fontSize: 7, halign: "center", cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
+      columnStyles: { 1: { halign: "left" }, 0: { halign: "left" } },
       theme: "grid",
+      didParseCell: (data: any) => {
+        if (data.section === "body" && data.column.index === 0) {
+          const prevRow = data.row.index > 0 ? tableBody[data.row.index - 1] : null;
+          if (prevRow && prevRow[0] === tableBody[data.row.index][0]) {
+            data.cell.text = [""];
+          }
+        }
+      },
       didDrawPage: (data) => {
         addHeader();
         addFooter(data.pageNumber, tempTotalPages);
       },
     });
+
+    // Summary box
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    const boxX = 10;
+    const boxW = pageWidth - 20;
+    const rowH = 8;
+    const headerH = 10;
+    const boxH = headerH + supervisorTotals.length * rowH + 10;
+    let summaryY = finalY;
+    if (summaryY + boxH > pageHeight - 55) {
+      doc.addPage();
+      addHeader();
+      summaryY = 65;
+    }
+    doc.setDrawColor(41, 128, 185);
+    doc.setLineWidth(0.5);
+    doc.rect(boxX, summaryY, boxW, boxH);
+    doc.setFillColor(41, 128, 185);
+    doc.rect(boxX, summaryY, boxW, headerH, "F");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 255, 255);
+    doc.text("SUMMARY — TOTAL RETURN WEIGHT PER SUPERVISOR", boxX + boxW / 2, summaryY + 7, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    supervisorTotals.forEach((s, i) => {
+      const y = summaryY + headerH + 5 + i * rowH;
+      doc.text(`${i + 1}. ${s.name}`, boxX + 5, y);
+      doc.text(`Total Return Weight: ${s.totalIssuedWeight.toFixed(2)} kg`, boxX + boxW - 5, y, { align: "right" });
+    });
+
     const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       addHeader();
       addFooter(p, totalPages);
     }
-    doc.save("Scaffolding_Issue_Report.pdf");
+    doc.save("Scaffolding_Return_Report.pdf");
   };
 
   const exportCSV = (): void => {
-    const headers = [
-      "Item",
-      "Unit",
-      "Date",
-      "Returned by TSL Manager",
-      "Location",
-      "W/O Number",
-      "Supervisor Name",
-      "Unit Weight",
-      "Issued Weight",
-      "Issued Quantity",
-    ];
+    const headers = ["Supervisor", "#", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O Number"];
 
-    // Use filteredRecords and map back to original records
-    const filteredOriginalRecords = filteredRecords
-      .map((fr) => {
-        return records.find((r) => r._id === fr._id);
-      })
+    const pdfRecords = filteredRecords
+      .map((fr) => records.find((r) => r._id === fr._id))
       .filter(Boolean) as ReturnRecord[];
 
-    const rows = filteredOriginalRecords.flatMap((r) =>
-      r.items.map((i) => [
-        i.itemName,
-        i.unit,
-        r.returnDate,
-        r.personName,
-        r.location || "",
-        r.woNumber || "",
-        r.supervisorName || "",
-        i.unitWeight || "",
-        i.returnWeight || "",
-        i.quantity,
-      ]),
-    );
+    const grouped: Record<string, ReturnRecord[]> = {};
+    pdfRecords.forEach((r) => {
+      const key = r.supervisorName || "Unknown";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    });
+
+    const rows: any[] = [];
+    Object.entries(grouped).forEach(([supervisor, recs]) => {
+      let itemNum = 1;
+      recs.forEach((r) => {
+        r.items.forEach((item: any) => {
+          rows.push([
+            supervisor,
+            itemNum++,
+            item.itemName,
+            item.unit,
+            item.quantity,
+            item.returnWeight || "-",
+            new Date(r.returnDate).toLocaleDateString("en-IN"),
+            r.personName,
+            r.location || "",
+            r.woNumber || "",
+          ]);
+        });
+      });
+    });
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+      [headers.join(","), ...rows.map((r) => r.map((v: any) => `"${v}"`).join(","))].join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
-    link.download = "Scaffolding_Issue_Report.csv";
+    link.download = "Scaffolding_Return_Report.csv";
     link.click();
   };
 
@@ -1008,61 +1046,161 @@ export default function ScaffoldingIssuePage() {
             </div>
             <div
               className="ppe-table-container"
-              style={{ margin: "0 auto", maxWidth: 1000 }}
+              style={{ margin: "0 auto", maxWidth: 1400, overflowX: "auto" }}
             >
-              <table className="ppe-table">
+              <table
+                className="ppe-table"
+                style={{
+                  width: "100%",
+                  minWidth: "1400px",
+                }}
+              >
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Returned by TSL Manager</th>
-                    <th>Location</th>
-                    <th>W/O Number</th>
-                    <th>Supervisor</th>
-                    <th>Items Issued</th>
-                    <th>Total Qty</th>
-                    {isAdmin && <th>Edit</th>}
-                    {/* {isAdmin && <th>Delete</th>} */}
+                    <th style={{ color: "black" }}>#</th>
+                    <th style={{ color: "black" }}>Date</th>
+                    <th style={{ color: "black" }}>TSL Manager</th>
+                    <th style={{ color: "black" }}>Supervisor</th>
+                    <th style={{ color: "black" }}>W/O No.</th>
+                    <th style={{ color: "black" }}>Location</th>
+                    <th style={{ color: "black", minWidth: "500px" }}>
+                      Items
+                    </th>
+                    {isAdmin && <th style={{ color: "black" }}>Edit</th>}
                   </tr>
                 </thead>
 
                 <tbody>
-                  {paginatedRecords.map((r) => (
-                    <tr key={r._id}>
-                      <td>{formatDate(r.issueDate)}</td>
-                      <td>{r.returnedBy}</td>
-                      <td>{r.location || "-"}</td>
-                      <td>{r.woNumber || "-"}</td>
-                      <td>{r.supervisorName || "-"}</td>
-                      <td>{r.itemsText}</td>
-                      <td>{r.totalQty}</td>
-                      {isAdmin && (
-                        <td>
-                          <button
-                            className="report-edit-btn"
-                            onClick={() => {
-                              const orig = records.find(
-                                (rec) => rec._id === r._id,
-                              );
-                              if (orig) openEdit(orig);
-                            }}
-                          >
-                            <MdEdit />
-                          </button>
-                        </td>
-                      )}
+                  {paginatedRecords.map((r) => {
+                    const orig = records.find((rec) => rec._id === r._id);
 
-                      {/* {isAdmin && (
+                    return (
+                      <tr key={r._id}>
+                        <td>{filteredRecords.indexOf(r) + 1}</td>
+
                         <td>
-                          <button
-                            className="report-delete-btn"
-                            onClick={() => handleDelete(r._id)}
-                          >
-                            <MdDelete />
-                          </button>
+                          {new Date(r.issueDate).toLocaleDateString("en-IN")}
                         </td>
-                      )} */}
-                    </tr>
-                  ))}
+
+                        <td>{r.returnedBy}</td>
+
+                        <td>{r.supervisorName || "-"}</td>
+
+                        <td>{r.woNumber || "-"}</td>
+
+                        <td>{r.location || "-"}</td>
+
+                        <td
+                          style={{
+                            minWidth: "500px",
+                            textAlign: "left",
+                            verticalAlign: "top",
+                          }}
+                        >
+                          {orig?.items.map((i: any, n: number) => (
+                            <div
+                              key={n}
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                                padding: "12px 0",
+                                borderBottom:
+                                  n !== orig.items.length - 1
+                                    ? "1px solid #e5e7eb"
+                                    : "none",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: "30px",
+                                  height: "30px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#2563eb",
+                                  color: "#fff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontWeight: 600,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {n + 1}
+                              </span>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "8px",
+                                  flex: 1,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight: 600,
+                                    lineHeight: "1.5",
+                                  }}
+                                >
+                                  {i.itemName}
+                                </span>
+
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "10px",
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      backgroundColor: "#f3f4f6",
+                                      color: "#6b7280",
+                                      padding: "4px 10px",
+                                      borderRadius: "999px",
+                                      fontSize: "12px",
+                                    }}
+                                  >
+                                    {i.quantity} {i.unit}
+                                  </span>
+
+                                  <span
+                                    style={{
+                                      backgroundColor: "#dbeafe",
+                                      color: "#1d4ed8",
+                                      padding: "4px 10px",
+                                      borderRadius: "999px",
+                                      fontSize: "12px",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {Number(i.returnWeight || 0).toFixed(2)} kg
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </td>
+
+                        {isAdmin && (
+                          <td style={{ textAlign: "center" }}>
+                            <button
+                              className="report-edit-btn"
+                              onClick={() => {
+                                const orig = records.find(
+                                  (rec) => rec._id === r._id
+                                );
+
+                                if (orig) openEdit(orig);
+                              }}
+                            >
+                              <MdEdit />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1265,13 +1403,13 @@ export default function ScaffoldingIssuePage() {
                             background: "#f3f4f6",
                             cursor: "not-allowed",
                           }}
-                          // onChange={(e) =>
-                          //   updateEditItem(
-                          //     idx,
-                          //     "returnQuantity",
-                          //     e.target.value,
-                          //   )
-                          // }
+                        // onChange={(e) =>
+                        //   updateEditItem(
+                        //     idx,
+                        //     "returnQuantity",
+                        //     e.target.value,
+                        //   )
+                        // }
                         />
                       </div>
 
