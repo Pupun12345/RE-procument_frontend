@@ -368,34 +368,19 @@ export default function ScaffoldingIssuePage() {
   const filteredRecords = reportRows.filter((r) => {
     const searchText = filters.search.toLowerCase().trim();
 
-    // Search filter - ONLY TSL Manager name, item names, and W/O Number
-    if (!searchText) {
-      // If no search text, apply only date filter
-      let dateMatch = true;
-      if (filters.to) {
-        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
-        dateMatch = recordDate === filters.to;
-      }
-      return dateMatch;
-    }
-
-    // Get the original record to access items array
     const originalRecord = records.find((rec) => rec._id === r._id);
     const itemMatch = originalRecord
-      ? originalRecord.items.some((i) =>
-        i.itemName.toLowerCase().includes(searchText),
-      )
+      ? originalRecord.items.some((i) => i.itemName.toLowerCase().includes(searchText))
       : false;
     const tslManagerMatch = r.issuedTo.toLowerCase().includes(searchText);
     const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
-    const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
+    const supervisorMatch = (r.supervisorName || "").toLowerCase().includes(searchText);
+    const searchMatch = !searchText || itemMatch || tslManagerMatch || woNumberMatch || supervisorMatch;
 
-    // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.to) {
       const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
-      const selectedDate = filters.to;
-      dateMatch = recordDate === selectedDate;
+      dateMatch = recordDate === filters.to;
     }
 
     return searchMatch && dateMatch;
@@ -462,49 +447,31 @@ export default function ScaffoldingIssuePage() {
 
           tableBody.push([
             supervisor,
-
             `${itemNum++}. ${item.itemName}`,
-
             item.unit,
-
             item.qty,
-
             w > 0 ? w.toFixed(2) : "-",
-
             index === 0
-              ? {
-                content: new Date(r.issueDate).toLocaleDateString("en-IN"),
-                rowSpan: r.items.length,
-                styles: { valign: "middle" },
-              }
+              ? { content: new Date(r.issueDate).toLocaleDateString("en-IN"), rowSpan: r.items.length, styles: { valign: "middle" } }
               : "",
-
             index === 0
-              ? {
-                content: r.issuedTo,
-                rowSpan: r.items.length,
-                styles: { valign: "middle" },
-              }
+              ? { content: r.issuedTo, rowSpan: r.items.length, styles: { valign: "middle" } }
               : "",
-
             index === 0
-              ? {
-                content: r.location || "-",
-                rowSpan: r.items.length,
-                styles: { valign: "middle" },
-              }
+              ? { content: r.location || "-", rowSpan: r.items.length, styles: { valign: "middle" } }
               : "",
-
             index === 0
-              ? {
-                content: r.woNumber || "-",
-                rowSpan: r.items.length,
-                styles: { valign: "middle" },
-              }
+              ? { content: r.woNumber || "-", rowSpan: r.items.length, styles: { valign: "middle" } }
               : "",
+            "",
           ]);
         });
       });
+      // subtotal row per supervisor
+      tableBody.push([
+        { content: `Total — ${supervisor}`, colSpan: 9, styles: { halign: "right", fontStyle: "bold", fillColor: [234, 244, 255] } },
+        { content: `${totalWeight.toFixed(2)} kg`, styles: { fontStyle: "bold", fillColor: [234, 244, 255], halign: "center" } },
+      ]);
       supervisorTotals.push({ name: supervisor, totalIssuedWeight: totalWeight });
     });
 
@@ -512,7 +479,7 @@ export default function ScaffoldingIssuePage() {
     autoTable(doc, {
       startY: 65,
       margin: { top: 70, bottom: 65 },
-      head: [["Supervisor", "Item", "Unit", "Qty", "Issued Weight (kg)", "Date", "TSL Manager", "Location", "W/O No."]],
+      head: [["Supervisor", "Item", "Unit", "Qty", "Issued Weight (kg)", "Date", "TSL Manager", "Location", "W/O No.", "Total Issued Weight"]],
       body: tableBody,
       styles: {
         fontSize: 7,
@@ -537,37 +504,7 @@ export default function ScaffoldingIssuePage() {
       },
     });
 
-    // Summary box
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
-    const boxX = 10;
-    const boxW = pageWidth - 20;
-    const rowH = 8;
-    const headerH = 10;
-    const boxH = headerH + supervisorTotals.length * rowH + 10;
-    let summaryY = finalY;
-    if (summaryY + boxH > pageHeight - 55) {
-      doc.addPage();
-      addHeader();
-      summaryY = 65;
-    }
-    doc.setDrawColor(41, 128, 185);
-    doc.setLineWidth(0.5);
-    doc.rect(boxX, summaryY, boxW, boxH);
-    doc.setFillColor(41, 128, 185);
-    doc.rect(boxX, summaryY, boxW, headerH, "F");
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.text("SUMMARY — TOTAL ISSUED WEIGHT PER SUPERVISOR", boxX + boxW / 2, summaryY + 7, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    supervisorTotals.forEach((s, i) => {
-      const y = summaryY + headerH + 5 + i * rowH;
-      doc.text(`${i + 1}. ${s.name}`, boxX + 5, y);
-      doc.text(`Total Issued Weight: ${s.totalIssuedWeight.toFixed(2)} kg`, boxX + boxW - 5, y, { align: "right" });
-    });
-
+    // Remove separate summary box — totals are now inline in the table
     const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
@@ -644,7 +581,6 @@ export default function ScaffoldingIssuePage() {
   }, [records]);
   useEffect(() => {
     if (activeTab === "report") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFilters({ search: "", from: "", to: "" });
       setCurrentPage(1);
     }
@@ -987,37 +923,20 @@ export default function ScaffoldingIssuePage() {
                 <input
                   className="ppe-search-input"
                   type="text"
-                  placeholder="Search TSL Manager / Item / W/O Number"
+                  placeholder="Search TSL Manager / Item / W/O Number / Supervisor"
                   value={filters.search}
-                  onChange={(e) => {
-                    setFilters({ ...filters, search: e.target.value });
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setCurrentPage(1); }}
                 />
               </div>
-
               <input
                 className="ppe-date-filter"
                 type="date"
                 value={filters.to}
-                onChange={(e) => {
-                  setFilters({ ...filters, to: e.target.value });
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => { setFilters({ ...filters, to: e.target.value }); setCurrentPage(1); }}
                 style={{ width: "150px" }}
               />
-              <button
-                onClick={exportPDF}
-                className="ppe-export-btn ppe-export-pdf"
-              >
-                Export PDF
-              </button>
-              <button
-                onClick={exportCSV}
-                className="ppe-export-btn ppe-export-csv"
-              >
-                Export CSV
-              </button>
+              <button onClick={exportPDF} className="ppe-export-btn ppe-export-pdf">Export PDF</button>
+              <button onClick={exportCSV} className="ppe-export-btn ppe-export-csv">Export CSV</button>
             </div>
             <div
               className="ppe-table-container"
