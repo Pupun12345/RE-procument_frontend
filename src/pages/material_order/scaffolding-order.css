@@ -3,7 +3,8 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 28px;
-  max-width: 1050px;
+  max-width: 1400px;
+  width: 100%;
   margin: 24px auto;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
 }
@@ -271,22 +272,30 @@
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 .tab-btn {
-  padding: 8px 18px;
+  padding: 10px 28px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #ffffff;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
 }
 
 .tab-btn.active {
   background: #6b6ef9;
   color: #ffffff;
   border-color: #6b6ef9;
+}
+
+.tab-btn:not(.active):hover {
+  border-color: #6b6ef9;
+  color: #6b6ef9;
 }
 /* ================= REPORT ================= */
 
@@ -347,38 +356,61 @@
   color: #374151;
 }
 
-/* View Button */
 /* View */
 .view-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: #eef2ff;
   color: #6b6ef9;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-btn:hover {
+  background: #e0e7ff;
 }
 
 /* Edit */
 .edit-btn {
-  width: 44px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: #22c55e;
   color: white;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn:hover {
+  background: #16a34a;
 }
 
 /* Delete */
 .delete-btn {
-  width: 44px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: #ef4444;
   color: white;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
 }
 
 
@@ -395,6 +427,8 @@
 .report-table {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
 }
 
 .report-table .table-head,

@@ -20,6 +20,8 @@ interface ReturnRecord {
   location?: string;
   woNumber?: string;
   supervisorName?: string;
+  tslName?: string;
+  issueId?: { _id: string; issuedTo: string; issueDate: string } | string;
   items: {
     itemName: string;
     unit: string;
@@ -58,6 +60,8 @@ export default function ScaffoldingIssuePage() {
     itemName: string;
     unit: string;
     unitWeight: string;
+    issuedQuantity: string;
+    issuedWeight: string;
     returnQuantity: string;
     returnWeight: string;
   }
@@ -89,7 +93,9 @@ export default function ScaffoldingIssuePage() {
       issue.items.map((it: any) => ({
         itemName: it.itemName,
         unit: it.unit,
-        unitWeight: String(it.unitWeight),
+        unitWeight: String(it.unitWeight ?? ""),
+        issuedQuantity: String(it.issuedQuantity ?? it.qty ?? ""),
+        issuedWeight: String(it.issuedWeight ?? ""),
         returnQuantity: "",
         returnWeight: "",
       })),
@@ -101,6 +107,8 @@ export default function ScaffoldingIssuePage() {
       itemName: "",
       unit: "",
       unitWeight: "",
+      issuedQuantity: "",
+      issuedWeight: "",
       returnQuantity: "",
       returnWeight: "",
     },
@@ -131,6 +139,8 @@ export default function ScaffoldingIssuePage() {
         itemName: "",
         unit: "",
         unitWeight: "",
+        issuedQuantity: "",
+        issuedWeight: "",
         returnQuantity: "",
         returnWeight: "",
       },
@@ -393,49 +403,30 @@ export default function ScaffoldingIssuePage() {
     _id: r._id,
     issueDate: r.returnDate,
     returnedBy: r.personName,
-
+    tslName: r.tslName,
     location: r.location,
     woNumber: r.woNumber,
     supervisorName: r.supervisorName,
-
     itemsText: r.items.map((i) => `${i.itemName} (${i.quantity})`).join(", "),
-
     totalQty: r.items.reduce((sum, i) => sum + i.quantity, 0),
   }));
 
   const filteredRecords = reportRows.filter((r) => {
     const searchText = (filters.search || "").toLowerCase();
 
-    // Search filter - ONLY TSL Manager name, item names, and W/O Number
-    if (!searchText) {
-      // If no search text, apply only date filter
-      let dateMatch = true;
-      if (filters.to) {
-        const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
-        dateMatch = recordDate === filters.to;
-      }
-      return dateMatch;
-    }
-
-    // Get the original record to access items array
     const originalRecord = records.find((rec) => rec._id === r._id);
     const itemMatch = originalRecord
-      ? originalRecord.items.some((i) =>
-        i.itemName.toLowerCase().includes(searchText),
-      )
+      ? originalRecord.items.some((i) => i.itemName.toLowerCase().includes(searchText))
       : false;
-    const tslManagerMatch = (r.returnedBy || "")
-      .toLowerCase()
-      .includes(searchText);
+    const tslManagerMatch = (r.returnedBy || "").toLowerCase().includes(searchText);
     const woNumberMatch = (r.woNumber || "").toLowerCase().includes(searchText);
-    const searchMatch = itemMatch || tslManagerMatch || woNumberMatch;
+    const supervisorMatch = (r.supervisorName || "").toLowerCase().includes(searchText);
+    const searchMatch = !searchText || itemMatch || tslManagerMatch || woNumberMatch || supervisorMatch;
 
-    // Date filter - exact date match when date is selected
     let dateMatch = true;
     if (filters.to) {
       const recordDate = new Date(r.issueDate).toISOString().split("T")[0];
-      const selectedDate = filters.to;
-      dateMatch = recordDate === selectedDate;
+      dateMatch = recordDate === filters.to;
     }
 
     return searchMatch && dateMatch;
@@ -509,9 +500,15 @@ export default function ScaffoldingIssuePage() {
             r.personName,
             r.location || "-",
             r.woNumber || "-",
+            "",
           ]);
         });
       });
+      // subtotal row per supervisor
+      tableBody.push([
+        { content: `Total — ${supervisor}`, colSpan: 9, styles: { halign: "right", fontStyle: "bold", fillColor: [234, 244, 255] } },
+        { content: `${totalWeight.toFixed(2)} kg`, styles: { fontStyle: "bold", fillColor: [234, 244, 255], halign: "center" } },
+      ]);
       supervisorTotals.push({ name: supervisor, totalIssuedWeight: totalWeight });
     });
 
@@ -519,7 +516,7 @@ export default function ScaffoldingIssuePage() {
     autoTable(doc, {
       startY: 65,
       margin: { top: 70, bottom: 65 },
-      head: [["Supervisor", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O No."]],
+      head: [["Supervisor", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O No.", "Total Returned Weight"]],
       body: tableBody,
       styles: { fontSize: 7, halign: "center", cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
@@ -539,37 +536,7 @@ export default function ScaffoldingIssuePage() {
       },
     });
 
-    // Summary box
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
-    const boxX = 10;
-    const boxW = pageWidth - 20;
-    const rowH = 8;
-    const headerH = 10;
-    const boxH = headerH + supervisorTotals.length * rowH + 10;
-    let summaryY = finalY;
-    if (summaryY + boxH > pageHeight - 55) {
-      doc.addPage();
-      addHeader();
-      summaryY = 65;
-    }
-    doc.setDrawColor(41, 128, 185);
-    doc.setLineWidth(0.5);
-    doc.rect(boxX, summaryY, boxW, boxH);
-    doc.setFillColor(41, 128, 185);
-    doc.rect(boxX, summaryY, boxW, headerH, "F");
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
-    doc.text("SUMMARY — TOTAL RETURN WEIGHT PER SUPERVISOR", boxX + boxW / 2, summaryY + 7, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    supervisorTotals.forEach((s, i) => {
-      const y = summaryY + headerH + 5 + i * rowH;
-      doc.text(`${i + 1}. ${s.name}`, boxX + 5, y);
-      doc.text(`Total Return Weight: ${s.totalIssuedWeight.toFixed(2)} kg`, boxX + boxW - 5, y, { align: "right" });
-    });
-
+    // Remove separate summary box — totals are now inline in the table
     const totalPages = doc.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
@@ -646,7 +613,6 @@ export default function ScaffoldingIssuePage() {
   }, [records]);
   useEffect(() => {
     if (activeTab === "report") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFilters({ search: "", from: "", to: "" });
       setCurrentPage(1);
     }
@@ -758,7 +724,7 @@ export default function ScaffoldingIssuePage() {
                     className="ppe-table-head"
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr",
+                      gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
                       alignItems: "center",
                     }}
                   >
@@ -766,8 +732,10 @@ export default function ScaffoldingIssuePage() {
                     <span>Item Name</span>
                     <span>Unit</span>
                     <span>Unit Weight</span>
-                    <span>Issued Quantity</span>
+                    <span>Issued Qty</span>
                     <span>Issued Weight</span>
+                    <span>Return Quantity</span>
+                    <span>Return Weight</span>
                     <span>Action</span>
                   </div>
                   {materials.map((row, index) => (
@@ -776,7 +744,7 @@ export default function ScaffoldingIssuePage() {
                       key={index}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr",
+                        gridTemplateColumns: "48px 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
                         alignItems: "center",
                       }}
                     >
@@ -832,6 +800,22 @@ export default function ScaffoldingIssuePage() {
                         value={row.unitWeight}
                         readOnly
                         placeholder="PUW"
+                        style={{ background: "#f3f4f6", cursor: "not-allowed" }}
+                      />
+
+                      <input
+                        className="ppe-input"
+                        value={row.issuedQuantity}
+                        readOnly
+                        placeholder="Issued Qty"
+                        style={{ background: "#f3f4f6", cursor: "not-allowed" }}
+                      />
+
+                      <input
+                        className="ppe-input"
+                        value={row.issuedWeight ? Number(row.issuedWeight).toFixed(2) : ""}
+                        readOnly
+                        placeholder="Issued Weight"
                         style={{ background: "#f3f4f6", cursor: "not-allowed" }}
                       />
 
@@ -963,6 +947,8 @@ export default function ScaffoldingIssuePage() {
                           itemName: "",
                           unit: "",
                           unitWeight: "",
+                          issuedQuantity: "",
+                          issuedWeight: "",
                           returnQuantity: "",
                           returnWeight: "",
                         },
@@ -984,9 +970,9 @@ export default function ScaffoldingIssuePage() {
 
                       showToast("success", "Materials issued successfully");
                       setActiveTab("report");
-                    } catch (err) {
-                      console.error(err);
-                      showToast("error", "Failed to return materials");
+                    } catch (err: any) {
+                      console.error("RETURN ERROR:", err?.response?.data);
+                      showToast("error", err?.response?.data?.message || "Failed to return materials");
                     }
                   }}
                 >
@@ -1012,37 +998,20 @@ export default function ScaffoldingIssuePage() {
                 <input
                   className="ppe-search-input"
                   type="text"
-                  placeholder="Search TSL Manager / Item / W/O Number"
+                  placeholder="Search TSL Manager / Item / W/O Number / Supervisor"
                   value={filters.search}
-                  onChange={(e) => {
-                    setFilters({ ...filters, search: e.target.value });
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setFilters({ ...filters, search: e.target.value }); setCurrentPage(1); }}
                 />
               </div>
-
               <input
                 className="ppe-date-filter"
                 type="date"
                 value={filters.to}
-                onChange={(e) => {
-                  setFilters({ ...filters, to: e.target.value });
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => { setFilters({ ...filters, to: e.target.value }); setCurrentPage(1); }}
                 style={{ width: "150px" }}
               />
-              <button
-                onClick={exportPDF}
-                className="ppe-export-btn ppe-export-pdf"
-              >
-                Export PDF
-              </button>
-              <button
-                onClick={exportCSV}
-                className="ppe-export-btn ppe-export-csv"
-              >
-                Export CSV
-              </button>
+              <button onClick={exportPDF} className="ppe-export-btn ppe-export-pdf">Export PDF</button>
+              <button onClick={exportCSV} className="ppe-export-btn ppe-export-csv">Export CSV</button>
             </div>
             <div
               className="ppe-table-container"
@@ -1184,18 +1153,35 @@ export default function ScaffoldingIssuePage() {
 
                         {isAdmin && (
                           <td style={{ textAlign: "center" }}>
-                            <button
-                              className="report-edit-btn"
-                              onClick={() => {
-                                const orig = records.find(
-                                  (rec) => rec._id === r._id
-                                );
-
-                                if (orig) openEdit(orig);
-                              }}
-                            >
-                              <MdEdit />
-                            </button>
+                            <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                              <button
+                                className="report-edit-btn"
+                                onClick={() => {
+                                  const orig = records.find((rec) => rec._id === r._id);
+                                  if (orig) openEdit(orig);
+                                }}
+                              >
+                                <MdEdit />
+                              </button>
+                              <button
+                                className="ppe-delete-btn"
+                                style={{
+                                  fontSize: 16,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "#fff",
+                                  background: "#ef4444",
+                                  border: "1px solid #ef4444",
+                                  borderRadius: 4,
+                                  padding: "4px 8px",
+                                  cursor: "pointer",
+                                }}
+                                onClick={() => handleDelete(r._id)}
+                              >
+                                <MdDelete />
+                              </button>
+                            </div>
                           </td>
                         )}
                       </tr>
