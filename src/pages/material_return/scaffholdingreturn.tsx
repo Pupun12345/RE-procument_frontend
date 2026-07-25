@@ -481,26 +481,51 @@ export default function ScaffoldingIssuePage() {
     });
 
     const tableBody: any[] = [];
-    const supervisorTotals: { name: string; totalIssuedWeight: number }[] = [];
 
     Object.entries(grouped).forEach(([supervisor, recs]) => {
       let itemNum = 1;
       let totalWeight = 0;
+
+      // Pre-compute total return weight per date within this supervisor's records
+      const dateTotals: Record<string, number> = {};
       recs.forEach((r) => {
+        const dateKey = new Date(r.returnDate).toLocaleDateString("en-IN");
         r.items.forEach((item: any) => {
+          dateTotals[dateKey] = (dateTotals[dateKey] || 0) + (Number(item.returnWeight) || 0);
+        });
+      });
+      const dateTotalShown = new Set<string>();
+
+      recs.forEach((r) => {
+        const dateKey = new Date(r.returnDate).toLocaleDateString("en-IN");
+        r.items.forEach((item: any, index: number) => {
           const w = Number(item.returnWeight) || 0;
           totalWeight += w;
+
+          const showDateTotal = !dateTotalShown.has(dateKey);
+          if (showDateTotal) dateTotalShown.add(dateKey);
+
           tableBody.push([
             supervisor,
             `${itemNum++}. ${item.itemName}`,
             item.unit,
             item.quantity,
             w > 0 ? w.toFixed(2) : "-",
-            new Date(r.returnDate).toLocaleDateString("en-IN"),
-            r.personName,
-            r.location || "-",
-            r.woNumber || "-",
-            "",
+            index === 0
+              ? { content: new Date(r.returnDate).toLocaleDateString("en-IN"), rowSpan: r.items.length, styles: { valign: "middle" } }
+              : "",
+            index === 0
+              ? { content: r.personName, rowSpan: r.items.length, styles: { valign: "middle" } }
+              : "",
+            index === 0
+              ? { content: r.location || "-", rowSpan: r.items.length, styles: { valign: "middle" } }
+              : "",
+            index === 0
+              ? { content: r.woNumber || "-", rowSpan: r.items.length, styles: { valign: "middle" } }
+              : "",
+            showDateTotal
+              ? { content: `${dateTotals[dateKey].toFixed(2)} kg`, styles: { fontStyle: "bold", halign: "center", fillColor: [240, 249, 255] } }
+              : "",
           ]);
         });
       });
@@ -509,7 +534,6 @@ export default function ScaffoldingIssuePage() {
         { content: `Total — ${supervisor}`, colSpan: 9, styles: { halign: "right", fontStyle: "bold", fillColor: [234, 244, 255] } },
         { content: `${totalWeight.toFixed(2)} kg`, styles: { fontStyle: "bold", fillColor: [234, 244, 255], halign: "center" } },
       ]);
-      supervisorTotals.push({ name: supervisor, totalIssuedWeight: totalWeight });
     });
 
     let tempTotalPages = 1;
@@ -518,7 +542,7 @@ export default function ScaffoldingIssuePage() {
       margin: { top: 70, bottom: 65 },
       head: [["Supervisor", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O No.", "Total Returned Weight"]],
       body: tableBody,
-      styles: { fontSize: 7, halign: "center", cellPadding: 2 },
+      styles: { fontSize: 7, halign: "center", valign: "middle", cellPadding: 2 },
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
       columnStyles: { 1: { halign: "left" }, 0: { halign: "left" } },
       theme: "grid",
@@ -549,45 +573,54 @@ export default function ScaffoldingIssuePage() {
   const exportCSV = (): void => {
     const headers = ["Supervisor", "#", "Item", "Unit", "Qty", "Return Weight (kg)", "Date", "TSL Manager", "Location", "W/O Number"];
 
-    const pdfRecords = filteredRecords
+    const csvRecords = filteredRecords
       .map((fr) => records.find((r) => r._id === fr._id))
       .filter(Boolean) as ReturnRecord[];
 
     const grouped: Record<string, ReturnRecord[]> = {};
-    pdfRecords.forEach((r) => {
+    csvRecords.forEach((r) => {
       const key = r.supervisorName || "Unknown";
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(r);
     });
 
-    const rows: any[] = [];
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+    const rows: string[] = [headers.map(escape).join(",")];
+    let itemNum = 1;
     Object.entries(grouped).forEach(([supervisor, recs]) => {
-      let itemNum = 1;
+      let supervisorTotal = 0;
       recs.forEach((r) => {
         r.items.forEach((item: any) => {
+          const w = Number(item.returnWeight) || 0;
+          supervisorTotal += w;
           rows.push([
-            supervisor,
-            itemNum++,
-            item.itemName,
-            item.unit,
-            item.quantity,
-            item.returnWeight || "-",
-            new Date(r.returnDate).toLocaleDateString("en-IN"),
-            r.personName,
-            r.location || "",
-            r.woNumber || "",
-          ]);
+            escape(supervisor),
+            escape(itemNum++),
+            escape(item.itemName),
+            escape(item.unit),
+            escape(item.quantity),
+            escape(w > 0 ? w.toFixed(2) : "-"),
+            escape(new Date(r.returnDate).toLocaleDateString("en-IN")),
+            escape(r.personName),
+            escape(r.location || ""),
+            escape(r.woNumber || ""),
+          ].join(","));
         });
       });
+      rows.push([
+        escape(`Total — ${supervisor}`), "", "", "", "", "", "", "", "",
+        escape(`${supervisorTotal.toFixed(2)} kg`),
+      ].join(","));
     });
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.map((v: any) => `"${v}"`).join(","))].join("\n");
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
+    link.href = url;
     link.download = "Scaffolding_Return_Report.csv";
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -929,6 +962,11 @@ export default function ScaffoldingIssuePage() {
                         "error",
                         "Enter return quantity for at least one item",
                       );
+                      return;
+                    }
+
+                    if (payload.items.some((m: any) => m.quantity < 1)) {
+                      showToast("error", "Return quantity must be at least 1 for all items");
                       return;
                     }
 

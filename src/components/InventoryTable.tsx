@@ -115,8 +115,6 @@ export default function InventoryTable() {
             <th>Item Description</th>
             <th>Unit</th>
             <th>Total Issued</th>
-            <th>Total Returned</th>
-            <th>In Field</th>
             <th>Current Stock</th>
             <th>Status</th>
           </tr>
@@ -124,7 +122,7 @@ export default function InventoryTable() {
         <tbody>
           {filteredData.length === 0 ? (
             <tr>
-              <td colSpan={7} style={{ textAlign: "center", padding: "20px" }}>
+              <td colSpan={5} style={{ textAlign: "center", padding: "20px" }}>
                 {searchTerm
                   ? "No items found matching your search"
                   : "No data available"}
@@ -135,28 +133,12 @@ export default function InventoryTable() {
               const status = getStockStatus(item.currentStock, item.inField);
               return (
                 <tr key={item.itemName}>
+                  <td><span>{item.itemName}</span></td>
+                  <td><span>{item.unit}</span></td>
+                  <td><span>{item.totalIssued.toLocaleString()}</span></td>
+                  <td><span>{item.currentStock.toLocaleString()}</span></td>
                   <td>
-                    <span>{item.itemName}</span>
-                  </td>
-                  <td>
-                    <span>{item.unit}</span>
-                  </td>
-                  <td>
-                    <span>{item.totalIssued.toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <span>{item.totalReturned.toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <span>{item.inField.toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <span>{item.currentStock.toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <span
-                      className={`status ${status.replace(/\s+/g, "").toLowerCase()}`}
-                    >
+                    <span className={`status ${status.replace(/\s+/g, "").toLowerCase()}`}>
                       {status}
                     </span>
                   </td>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import "./scaffolding-order.css";
 import "../material_issue/scaffoldingISsue.css";
 import api from "../../api/axios";
@@ -199,6 +201,72 @@ export default function ScaffoldingOrder() {
     setActiveTab("entry");
   };
 
+  const exportPDF = () => {
+    const doc = new jsPDF("l", "mm", "a4");
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const addHeader = () => {
+      try { doc.addImage("/ray-log.png", "PNG", 15, 10, 18, 18); } catch (e) {}
+      doc.setFontSize(14); doc.setFont("helvetica", "bold");
+      doc.text("RAY ENGINEERING", 50, 15);
+      doc.setFontSize(10); doc.setFont("helvetica", "normal");
+      doc.text("Contact No: 9337670266", 50, 22);
+      doc.text("E-Mail: accounts@rayengineering.co", 50, 28);
+      doc.setLineWidth(0.5);
+      doc.line(10, 40, pageWidth - 10, 40);
+      doc.setFontSize(16); doc.setFont("helvetica", "bold");
+      doc.text("SCAFFOLDING ORDER REPORT", pageWidth / 2, 55, { align: "center" });
+    };
+
+    const addFooter = (pageNum: number, total: number) => {
+      const y = pageHeight - 50;
+      doc.line(10, y, pageWidth - 10, y);
+      doc.setFontSize(8); doc.setFont("helvetica", "normal");
+      doc.text("Registrations:\nGSTIN: 21AIJHPR1040H1ZO\nUDYAM: DO-12-0001261\nState: Odisha (Code: 21)", 10, y + 5);
+      doc.text("Registered Address:\nAt- Gandakipur, Po- Gopiakuda,\nPs- Kujanga, Dist- Jagatsinghpur", 90, y + 5);
+      doc.text(`Contact & Web:\nMD Email: md@rayengineering.co\nWebsite: rayengineering.co\nPage ${pageNum} / ${total}`, 190, y + 5);
+    };
+
+    const tableBody: any[] = [];
+    filteredOrders.forEach((o) => {
+      o.materials.forEach((m, idx) => {
+        tableBody.push([
+          idx === 0 ? { content: o.orderNo, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          idx === 0 ? { content: o.orderManager, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          idx === 0 ? { content: o.workOrderNumber || "-", rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          idx === 0 ? { content: formatDate(o.fromDate), rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          idx === 0 ? { content: formatDate(o.toDate), rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          idx === 0 ? { content: o.location, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          `${idx + 1}. ${m.material}`,
+          m.unit || "-",
+          m.quantity,
+          Number(m.issuedWeight || 0).toFixed(2),
+          m.provider,
+        ]);
+      });
+    });
+
+    let tempTotalPages = 1;
+    autoTable(doc, {
+      startY: 65,
+      margin: { top: 70, bottom: 65 },
+      head: [["Order No.", "Order Manager", "W/O No.", "From Date", "To Date", "Location", "Material", "Unit", "Qty", "Weight (kg)", "Provider"]],
+      body: tableBody,
+      styles: { fontSize: 7, halign: "center", valign: "middle", cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
+      columnStyles: { 6: { halign: "left" }, 0: { halign: "left" }, 1: { halign: "left" } },
+      theme: "grid",
+      didDrawPage: (data) => { addHeader(); addFooter(data.pageNumber, tempTotalPages); },
+    });
+
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p); addHeader(); addFooter(p, totalPages);
+    }
+    doc.save("Scaffolding_Order_Report.pdf");
+  };
+
   /* ================= HELPERS ================= */
 
   const formatDate = (date: string) => date ? new Date(date).toLocaleDateString("en-IN") : "-";
@@ -379,6 +447,12 @@ export default function ScaffoldingOrder() {
         <div className="report-section">
           <div className="report-header">
             <h3>View Orders</h3>
+            <button
+              onClick={exportPDF}
+              style={{ background: "#c81e1e", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+            >
+              Export PDF
+            </button>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", alignItems: "end", marginTop: 16 }}>

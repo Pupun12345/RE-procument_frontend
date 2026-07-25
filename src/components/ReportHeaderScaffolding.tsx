@@ -14,6 +14,7 @@ interface ScaffoldingItem {
   netIssued: number;
   inField: number;
   currentStock: number;
+  currentStockWeight: number;
   status: string;
 }
 
@@ -61,6 +62,7 @@ export default function ReportHeader() {
       (item.totalReturnedWeight || 0).toFixed(2),
       item.inField.toString(),
       item.currentStock.toString(),
+      (item.currentStockWeight || 0).toFixed(2),
       item.status,
     ]) || [];
 
@@ -72,12 +74,13 @@ export default function ReportHeader() {
     "Total Returned (Qty)",
     "Returned Weight (kg)",
     "In Field",
-    "Current Stock",
+    "Current Stock (Qty)",
+    "Current Stock Weight (kg)",
     "Status",
   ];
 
   const exportPDF = () => {
-    const doc = new jsPDF("p", "mm", "a4");
+    const doc = new jsPDF("l", "mm", "a4");
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -141,10 +144,13 @@ export default function ReportHeader() {
     const headers = [
       "Item Description",
       "Unit",
-      "Total Issued",
-      "Total Returned",
+      "Total Issued (Qty)",
+      "Issued Weight (kg)",
+      "Total Returned (Qty)",
+      "Returned Weight (kg)",
       "In Field",
-      "Current Stock",
+      "Current Stock (Qty)",
+      "Current Stock Weight (kg)",
       "Status",
     ];
 
@@ -158,6 +164,7 @@ export default function ReportHeader() {
         (item.totalReturnedWeight || 0).toFixed(2),
         item.inField,
         item.currentStock,
+        (item.currentStockWeight || 0).toFixed(2),
         item.status,
       ]) || [];
 
@@ -192,12 +199,13 @@ export default function ReportHeader() {
         5: { halign: "right" },
         6: { halign: "right" },
         7: { halign: "right" },
+        8: { halign: "right" },
       },
 
       theme: "grid",
 
       didParseCell: (data: any) => {
-        if (data.section === "body" && data.column.index === 8) {
+        if (data.section === "body" && data.column.index === 9) {
           const status = String(data.cell.raw);
 
           if (status.includes("Healthy")) {

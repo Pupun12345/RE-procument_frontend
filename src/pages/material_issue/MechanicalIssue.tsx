@@ -721,6 +721,12 @@ const DistributionPage: React.FC = () => {
                         return;
                       }
 
+                      const invalidQty = items.some((i) => i.itemName && Number(i.quantity) < 1);
+                      if (invalidQty) {
+                        toast.error("Issued quantity must be at least 1 for all items");
+                        return;
+                      }
+
                       await api.post("/issue/mechanical", payload);
 
                       setItems([{ itemName: "", quantity: "", unit: "" }]);

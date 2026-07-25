@@ -57,6 +57,7 @@ const ScaffoldingStockReport: React.FC = () => {
   }, [page, search]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const grandTotalWeight = stocks.reduce((sum, s) => sum + (s.weight ?? s.qty * s.puw), 0);
 
   const exportCSV = () => {
     const headers = [
@@ -75,8 +76,9 @@ const ScaffoldingStockReport: React.FC = () => {
       s.unit || "-",
       s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
     ]);
+    const grandTotalRow = ["Grand Total", "", "", grandTotalWeight.toFixed(2), "", ""];
 
-    const csv = [headers, ...rows]
+    const csv = [headers, ...rows, grandTotalRow]
       .map((r) => r.map((v) => `"${v}"`).join(","))
       .join("\n");
 
@@ -147,14 +149,22 @@ const ScaffoldingStockReport: React.FC = () => {
       head: [
         ["Item Name", "PUW (kg)", "Qty", "Total Weight (kg)", "Unit", "Status"],
       ],
-      body: stocks.map((s) => [
-        s.itemName,
-        String(s.puw),
-        String(s.qty),
-        (s.weight ?? s.qty * s.puw).toFixed(2),
-        s.unit || "-",
-        s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
-      ]),
+      body: [
+        ...stocks.map((s) => [
+          s.itemName,
+          String(s.puw),
+          String(s.qty),
+          (s.weight ?? s.qty * s.puw).toFixed(2),
+          s.unit || "-",
+          s.qty > 10 ? "In Stock" : s.qty > 0 ? "Low Stock" : "Out of Stock",
+        ]),
+        [
+          { content: "Grand Total", styles: { fontStyle: "bold", halign: "right" } },
+          "", "",
+          { content: `${grandTotalWeight.toFixed(2)} kg`, styles: { fontStyle: "bold", halign: "center" } },
+          "", "",
+        ],
+      ],
 
       styles: { fontSize: 9, halign: "center", cellPadding: 3 },
       headStyles: { fillColor: [245, 158, 11], textColor: "#fff" },
@@ -237,6 +247,13 @@ const ScaffoldingStockReport: React.FC = () => {
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className={styles.grandTotalRow}>
+                <td className={styles.grandTotalLabel} colSpan={3}>Grand Total Weight</td>
+                <td className={styles.grandTotalValue}>{grandTotalWeight.toFixed(2)} kg</td>
+                <td colSpan={2}></td>
+              </tr>
+            </tfoot>
           </table>
         )}
       </div>

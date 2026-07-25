@@ -154,6 +154,26 @@
   font-weight: 600;
 }
 
+/* ===== GRAND TOTAL ROW ===== */
+.grandTotalRow {
+  background: #f1f3ff;
+  border-top: 2px solid #6b6ef9;
+}
+
+.grandTotalLabel {
+  font-weight: 700;
+  color: #1f2937;
+  text-align: right;
+  padding: 14px 18px;
+}
+
+.grandTotalValue {
+  font-weight: 700;
+  color: #6b6ef9;
+  text-align: center;
+  padding: 14px;
+}
+
 /* ===== LOADING ===== */
 .loading {
   padding: 30px;
