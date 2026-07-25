@@ -440,10 +440,25 @@ export default function ScaffoldingIssuePage() {
     Object.entries(grouped).forEach(([supervisor, recs]) => {
       let itemNum = 1;
       let totalWeight = 0;
+
+      // Pre-compute total weight per date within this supervisor's records
+      const dateTotals: Record<string, number> = {};
       recs.forEach((r) => {
+        const dateKey = new Date(r.issueDate).toLocaleDateString("en-IN");
+        r.items.forEach((item: any) => {
+          dateTotals[dateKey] = (dateTotals[dateKey] || 0) + (Number(item.issuedWeight) || 0);
+        });
+      });
+      const dateTotalShown = new Set<string>();
+
+      recs.forEach((r) => {
+        const dateKey = new Date(r.issueDate).toLocaleDateString("en-IN");
         r.items.forEach((item: any, index: number) => {
           const w = Number(item.issuedWeight) || 0;
           totalWeight += w;
+
+          const showDateTotal = !dateTotalShown.has(dateKey);
+          if (showDateTotal) dateTotalShown.add(dateKey);
 
           tableBody.push([
             supervisor,
@@ -463,7 +478,9 @@ export default function ScaffoldingIssuePage() {
             index === 0
               ? { content: r.woNumber || "-", rowSpan: r.items.length, styles: { valign: "middle" } }
               : "",
-            "",
+            showDateTotal
+              ? { content: `${dateTotals[dateKey].toFixed(2)} kg`, styles: { fontStyle: "bold", halign: "center", fillColor: [240, 249, 255] } }
+              : "",
           ]);
         });
       });
@@ -514,48 +531,58 @@ export default function ScaffoldingIssuePage() {
     doc.save("Scaffolding_Issue_Report.pdf");
   };
 
+
   const exportCSV = (): void => {
     const headers = ["Supervisor", "#", "Item", "Unit", "Qty", "Issued Weight (kg)", "Date", "TSL Manager", "Location", "W/O Number"];
 
-    const pdfRecords = filteredRecords
+    const csvRecords = filteredRecords
       .map((fr) => records.find((r) => r._id === fr._id))
       .filter(Boolean) as IssueRecord[];
 
     const grouped: Record<string, IssueRecord[]> = {};
-    pdfRecords.forEach((r) => {
+    csvRecords.forEach((r) => {
       const key = r.supervisorName || "Unknown";
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(r);
     });
 
-    const rows: any[] = [];
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+    const rows: string[] = [headers.map(escape).join(",")];
+    let itemNum = 1;
     Object.entries(grouped).forEach(([supervisor, recs]) => {
-      let itemNum = 1;
+      let supervisorTotal = 0;
       recs.forEach((r) => {
         r.items.forEach((item: any) => {
+          const w = Number(item.issuedWeight) || 0;
+          supervisorTotal += w;
           rows.push([
-            supervisor,
-            itemNum++,
-            item.itemName,
-            item.unit,
-            item.qty,
-            item.issuedWeight || "-",
-            new Date(r.issueDate).toLocaleDateString("en-IN"),
-            r.issuedTo,
-            r.location || "",
-            r.woNumber || "",
-          ]);
+            escape(supervisor),
+            escape(itemNum++),
+            escape(item.itemName),
+            escape(item.unit),
+            escape(item.qty),
+            escape(w > 0 ? w.toFixed(2) : "-"),
+            escape(new Date(r.issueDate).toLocaleDateString("en-IN")),
+            escape(r.issuedTo),
+            escape(r.location || ""),
+            escape(r.woNumber || ""),
+          ].join(","));
         });
       });
+      rows.push([
+        escape(`Total — ${supervisor}`), "", "", "", "", "", "", "", "",
+        escape(`${supervisorTotal.toFixed(2)} kg`),
+      ].join(","));
     });
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.map((v: any) => `"${v}"`).join(","))].join("\n");
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
+    link.href = url;
     link.download = "Scaffolding_Issue_Report.csv";
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -832,6 +859,13 @@ export default function ScaffoldingIssuePage() {
                     // 1️⃣ Basic validation
                     if (!form.personName || materials.length === 0) {
                       showToast("error", "Missing required fields");
+                      return;
+                    }
+
+                    // 1.5️⃣ Validate issued quantity
+                    const invalidQty = materials.some((m) => Number(m.issuedQuantity) < 1);
+                    if (invalidQty) {
+                      showToast("error", "Issued quantity must be at least 1 for all items");
                       return;
                     }
 

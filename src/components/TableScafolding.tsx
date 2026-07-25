@@ -12,6 +12,7 @@ interface ScaffoldingItem {
   netIssued: number;
   inField: number;
   currentStock: number;
+  currentStockWeight: number;
   status: string;
 }
 
@@ -129,7 +130,8 @@ export default function InventoryTable() {
             <th>Total Returned (Qty)</th>
             <th>Returned Weight (kg)</th>
             <th>In Field</th>
-            <th>Current Stock</th>
+            <th>Current Stock (Qty)</th>
+            <th>Current Stock Weight (kg)</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -153,6 +155,7 @@ export default function InventoryTable() {
                 <td><span>{(item.totalReturnedWeight || 0).toFixed(2)}</span></td>
                 <td><span>{item.inField.toLocaleString()}</span></td>
                 <td><span>{item.currentStock.toLocaleString()}</span></td>
+                <td><span>{(item.currentStockWeight || 0).toFixed(2)}</span></td>
                 <td>
                   <span className={`status ${item.status.replace(/\s+/g, "").toLowerCase()}`}>
                     {item.status}
@@ -164,8 +167,7 @@ export default function InventoryTable() {
         </tbody>
       </table>
       <div className="pagination">
-        Showing {filteredData.length} of {reportData?.summary.totalItems || 0}{" "}
-        items
+        Showing {filteredData.length} of {reportData?.summary.totalItems || 0} items
       </div>
     </div>
   );

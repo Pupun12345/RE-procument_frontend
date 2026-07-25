@@ -643,6 +643,11 @@ const DistributionPage: React.FC = () => {
                         return;
                       }
 
+                      if (payload.items.some((i: any) => i.quantity < 1)) {
+                        toast.error("Return quantity must be at least 1 for all items");
+                        return;
+                      }
+
                       await api.post("/returns", payload);
 
                       setItems([{ itemName: "", quantity: "", unit: "" }]);

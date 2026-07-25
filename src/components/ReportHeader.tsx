@@ -118,8 +118,6 @@ export default function ReportHeader() {
       "Item Description",
       "Unit",
       "Total Issued",
-      "Total Returned",
-      "In Field",
       "Current Stock",
       "Status",
     ];
@@ -128,8 +126,6 @@ export default function ReportHeader() {
       item.itemName,
       item.unit,
       item.totalIssued,
-      item.totalReturned,
-      item.inField,
       item.currentStock,
       getStockStatus(item.currentStock, item.inField),
     ]);
@@ -159,14 +155,12 @@ export default function ReportHeader() {
         0: { halign: "left" },
         2: { halign: "right" },
         3: { halign: "right" },
-        4: { halign: "right" },
-        5: { halign: "right" },
       },
 
       theme: "grid",
 
       didParseCell: (data: any) => {
-        if (data.section === "body" && data.column.index === 6) {
+        if (data.section === "body" && data.column.index === 4) {
           const status = String(data.cell.raw);
 
           if (status === "Healthy") {
@@ -213,8 +207,6 @@ export default function ReportHeader() {
       "Item Description",
       "Unit",
       "Total Issued",
-      "Total Returned",
-      "In Field",
       "Current Stock",
       "Status",
     ];
@@ -222,8 +214,6 @@ export default function ReportHeader() {
       item.itemName,
       item.unit,
       item.totalIssued.toString(),
-      item.totalReturned.toString(),
-      item.inField.toString(),
       item.currentStock.toString(),
       getStockStatus(item.currentStock, item.inField),
     ]);
