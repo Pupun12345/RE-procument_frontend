@@ -230,24 +230,32 @@ export default function ScaffoldingOrder() {
 
     const tableBody: any[] = [];
     filteredOrders.forEach((o) => {
-      o.materials.forEach((m, idx) => {
+      const mats = o.materials || [];
+      if (mats.length === 0) {
         tableBody.push([
-          idx === 0 ? { content: o.orderNo, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
-          idx === 0 ? { content: o.orderManager, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
-          idx === 0 ? { content: o.workOrderNumber || "-", rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
-          idx === 0 ? { content: formatDate(o.fromDate), rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
-          idx === 0 ? { content: formatDate(o.toDate), rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
-          idx === 0 ? { content: o.location, rowSpan: o.materials.length, styles: { valign: "middle" } } : "",
+          o.orderNo, o.orderManager, o.workOrderNumber || "-",
+          formatDate(o.fromDate), formatDate(o.toDate), o.location,
+          "-", "-", "-", "-", "-",
+        ]);
+        return;
+      }
+      mats.forEach((m, idx) => {
+        tableBody.push([
+          idx === 0 ? o.orderNo : "",
+          idx === 0 ? o.orderManager : "",
+          idx === 0 ? (o.workOrderNumber || "-") : "",
+          idx === 0 ? formatDate(o.fromDate) : "",
+          idx === 0 ? formatDate(o.toDate) : "",
+          idx === 0 ? o.location : "",
           `${idx + 1}. ${m.material}`,
           m.unit || "-",
           m.quantity,
           Number(m.issuedWeight || 0).toFixed(2),
-          m.provider,
+          m.provider || "-",
         ]);
       });
     });
 
-    let tempTotalPages = 1;
     autoTable(doc, {
       startY: 65,
       margin: { top: 70, bottom: 65 },
@@ -257,7 +265,7 @@ export default function ScaffoldingOrder() {
       headStyles: { fillColor: [41, 128, 185], textColor: "#fff", fontStyle: "bold" },
       columnStyles: { 6: { halign: "left" }, 0: { halign: "left" }, 1: { halign: "left" } },
       theme: "grid",
-      didDrawPage: (data) => { addHeader(); addFooter(data.pageNumber, tempTotalPages); },
+      didDrawPage: () => {},
     });
 
     const totalPages = doc.getNumberOfPages();
@@ -265,6 +273,45 @@ export default function ScaffoldingOrder() {
       doc.setPage(p); addHeader(); addFooter(p, totalPages);
     }
     doc.save("Scaffolding_Order_Report.pdf");
+  };
+
+  const exportCSV = () => {
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const headers = ["Order No.", "Order Manager", "W/O No.", "From Date", "To Date", "Location", "#", "Material", "Unit", "Unit Weight", "Qty", "Weight (kg)", "Provider"];
+    const rows: string[] = [headers.map(escape).join(",")];
+
+    filteredOrders.forEach((o) => {
+      const mats = o.materials || [];
+      if (mats.length === 0) {
+        rows.push([o.orderNo, o.orderManager, o.workOrderNumber || "-", formatDate(o.fromDate), formatDate(o.toDate), o.location, "-", "-", "-", "-", "-", "-", "-"].map(escape).join(","));
+        return;
+      }
+      mats.forEach((m, idx) => {
+        rows.push([
+          idx === 0 ? o.orderNo : "",
+          idx === 0 ? o.orderManager : "",
+          idx === 0 ? (o.workOrderNumber || "-") : "",
+          idx === 0 ? formatDate(o.fromDate) : "",
+          idx === 0 ? formatDate(o.toDate) : "",
+          idx === 0 ? o.location : "",
+          idx + 1,
+          m.material,
+          m.unit || "-",
+          m.unitWeight ?? "-",
+          m.quantity,
+          Number(m.issuedWeight || 0).toFixed(2),
+          m.provider || "-",
+        ].map(escape).join(","));
+      });
+    });
+
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Scaffolding_Order_Report.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   /* ================= HELPERS ================= */
@@ -447,12 +494,20 @@ export default function ScaffoldingOrder() {
         <div className="report-section">
           <div className="report-header">
             <h3>View Orders</h3>
-            <button
-              onClick={exportPDF}
-              style={{ background: "#c81e1e", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, fontSize: 13, cursor: "pointer", fontWeight: 600 }}
-            >
-              Export PDF
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={exportCSV}
+                style={{ background: "#16a34a", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={exportPDF}
+                style={{ background: "#c81e1e", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              >
+                Export PDF
+              </button>
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", alignItems: "end", marginTop: 16 }}>

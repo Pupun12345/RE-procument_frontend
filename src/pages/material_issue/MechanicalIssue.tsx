@@ -739,10 +739,12 @@ const DistributionPage: React.FC = () => {
                         location: "",
                       });
 
+                      toast.success("Mechanical items issued successfully");
                       setActiveTab("report");
                       fetchRecords();
-                    } catch {
-                      toast.error("Failed to issue Mechanical items");
+                    } catch (err: any) {
+                      const data = err?.response?.data;
+                      toast.error(data?.message || "Failed to issue Mechanical items");
                     }
                   }}
                 >
