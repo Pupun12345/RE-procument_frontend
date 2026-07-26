@@ -5,6 +5,7 @@ import api from "../api/axios";
 interface ReportItem {
   itemName: string;
   unit: string;
+  totalPurchased: number;
   totalIssued: number;
   totalReturned: number;
   currentStock: number;
@@ -16,6 +17,7 @@ interface ReportData {
   success: boolean;
   summary: {
     totalItems: number;
+    totalPurchased: number;
     totalIssued: number;
     totalReturned: number;
     totalInField: number;
@@ -114,6 +116,7 @@ export default function InventoryTable() {
           <tr>
             <th>Item Description</th>
             <th>Unit</th>
+            <th>Total Purchases</th>
             <th>Total Issued</th>
             <th>Current Stock</th>
             <th>Status</th>
@@ -122,7 +125,7 @@ export default function InventoryTable() {
         <tbody>
           {filteredData.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ textAlign: "center", padding: "20px" }}>
+              <td colSpan={6} style={{ textAlign: "center", padding: "20px" }}>
                 {searchTerm
                   ? "No items found matching your search"
                   : "No data available"}
@@ -135,6 +138,7 @@ export default function InventoryTable() {
                 <tr key={item.itemName}>
                   <td><span>{item.itemName}</span></td>
                   <td><span>{item.unit}</span></td>
+                  <td><span>{(item.totalPurchased || 0).toLocaleString()}</span></td>
                   <td><span>{item.totalIssued.toLocaleString()}</span></td>
                   <td><span>{item.currentStock.toLocaleString()}</span></td>
                   <td>

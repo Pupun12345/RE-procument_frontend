@@ -929,9 +929,15 @@ export default function ScaffoldingIssuePage() {
 
                       showToast("success", "Materials issued successfully");
                       setActiveTab("report");
-                    } catch (err) {
-                      console.error(err);
-                      showToast("error", "Failed to issue materials");
+                    } catch (err: any) {
+                      const data = err?.response?.data;
+                      if (data?.insufficient?.length > 0) {
+                        data.insufficient.forEach((i: any) => {
+                          showToast("error", `Insufficient stock for "${i.itemName}" — requested: ${i.requested}, available: ${i.available}`);
+                        });
+                      } else {
+                        showToast("error", data?.message || "Failed to issue materials");
+                      }
                     }
                   }}
                 >
