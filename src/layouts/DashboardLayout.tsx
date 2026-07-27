@@ -88,15 +88,15 @@ export default function DashboardLayout({ children }: Props) {
               window.innerWidth < 768
                 ? "200px"
                 : window.innerWidth < 1024
-                ? "240px"
-                : "20%",
+                  ? "240px"
+                  : "20%",
             flexShrink: 0,
             width:
               window.innerWidth < 768
                 ? 200
                 : window.innerWidth < 1024
-                ? 240
-                : 320,
+                  ? 240
+                  : 320,
             minWidth: window.innerWidth < 768 ? 200 : 240,
             maxWidth: 320,
             background: "#ffffff",
@@ -258,25 +258,25 @@ export default function DashboardLayout({ children }: Props) {
             open={openMenu === "store"}
             onClick={() => toggleMenu("store", "Store Management")}
           >
-            {role === "admin" && (
-              <SubGroup label="Material Purchase">
-                <SubItem
-                  label="PPE"
-                  path="/dashboard/material-purchase/ppe"
-                  onNavigate={() => setOpenMenu(null)}
-                />
-                <SubItem
-                  label="Mechanical"
-                  path="/dashboard/material-purchase/mechanical"
-                  onNavigate={() => setOpenMenu(null)}
-                />
-                <SubItem
-                  label="Scaffolding"
-                  path="/dashboard/material-purchase/scaffolding"
-                  onNavigate={() => setOpenMenu(null)}
-                />
-              </SubGroup>
-            )}
+
+            <SubGroup label="Material Purchase">
+              <SubItem
+                label="PPE"
+                path="/dashboard/material-purchase/ppe"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Mechanical"
+                path="/dashboard/material-purchase/mechanical"
+                onNavigate={() => setOpenMenu(null)}
+              />
+              <SubItem
+                label="Scaffolding"
+                path="/dashboard/material-purchase/scaffolding"
+                onNavigate={() => setOpenMenu(null)}
+              />
+            </SubGroup>
+
 
             <SubGroup label="Material orders">
               <SubItem
@@ -346,7 +346,7 @@ export default function DashboardLayout({ children }: Props) {
             </SubGroup>
           </SidebarExpandable>
 
-          <SidebarButton 
+          <SidebarButton
             icon={<FaCogs />}
             label="HRMS"
             onClick={() => {
